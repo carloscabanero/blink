@@ -179,6 +179,8 @@
     [self _runSSHWithArgs:cmdline];
   } else if ([cmd isEqualToString:@"ssh-copy-id"]) {
     [self _runSSHCopyIDWithArgs:cmdline];
+  }else if ([cmd isEqualToString:@"sftp"]) {
+    [self _runSFTPWithArgs:cmdline];
   } else {
     
     _currentCmd = cmdline;
@@ -271,6 +273,7 @@
 - (void)_runSSHCopyIDWithArgs:(NSString *)args
 {
   self.sessionParams.childSessionParams = nil;
+  
   _childSession = [[SSHCopyIDSession alloc] initWithDevice:_device andParams:self.sessionParams.childSessionParams];
   self.sessionParams.childSessionType = @"sshcopyid";
   [_childSession executeAttachedWithArgs:args];
@@ -294,6 +297,15 @@
   [_childSession executeAttachedWithArgs:args];
   _childSession = nil;
 }
+
+- (void)_runSFTPWithArgs:(NSString *)args {
+  self.sessionParams.childSessionParams = nil;
+  _childSession = [[SFTPSession alloc] initWithDevice:_device andParams:self.sessionParams.childSessionParams];
+  self.sessionParams.childSessionType = @"sftp";
+  [_childSession executeAttachedWithArgs:args];
+  _childSession = nil;
+}
+
 
 - (void)sigwinch
 {

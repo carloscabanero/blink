@@ -159,11 +159,14 @@ void *run_session(void *sessionData)
 }
 
 - (void)_run {
+//  fprintf(_stream.out, "%s %s\n",[NSStringFromClass([self class]) UTF8String], [NSStringFromSelector(_cmd) UTF8String]);
   int argc = makeargs(_args.UTF8String, &_argv);
   [self main:argc argv:_argv];
 }
 
 - (void)main_cleanup {
+  
+//  fprintf(_stream.out, "%s %s\n",[NSStringFromClass([self class]) UTF8String], [NSStringFromSelector(_cmd) UTF8String]);
   [_stream close];
   dispatch_sync(dispatch_get_main_queue(), ^{
     [_delegate sessionFinished];
@@ -177,6 +180,8 @@ void *run_session(void *sessionData)
 
 - (id)initWithDevice:(TermDevice *)device andParams:(SessionParams *)params
 {
+  
+  
   self = [super init];
 
   if (self) {
@@ -184,12 +189,16 @@ void *run_session(void *sessionData)
     _stream = [_device.stream duplicate];
     _sessionParams = params;
   }
+  
+//  fprintf(_stream.out, "%s %s\n",[NSStringFromClass([self class]) UTF8String], [NSStringFromSelector(_cmd) UTF8String]);
 
   return self;
 }
 
 - (void)executeWithArgs:(NSString *)argstr
 {
+  
+//  fprintf(_stream.out, "%s %s\n",[NSStringFromClass([self class]) UTF8String], [NSStringFromSelector(_cmd) UTF8String]);
   _attached = NO;
   _args = argstr;
 
@@ -202,6 +211,8 @@ void *run_session(void *sessionData)
 
 - (void)executeAttachedWithArgs:(NSString *)argstr
 {
+  
+//  fprintf(_stream.out, "%s %s\n",[NSStringFromClass([self class]) UTF8String], [NSStringFromSelector(_cmd) UTF8String]);
   _attached = YES;
   _args = argstr;
 
@@ -213,17 +224,20 @@ void *run_session(void *sessionData)
 }
 
 - (int)main:(int)argc argv:(char **)argv {
+//  fprintf(_stream.out, "%s %s\n",[NSStringFromClass([self class]) UTF8String], [NSStringFromSelector(_cmd) UTF8String]);
   return 0;
 }
 
 - (void)sigwinch {
+//  fprintf(_stream.out, "%s %s",[NSStringFromClass([self class]) UTF8String], [NSStringFromSelector(_cmd) UTF8String]);
 }
 
 - (void)kill {
+//  fprintf(_stream.out, "%s %s\n",[NSStringFromClass([self class]) UTF8String], [NSStringFromSelector(_cmd) UTF8String]);
 }
 
-- (void)suspend
-{
+- (void)suspend {
+//  fprintf(_stream.out, "%s %s\n",[NSStringFromClass([self class]) UTF8String], [NSStringFromSelector(_cmd) UTF8String]);
 }
 
 - (BOOL)handleControl:(NSString *)control
@@ -232,6 +246,7 @@ void *run_session(void *sessionData)
 }
 
 - (void)setActiveSession {
+//  fprintf(_stream.out, "%s %s\n",[NSStringFromClass([self class]) UTF8String], [NSStringFromSelector(_cmd) UTF8String]);
 }
 
 - (void)dealloc {
@@ -240,3 +255,4 @@ void *run_session(void *sessionData)
 }
 
 @end
+
