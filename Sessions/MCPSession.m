@@ -299,7 +299,12 @@
 }
 
 - (void)_runSFTPWithArgs:(NSString *)args {
-  self.sessionParams.childSessionParams = nil;
+  
+  SFTPParams * sftpParams = [[SFTPParams alloc] init];
+  // TODO: Remove only if in first position
+  sftpParams.command = [args stringByReplacingOccurrencesOfString:@"sftp " withString:@""];
+  
+  self.sessionParams.childSessionParams = sftpParams;
   _childSession = [[SFTPSession alloc] initWithDevice:_device andParams:self.sessionParams.childSessionParams];
   self.sessionParams.childSessionType = @"sftp";
   [_childSession executeAttachedWithArgs:args];

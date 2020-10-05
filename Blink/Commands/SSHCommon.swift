@@ -30,21 +30,40 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 
-#ifndef Blink_bridge_h
-#define Blink_bridge_h
+import Foundation
 
-#import "BKDefaults.h"
-#import "BKHosts.h"
-#import "BlinkPaths.h"
-#import "DeviceInfo.h"
-#import "LayoutManager.h"
-#import "BKUserConfigurationManager.h"
-#import "Session.h"
-#import "MCPSession.h"
-#import "TermDevice.h"
-#import "KBWebViewBase.h"
-#import "openurl.h"
-#import "BKPubKey.h"
-#import "BKHosts.h"
+/**
+ List auth methods
+ List available connections
+ */
 
-#endif /* Blink_bridge_h */
+class SSHCommons {
+  
+  var clients: [SSHClient] = []
+  
+  static func getPrivateKey(from identifier: String) -> String? {
+    
+    guard let publicKeys = (BKPubKey.all() as? [BKPubKey]) else {
+      return nil
+    }
+    
+    guard let privateKey = publicKeys.first(where: { $0.id == identifier }) else {
+      return nil
+    }
+    
+    return privateKey.privateKey
+  }
+  
+  static func getHosts(by identifier: String) -> BKHosts? {
+
+    guard let hosts = (BKHosts.all() as? [BKHosts]) else {
+      return nil
+    }
+    
+    guard let host = hosts.first(where: { $0.host == identifier }) else {
+      return nil
+    }
+    
+    return host
+  }
+}

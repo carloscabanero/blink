@@ -38,9 +38,11 @@
 		22A9494C2067FD5E003A0666 /* tar.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 22A9494A2067FD5E003A0666 /* tar.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		22E1F3352036EE87001FCC5C /* openssl.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 22E1F3332036EE86001FCC5C /* openssl.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		22E1F3362036EE87001FCC5C /* libssh2.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 22E1F3342036EE86001FCC5C /* libssh2.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		8083E20D252723FA00B8CE60 /* ArgumentParser in Frameworks */ = {isa = PBXBuildFile; productRef = 8083E20C252723FA00B8CE60 /* ArgumentParser */; };
 		80D0956F2525DAB300E38173 /* SFTPSession.swift in Sources */ = {isa = PBXBuildFile; fileRef = 80D0956E2525DAB300E38173 /* SFTPSession.swift */; };
-		80D09587252619F200E38173 /* SSH.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = 80D095642525DA7F00E38173 /* SSH.xcframework */; };
-		80D09588252619F200E38173 /* SSH.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 80D095642525DA7F00E38173 /* SSH.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		80D9BF24252B13BE00FFB19D /* SSH.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = 80D095642525DA7F00E38173 /* SSH.xcframework */; };
+		80D9BF25252B13BE00FFB19D /* SSH.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 80D095642525DA7F00E38173 /* SSH.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		80D9BF64252B5DEE00FFB19D /* SSHCommon.swift in Sources */ = {isa = PBXBuildFile; fileRef = 80D9BF63252B5DEE00FFB19D /* SSHCommon.swift */; };
 		85A34307200A837A009324F1 /* webfontloader.js in Resources */ = {isa = PBXBuildFile; fileRef = 85A34303200A837A009324F1 /* webfontloader.js */; };
 		85A34309200A8FAF009324F1 /* term.css in Resources */ = {isa = PBXBuildFile; fileRef = 85A34308200A8FAF009324F1 /* term.css */; };
 		B700AED81DD0F2C200100EBF /* CloudKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = B700AED71DD0F2C200100EBF /* CloudKit.framework */; };
@@ -350,7 +352,7 @@
 				D2A3F50020690D44006BB305 /* network_ios.framework in Embed Frameworks */,
 				0732F11F1D062DDB00AB5438 /* UICKeyChainStore.framework in Embed Frameworks */,
 				D2A3F4FA20690CDF006BB305 /* ios_system.framework in Embed Frameworks */,
-				80D09588252619F200E38173 /* SSH.xcframework in Embed Frameworks */,
+				80D9BF25252B13BE00FFB19D /* SSH.xcframework in Embed Frameworks */,
 				D2A3F50420690D7E006BB305 /* ssh_cmd.framework in Embed Frameworks */,
 				D2A3F4FE20690D23006BB305 /* text.framework in Embed Frameworks */,
 				D2A3F50620690D8A006BB305 /* curl_ios.framework in Embed Frameworks */,
@@ -407,6 +409,7 @@
 		22E1F3342036EE86001FCC5C /* libssh2.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; path = libssh2.framework; sourceTree = "<group>"; };
 		80D095642525DA7F00E38173 /* SSH.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; path = SSH.xcframework; sourceTree = "<group>"; };
 		80D0956E2525DAB300E38173 /* SFTPSession.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SFTPSession.swift; sourceTree = "<group>"; };
+		80D9BF63252B5DEE00FFB19D /* SSHCommon.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SSHCommon.swift; sourceTree = "<group>"; };
 		85A34303200A837A009324F1 /* webfontloader.js */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.javascript; path = webfontloader.js; sourceTree = "<group>"; };
 		85A34308200A8FAF009324F1 /* term.css */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.css; path = term.css; sourceTree = "<group>"; };
 		B700AED71DD0F2C200100EBF /* CloudKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CloudKit.framework; path = System/Library/Frameworks/CloudKit.framework; sourceTree = SDKROOT; };
@@ -710,12 +713,13 @@
 				D2A3F4F020690B71006BB305 /* tar.framework in Frameworks */,
 				D2A3F50320690D7E006BB305 /* ssh_cmd.framework in Frameworks */,
 				B700AED81DD0F2C200100EBF /* CloudKit.framework in Frameworks */,
+				8083E20D252723FA00B8CE60 /* ArgumentParser in Frameworks */,
 				D2A3F4EA20690B71006BB305 /* text.framework in Frameworks */,
 				D2A3F4F620690C24006BB305 /* awk.framework in Frameworks */,
 				D263489820BEBFE000A8E89F /* libsshd.a in Frameworks */,
+				80D9BF24252B13BE00FFB19D /* SSH.xcframework in Frameworks */,
 				0732F0D11D062BB400AB5438 /* openssl.framework in Frameworks */,
 				0732F0BE1D062BB400AB5438 /* libssh2.framework in Frameworks */,
-				80D09587252619F200E38173 /* SSH.xcframework in Frameworks */,
 				076FBD501DB6BD9400F6D997 /* libmoshios.framework in Frameworks */,
 				D2A3F4F120690B71006BB305 /* network_ios.framework in Frameworks */,
 				D2A3F4F220690B71006BB305 /* curl_ios.framework in Frameworks */,
@@ -1361,6 +1365,7 @@
 				D27AD9BD222FDD5700379872 /* xcall.h */,
 				D27AD9BB222FDD3D00379872 /* xcall.m */,
 				D2F330D120A6EF020074ADD7 /* showkey.m */,
+				80D9BF63252B5DEE00FFB19D /* SSHCommon.swift */,
 			);
 			path = Commands;
 			sourceTree = "<group>";
@@ -1429,6 +1434,9 @@
 				D24AFD5B222410E700CFD3C1 /* PBXTargetDependency */,
 			);
 			name = Blink;
+			packageProductDependencies = (
+				8083E20C252723FA00B8CE60 /* ArgumentParser */,
+			);
 			productName = Blink;
 			productReference = EA0BA18B1C0CC57B00719C1A /* Blink.app */;
 			productType = "com.apple.product-type.application";
@@ -1493,6 +1501,9 @@
 				"zh-Hans",
 			);
 			mainGroup = EA0BA1821C0CC57B00719C1A;
+			packageReferences = (
+				8083E20B252723FA00B8CE60 /* XCRemoteSwiftPackageReference "swift-argument-parser" */,
+			);
 			productRefGroup = EA0BA18C1C0CC57B00719C1A /* Products */;
 			projectDirPath = "";
 			projectReferences = (
@@ -1782,6 +1793,7 @@
 				D241CBDD23040734003D64A5 /* KBProxy.swift in Sources */,
 				B75112CD1DE4A7B10040C693 /* BKiCloudConfigurationViewController.m in Sources */,
 				D2C24413238E44AB0082C69C /* KeyConfigPair.swift in Sources */,
+				80D9BF64252B5DEE00FFB19D /* SSHCommon.swift in Sources */,
 				D2FCB4DD2339F9DB00A88108 /* UIScrollView+Paging.swift in Sources */,
 				C989E5571D6CC4A1003E0079 /* BKFontCreateViewController.m in Sources */,
 				D241CBD723040734003D64A5 /* KBKeyShape.swift in Sources */,
@@ -2150,6 +2162,25 @@
 			defaultConfigurationName = Debug;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		8083E20B252723FA00B8CE60 /* XCRemoteSwiftPackageReference "swift-argument-parser" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/apple/swift-argument-parser";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 0.3.1;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		8083E20C252723FA00B8CE60 /* ArgumentParser */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 8083E20B252723FA00B8CE60 /* XCRemoteSwiftPackageReference "swift-argument-parser" */;
+			productName = ArgumentParser;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = EA0BA1831C0CC57B00719C1A /* Project object */;
 }

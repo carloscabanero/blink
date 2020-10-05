@@ -63,6 +63,26 @@ import UIKit
   class var supportsSecureCoding: Bool { return secureCoding1 }
 }
 
+@objc class SFTPParams: SessionParams {
+  /// Used later on in `SFTPCommand`
+  @objc var command: String? = nil
+  
+  override init() {
+    super.init()
+  }
+  
+  override func encode(with coder: NSCoder) {
+    super.encode(with: coder)
+  }
+  
+  required init?(coder: NSCoder) {
+    fatalError("init(coder:) has not been implemented")
+  }
+  
+  static var secureCoding2 = true
+  override class var supportsSecureCoding: Bool { secureCoding2 }
+}
+
 @objc class MoshParams: SessionParams {
   @objc var ip: String? = nil
   @objc var port: String? = nil

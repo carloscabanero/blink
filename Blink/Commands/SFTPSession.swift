@@ -29,26 +29,100 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-
 import Foundation
 import Combine
 import SSH
+import ArgumentParser
 
-@objc class SFTPSession: Session {
+struct SFTPCommand: ParsableCommand {
+
+  @Option(name:  [.customLong("port"), .customShort("P")],
+          default: "22",
+          help: "Specifies the port to connect to on the remote host.")
+  var port: String
   
-  let usageFormat = """
+  @Option(name:  [.customShort("i")],
+          default: nil,
+          help: "Identity file used to authenticate")
+  var identityFile: String?
+
+  @Argument(help: "user@]host[:file ...]")
+  var host: String
+  
+  
+
+  @Argument(help: "Specifies local path where the destination file will be stored")
+  var localPath: String
+
+  static let configuration = CommandConfiguration(abstract: """
   usage: sftp [-46aCfpqrv] [-B buffer_size] [-b batchfile] [-c cipher]
           [-D sftp_server_path] [-F ssh_config] [-i identity_file]
           [-J destination] [-l limit] [-o ssh_option] [-P port]
           [-R num_requests] [-S program] [-s subsystem | sftp_server]
           destination
-  """
+  """)
+
+  var username: String {
+    get {
+      
+      if host.contains("@") {
+        return host.components(separatedBy: "@")[0]
+      } else {
+        guard let hostName = SSHCommons.getHosts(by: host.components(separatedBy: ":")[0]) else {
+          return ""
+        }
+        
+        return hostName.user!
+      }
+    }
+  }
+
+  var remoteHost: String {
+    get {
+      
+      if host.contains("@") {
+        return host.components(separatedBy: "@")[1].components(separatedBy: ":")[0]
+      } else {
+        guard let hostName = SSHCommons.getHosts(by: host.components(separatedBy: ":")[0]) else {
+          return ""
+        }
+        
+        return hostName.hostName!
+      }
+    }
+  }
+
+  var remotePath: String {
+    get {
+      if host.contains("@") {
+        return host.components(separatedBy: "@")[1].components(separatedBy: ":")[1]
+      } else {
+        return host
+          .components(separatedBy: ":")[1]
+      }
+    }
+  }
+
+  func run() throws {
+    
+  }
+
+  func validate() throws {
+    
+  }
+}
+
+
+@objc class SFTPSession: Session {
   
   var cancellable: AnyCancellable?
   
   var _stream: TermStream?
   var _device: TermDevice?
   var _sessionParams: SessionParams?
+  
+  var startDate: Date?
+  var previousIntervalDate: Date?
   
   var username: String?
   var password: String?
@@ -57,15 +131,21 @@ import SSH
   var config: SSHClientConfig?
   var connection: SSH.SSHClient?
   
-  var t: Thread?
+  /// Size in bytes of the latest downloaded chunk
+  var latestChunkSize: Int = 0
+  /// Seconds of difference between downloaded chunks
+  var timeDiff: TimeInterval = 1
+  
+  var sftpCommand: SFTPCommand?
 
+  var latestConsolePrintedMessage: String = ""
+  
   let relativeDateFormatter: RelativeDateTimeFormatter = {
     let formatter = RelativeDateTimeFormatter()
     formatter.unitsStyle = .full
     return formatter
   }()
 
-  
   let byteCountFormatter: ByteCountFormatter = {
     let formatter = ByteCountFormatter()
     formatter.allowedUnits = .useAll
@@ -75,152 +155,214 @@ import SSH
     return formatter
   }()
   
-  var doingOperation: Bool = false
+  var rLoop: RunLoop?
   
   override init!(device: TermDevice!, andParams params: SessionParams!) {
     super.init(device: device, andParams: params)
     
-    _stream = device.stream.duplicate()
-    _device = device
-    _sessionParams = params
+    self._stream = device.stream.duplicate()
+    self._device = device
+    self._sessionParams = params
   }
   
   override func main(_ argc: Int32, argv: UnsafeMutablePointer<UnsafeMutablePointer<Int8>?>!) -> Int32 {
-    // TODO: Process args
-    // TODO: See Swift CLI apps command parsing
-    username = "javierdemartin"
-    password = "queiles"
-    //    path = "/Users/javierdemartin/TestSftpFile.dat"
-    path = "/Users/javierdemartin/xcode.xip"
-    host = "192.168.86.22"
     
-    self.config = SSHClientConfig(user: username!, authMethods: [AuthPassword(with: password!)])
-    
-    startDownload()
-    
-    /// TODO: See threads & RunLoops
-    while (doingOperation) {
-      RunLoop.current.run(mode: .default, before: Date.distantFuture)
+    do {
+      
+      sftpCommand = try SFTPCommand.parse((_sessionParams as! SFTPParams).command?.components(separatedBy: " "))
+      
+    } catch {
+      logConsole(message: error.localizedDescription)
+      return -1;
     }
+    
+    var authMethods: [AuthMethod] = []
+    
+    /// Publickey authentication
+    if let identityFile = sftpCommand?.identityFile {
+      guard let privateKey = SSHCommons.getPrivateKey(from: identityFile) else { return -1 }
+      
+      authMethods.append(AuthPublicKey(privateKey: privateKey))
+    }
+    /// Password authentication
+    else {
+      
+      let requestAnswers: AuthKeyboardInteractive.RequestAnswersCb = { prompt in
+          dump(prompt)
+          
+          var answers: [String] = []
+        
+        if prompt.userPrompts.count > 0 {
+          for question in prompt.userPrompts {
+            
+            if let input = self._device?.readline(question.prompt, secure: true) {
+              answers.append(input)
+            }
+          }
+          
+        } else {
+          answers = []
+        }
+          
+          return Just(answers).setFailureType(to: Error.self).eraseToAnyPublisher()
+      }
+      
+      authMethods.append(AuthKeyboardInteractive(requestAnswers: requestAnswers))
+    }
+
+    
+    self.config = SSHClientConfig(user: sftpCommand!.username, authMethods: authMethods)
+
+    startDownload()
+    CFRunLoopRun()
 
     return 0;
   }
   
   override func handleControl(_ control: String!) -> Bool {
     
-    logConsole(message: "", sameLine: false)
-    
     super.handleControl(control)
     
+    logConsole(message: "\n", sameLine: false)
+    
+    // Handle Ctrl-C key press
     if (control == "\u{03}") {
-      doingOperation = false
       self.cancellable?.cancel()
+      cancellable = nil
+      _stream?.close()
+      
+      /// Cancel the RunLoop of the executed command
+      if let cfRunLoop = rLoop?.getCFRunLoop() {
+        CFRunLoopStop(cfRunLoop)
+      } else {
+        return false
+      }
     }
     
     return true
   }
   
-  func randomString(length: Int) -> String {
-    let letters = " "
-    return String((0..<length).map{ _ in letters.randomElement()! })
-  }
-  
-  var previousMessage = ""
-  
-  var startDate: Date?
-  
-  func logConsole(message: String, sameLine: Bool = true) {
+  /// Log a message to the console
+  func logConsole(message: String, sameLine: Bool = false) {
     
-    
+    guard let outputStream = self._stream?.out else {
+      return
+    }
     
     var messageToPrint = (message + "\r")
     
     if !sameLine {
       messageToPrint += "\n"
+    } else if sameLine {
+      fputs((latestConsolePrintedMessage + "\r").cString(using: .utf8), outputStream)
+      // Print "fake" spaces to delete previous output
+      fputs((String(repeating: " ", count: latestConsolePrintedMessage.count + 2) + "\r").cString(using: .utf8), outputStream)
     }
     
-    fputs((randomString(length: previousMessage.count + 2)).cString(using: .utf8), self._stream!.out)
-    fputs("\r".cString(using: .utf8), self._stream!.out)
-    
-    
-    fputs(messageToPrint.cString(using: .utf8), self._stream!.out)
-    
-    previousMessage = messageToPrint
-    
+    fputs(messageToPrint.cString(using: .utf8), outputStream)
+    latestConsolePrintedMessage = messageToPrint
   }
   
   @objc func startDownload() {
     
+    guard let sftpCommand = sftpCommand else { return }
+    
     var sftp: SFTPClient?
-    let buffer = MemoryBuffer(fast: true)
+    let buffer = MemoryBuffer(fast: true, localPath: sftpCommand.localPath)
     var totalWritten = 0
     
-    doingOperation = true
+    rLoop = RunLoop.current
     
-    self.cancellable = SSHClient.dial(host!, with: config!)
+    self.cancellable = SSHClient.dial(sftpCommand.remoteHost, with: config!)
       .flatMap() { conn -> AnyPublisher<SFTPClient, Error> in
-        self.logConsole(message: "Connected to \(self.host!)", sameLine: false)
+        self.logConsole(message: "Connected to \(sftpCommand.remoteHost)", sameLine: false)
         self.connection = conn
         return conn.requestSFTP()
       }.flatMap() { client -> AnyPublisher<SFTPFile, Error> in
         sftp = client
-        self.logConsole(message: "Fetching \(self.path!) to \(BlinkPaths.iCloudDriveDocuments()! + "/xcode.xip")", sameLine: false)
-        return client.open(self.path!)
+        self.logConsole(message: "Fetching \(sftpCommand.remotePath) to \(BlinkPaths.iCloudDriveDocuments()! + "/" + sftpCommand.localPath)", sameLine: false)
+        return client.open(self.sftpCommand!.remotePath)
       }.flatMap() { file -> AnyPublisher<Int, Error> in
         self.startDate = Date()
+        self.previousIntervalDate = Date()
         return file.writeTo(buffer)
       }.sink(receiveCompletion: { completion in
+
         switch completion {
         case .finished:
-          self.logConsole(message: "Finished download of \(self.path!)", sameLine: false)
+          self.logConsole(message: "\nFinished download of \(sftpCommand.remotePath)", sameLine: false)
         case .failure(let error):
-          // Problem here is we can have both SFTP and SSHError
           self.logConsole(message: "\(error.localizedDescription)", sameLine: false)
         }
-        
-        self.doingOperation = false
-        
-        self.logConsole(message: "Connection closed.")
+
+        if let cfRunLoop = self.rLoop?.getCFRunLoop() {
+          CFRunLoopStop(cfRunLoop)
+        }
         
       }, receiveValue: { written in
-        self.logConsole(message: "\(self.byteCountFormatter.string(fromByteCount: Int64(totalWritten))) \t\(self.relativeDateFormatter.localizedString(for: self.startDate ?? Date(), relativeTo: Date()))")
+
         totalWritten += written
+
+        self.timeDiff = (Date().timeIntervalSince(self.previousIntervalDate!))
+        self.latestChunkSize = written
+        self.previousIntervalDate = Date()
+
+        self.logConsole(message: "\(self.byteCountFormatter.string(fromByteCount: Int64(totalWritten)))  \(self.relativeDateFormatter.localizedString(for: self.startDate ?? Date(), relativeTo: Date()))  \(self.byteCountFormatter.string(fromByteCount: Int64(Double(self.latestChunkSize) * 1.0 / self.timeDiff)))/s", sameLine: true)
       })
   }
 }
 
+
+
 class MemoryBuffer: Writer {
   var count = 0
   let fast: Bool
-  let queue: DispatchQueue
   var data = DispatchData.empty
-  
-  init(fast: Bool) {
+
+  var outputStream: OutputStream?
+
+  var fileHandle: FileHandle?
+
+  init(fast: Bool, localPath: String) {
     self.fast = fast
-    self.queue = DispatchQueue(label: "test")
+
+    let pathString = BlinkPaths.iCloudDriveDocuments()! + "/" + localPath //URL(fileURLWithPath: )
+    let pathUrl = URL(fileURLWithPath: pathString)
+
+    guard let outputStream = OutputStream(url: pathUrl, append: true) else {
+      fatalError()
+    }
+
+    self.outputStream = outputStream
+
+    // Create file if it doesn't exist
+    if !FileManager.default.fileExists(atPath: pathString) {
+      FileManager.default.createFile(atPath: pathString, contents: nil, attributes: nil)
+    }
+
+    fileHandle = try! FileHandle(forWritingTo: pathUrl)
+    fileHandle!.seekToEndOfFile()
   }
-  
+
   func write(_ buf: DispatchData, max length: Int) -> AnyPublisher<Int, Error> {
+
+    fileHandle?.write((buf as AnyObject as! Data))
+
     return Just(buf.count).map { val in
       self.count += buf.count
-      
-      self.data.append(buf)
-      
-      do {
-        /// TODO: check hashes
-        try (self.data as AnyObject as! Data).write(to: URL(fileURLWithPath: BlinkPaths.iCloudDriveDocuments()! + "/xcode.xip"))
-      } catch {
-        print(error.localizedDescription)
-      }
-      
-      
+
       if !self.fast {
         usleep(1000)
       }
+
       print("==== Wrote \(self.count)")
-      
-      print("Done")
+
       return val
     }.mapError { $0 as Error }.eraseToAnyPublisher()
   }
+
+  func saveFile() {
+    fileHandle?.closeFile()
+  }
 }
+
