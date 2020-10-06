@@ -125,6 +125,7 @@
 	</dict>
 	<key>NSUserActivityTypes</key>
 	<array>
+		<string>DownloadFileWithSFTPIntent</string>
 		<string>com.blink.cmdline</string>
 		<string>com.blink.session</string>
 	</array>

@@ -287,6 +287,8 @@ struct SFTPCommand: ParsableCommand {
         self.previousIntervalDate = Date()
         return file.writeTo(buffer)
       }.sink(receiveCompletion: { completion in
+        
+        buffer.saveFile()
 
         switch completion {
         case .finished:
@@ -311,58 +313,3 @@ struct SFTPCommand: ParsableCommand {
       })
   }
 }
-
-
-
-class MemoryBuffer: Writer {
-  var count = 0
-  let fast: Bool
-  var data = DispatchData.empty
-
-  var outputStream: OutputStream?
-
-  var fileHandle: FileHandle?
-
-  init(fast: Bool, localPath: String) {
-    self.fast = fast
-
-    let pathString = BlinkPaths.iCloudDriveDocuments()! + "/" + localPath //URL(fileURLWithPath: )
-    let pathUrl = URL(fileURLWithPath: pathString)
-
-    guard let outputStream = OutputStream(url: pathUrl, append: true) else {
-      fatalError()
-    }
-
-    self.outputStream = outputStream
-
-    // Create file if it doesn't exist
-    if !FileManager.default.fileExists(atPath: pathString) {
-      FileManager.default.createFile(atPath: pathString, contents: nil, attributes: nil)
-    }
-
-    fileHandle = try! FileHandle(forWritingTo: pathUrl)
-    fileHandle!.seekToEndOfFile()
-  }
-
-  func write(_ buf: DispatchData, max length: Int) -> AnyPublisher<Int, Error> {
-
-    fileHandle?.write((buf as AnyObject as! Data))
-
-    return Just(buf.count).map { val in
-      self.count += buf.count
-
-      if !self.fast {
-        usleep(1000)
-      }
-
-      print("==== Wrote \(self.count)")
-
-      return val
-    }.mapError { $0 as Error }.eraseToAnyPublisher()
-  }
-
-  func saveFile() {
-    fileHandle?.closeFile()
-  }
-}
-
