@@ -34,7 +34,7 @@ import Foundation
 import Combine
 import SSH
 
-class MemoryBuffer: Writer {
+class DownloadedFileBuffer: Writer {
   
   let fast: Bool
   
@@ -42,6 +42,7 @@ class MemoryBuffer: Writer {
   var fileHandle = FileHandle()
 
   init(fast: Bool, localPath: String) {
+    
     self.fast = fast
 
     let pathString = BlinkPaths.iCloudDriveDocuments()! + "/" + localPath //URL(fileURLWithPath: )

@@ -51,9 +51,16 @@ class DownloadFileWithSFTP: NSObject, DownloadFileWithSFTPIntentHandling {
     let config = SSHClientConfig(user: intent.username!, authMethods: [passwordAuth])
     
     var sftp: SFTPClient?
-    let buffer = MemoryBuffer(fast: true, localPath: intent.localPath!)
+    let buffer = DownloadedFileBuffer(fast: true, localPath: intent.localPath!)
     
-    var response: DownloadFileWithSFTPIntentResponse = DownloadFileWithSFTPIntentResponse.failure(downloadedPath: intent.localPath!)
+    let pathString = BlinkPaths.iCloudDriveDocuments()! + "/" + intent.localPath! //URL(fileURLWithPath: )filePath
+    let pathUrl = URL(fileURLWithPath: pathString)
+    
+    /// Modify the URL to return a x-callback-url accesible to open the downloaded file in the Files.app
+    var pathUrlComponents = URLComponents(url: pathUrl, resolvingAgainstBaseURL: false)
+    pathUrlComponents?.scheme = "shareddocuments"
+    
+    var response: DownloadFileWithSFTPIntentResponse = DownloadFileWithSFTPIntentResponse.success(downloadedPath: pathUrlComponents!.url!.absoluteString)
         
     rLoop = RunLoop.current
     
@@ -73,18 +80,17 @@ class DownloadFileWithSFTP: NSObject, DownloadFileWithSFTPIntentHandling {
         
         switch completionn {
         case .finished:
-          response = DownloadFileWithSFTPIntentResponse.success(downloadedPath: intent.localPath!)
+          response = DownloadFileWithSFTPIntentResponse.success(downloadedPath: pathUrlComponents!.url!.absoluteString)
         case .failure(let error):
-          response = DownloadFileWithSFTPIntentResponse.failure(downloadedPath: error.localizedDescription)
+          response = DownloadFileWithSFTPIntentResponse.failure(downloadErrorReason: error.localizedDescription)
         }
         
-        completion(response)
         
         if let cfRunLoop = self.rLoop?.getCFRunLoop() {
           CFRunLoopStop(cfRunLoop)
         }
         
-        
+        completion(response)
         
       }, receiveValue: { _ in })
     

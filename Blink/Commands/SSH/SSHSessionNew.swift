@@ -29,31 +29,39 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
+
 import Foundation
 import Combine
 import SSH
 import ArgumentParser
 
-struct SFTPCommand: ParsableCommand {
-
+struct SSHCommand: ParsableCommand {
+  
   @Option(name:  [.customLong("port"), .customShort("P")],
           default: "22",
           help: "Specifies the port to connect to on the remote host.")
   var port: String
   
+  @Option(name:  [.customShort("v")],
+          help: "Verbose mode. Causes ssh to print debugging messages about its progress. This is helpful in debugging connection, authentication, and configuration problems. Multiple -v options increase the verbosity. The maximum is 3.")
+  var verboseLevelMinimum: String?
+  
+  @Option(name:  [.customLong("vv")],
+          help: "Verbose mode. Causes ssh to print debugging messages about its progress. This is helpful in debugging connection, authentication, and configuration problems. Multiple -v options increase the verbosity. The maximum is 3.")
+  var verboseLevelMedium: String?
+  
+  @Option(name:  [.customLong("vvv")],
+          help: "Verbose mode. Causes ssh to print debugging messages about its progress. This is helpful in debugging connection, authentication, and configuration problems. Multiple -v options increase the verbosity. The maximum is 3.")
+  var verboseLevelMaximum: String?
+  
   @Option(name:  [.customShort("i")],
           default: nil,
-          help: "Identity file used to authenticate")
+          help: "Selects a file from which the identity (private key) for RSA or DSA authentication is read. The default is ~/.ssh/identity for protocol version 1, and ~/.ssh/id_rsa and ~/.ssh/id_dsa for protocol version 2. Identity files may also be specified on a per-host basis in the configuration file. It is possible to have multiple -i options (and multiple identities specified in configuration files).")
   var identityFile: String?
-
+  
   @Argument(help: "user@]host[:file ...]")
   var host: String
   
-  
-
-  @Argument(help: "Specifies local path where the destination file will be stored")
-  var localPath: String
-
   static let configuration = CommandConfiguration(abstract: """
   usage: sftp [-46aCfpqrv] [-B buffer_size] [-b batchfile] [-c cipher]
           [-D sftp_server_path] [-F ssh_config] [-i identity_file]
@@ -61,7 +69,7 @@ struct SFTPCommand: ParsableCommand {
           [-R num_requests] [-S program] [-s subsystem | sftp_server]
           destination
   """)
-
+  
   var username: String {
     get {
       
@@ -76,7 +84,7 @@ struct SFTPCommand: ParsableCommand {
       }
     }
   }
-
+  
   var remoteHost: String {
     get {
       
@@ -91,73 +99,52 @@ struct SFTPCommand: ParsableCommand {
       }
     }
   }
-
-  var remotePath: String {
-    get {
-      if host.contains("@") {
-        return host.components(separatedBy: "@")[1].components(separatedBy: ":")[1]
-      } else {
-        return host
-          .components(separatedBy: ":")[1]
-      }
-    }
-  }
-
+  
   func run() throws {
     
   }
-
+  
   func validate() throws {
+    
+    if host == nil || host.count == 0 {
+      throw  ValidationError("Missing '<host>'")
+    }
     
   }
 }
 
+struct BKCommandError: Error {
+    let message: String
 
-@objc class SFTPSession: Session {
+    init(_ message: String) {
+        self.message = message
+    }
+
+    public var localizedDescription: String {
+        return message
+    }
+}
+
+@objc class SSHSessionNew: Session {
   
   var cancellable: AnyCancellable?
-  
   var _stream: TermStream?
   var _device: TermDevice?
   var _sessionParams: SessionParams?
   
-  var startDate: Date?
-  var previousIntervalDate: Date?
+  var rLoop: RunLoop?
   
-  var username: String?
-  var password: String?
-  var path: String?
-  var host: String?
   var config: SSHClientConfig?
   var connection: SSH.SSHClient?
   
-  /// Size in bytes of the latest downloaded chunk
-  var latestChunkSize: Int = 0
-  /// Seconds of difference between downloaded chunks
-  var timeDiff: TimeInterval = 1
+  var sshCommand: SSHCommand?
   
-  var sftpCommand: SFTPCommand?
-
   var latestConsolePrintedMessage: String = ""
   
-  let relativeDateFormatter: RelativeDateTimeFormatter = {
-    let formatter = RelativeDateTimeFormatter()
-    formatter.unitsStyle = .full
-    return formatter
-  }()
-
-  let byteCountFormatter: ByteCountFormatter = {
-    let formatter = ByteCountFormatter()
-    formatter.allowedUnits = .useAll
-    formatter.countStyle = .file
-    formatter.includesUnit = true
-    formatter.isAdaptive = true
-    return formatter
-  }()
-  
-  var rLoop: RunLoop?
+  var authMethods: [AuthMethod] = []
   
   override init!(device: TermDevice!, andParams params: SessionParams!) {
+    
     super.init(device: device, andParams: params)
     
     self._stream = device.stream.duplicate()
@@ -165,36 +152,24 @@ struct SFTPCommand: ParsableCommand {
     self._sessionParams = params
   }
   
-  override func main(_ argc: Int32, argv: UnsafeMutablePointer<UnsafeMutablePointer<Int8>?>!) -> Int32 {
-    
-    do {
-      
-      sftpCommand = try SFTPCommand.parse((_sessionParams as! SFTPParams).command?.components(separatedBy: " "))
-      
-    } catch {
-      logConsole(message: error.localizedDescription)
-      return -1;
-    }
-    
-    var authMethods: [AuthMethod] = []
+  func parseAuthMethods() -> AuthMethod? {
     
     /// Publickey authentication
-    if let identityFile = sftpCommand?.identityFile {
-      guard let privateKey = SSHCommons.getPrivateKey(from: identityFile) else { return -1 }
+    if let identityFile = sshCommand?.identityFile {
       
-      authMethods.append(AuthPublicKey(privateKey: privateKey))
+      guard let privateKey = SSHCommons.getPrivateKey(from: identityFile) else { return nil }
+      
+      return AuthPublicKey(privateKey: privateKey)
     }
     /// Password authentication
     else {
-      
       let requestAnswers: AuthKeyboardInteractive.RequestAnswersCb = { prompt in
-          dump(prompt)
-          
-          var answers: [String] = []
+        dump(prompt)
+        
+        var answers: [String] = []
         
         if prompt.userPrompts.count > 0 {
           for question in prompt.userPrompts {
-            
             if let input = self._device?.readline(question.prompt, secure: true) {
               answers.append(input)
             }
@@ -207,16 +182,55 @@ struct SFTPCommand: ParsableCommand {
         return Just(answers).setFailureType(to: Error.self).eraseToAnyPublisher()
       }
       
-      authMethods.append(AuthKeyboardInteractive(requestAnswers: requestAnswers))
+      return AuthKeyboardInteractive(requestAnswers: requestAnswers)
+    }
+  }
+  
+  override func main(_ argc: Int32, argv: UnsafeMutablePointer<UnsafeMutablePointer<Int8>?>!) -> Int32 {
+    
+    do {
+      
+      _stream.out
+      
+      sshCommand = try SSHCommand.parse((_sessionParams as! SFTPParams).command?.components(separatedBy: " "))
+      
+    } catch {
+      logConsole(message: (error as NSError).description)
+      
+      return -1
     }
     
+    if let authMethod = parseAuthMethods() {
+      authMethods.append(authMethod)
+    } else {
+      
+    }
     
-    self.config = SSHClientConfig(user: sftpCommand!.username, authMethods: authMethods)
+    var connection: SSH.SSHClient?
+    
+    rLoop = RunLoop.current
+    
+    self.config = SSHClientConfig(user: sshCommand!.username, authMethods: authMethods)
 
-    startDownload()
+    cancellable = SSHClient.dial(sshCommand!.remoteHost, with: config!)
+      .sink(receiveCompletion: { completion in
+        switch completion {
+        case .finished:
+          break
+        case .failure(let error):
+          self.logConsole(message: error.localizedDescription)
+          if let cfRunLoop = self.rLoop?.getCFRunLoop() {
+            CFRunLoopStop(cfRunLoop)
+          }
+        }
+      }, receiveValue: { conn in
+        connection = conn
+      })
+
+    
     CFRunLoopRun()
-
-    return 0;
+    
+    return 0
   }
   
   override func handleControl(_ control: String!) -> Bool {
@@ -242,7 +256,6 @@ struct SFTPCommand: ParsableCommand {
     return true
   }
   
-  /// Log a message to the console
   func logConsole(message: String, sameLine: Bool = false) {
     
     guard let outputStream = self._stream?.out else {
@@ -261,55 +274,5 @@ struct SFTPCommand: ParsableCommand {
     
     fputs(messageToPrint.cString(using: .utf8), outputStream)
     latestConsolePrintedMessage = messageToPrint
-  }
-  
-  @objc func startDownload() {
-    
-    guard let sftpCommand = sftpCommand else { return }
-    
-    var sftp: SFTPClient?
-    let buffer = DownloadedFileBuffer(fast: true, localPath: sftpCommand.localPath)
-    var totalWritten = 0
-    
-    rLoop = RunLoop.current
-    
-    self.cancellable = SSHClient.dial(sftpCommand.remoteHost, with: config!)
-      .flatMap() { conn -> AnyPublisher<SFTPClient, Error> in
-        self.logConsole(message: "Connected to \(sftpCommand.remoteHost)", sameLine: false)
-        self.connection = conn
-        return conn.requestSFTP()
-      }.flatMap() { client -> AnyPublisher<SFTPFile, Error> in
-        sftp = client
-        self.logConsole(message: "Fetching \(sftpCommand.remotePath) to \(BlinkPaths.iCloudDriveDocuments()! + "/" + sftpCommand.localPath)", sameLine: false)
-        return client.open(self.sftpCommand!.remotePath)
-      }.flatMap() { file -> AnyPublisher<Int, Error> in
-        self.startDate = Date()
-        self.previousIntervalDate = Date()
-        return file.writeTo(buffer)
-      }.sink(receiveCompletion: { completion in
-        
-        buffer.saveFile()
-
-        switch completion {
-        case .finished:
-          self.logConsole(message: "\nFinished download of \(sftpCommand.remotePath)", sameLine: false)
-        case .failure(let error):
-          self.logConsole(message: "\(error.localizedDescription)", sameLine: false)
-        }
-
-        if let cfRunLoop = self.rLoop?.getCFRunLoop() {
-          CFRunLoopStop(cfRunLoop)
-        }
-        
-      }, receiveValue: { written in
-
-        totalWritten += written
-        
-        self.timeDiff = (Date().timeIntervalSince(self.previousIntervalDate!))
-        self.latestChunkSize = written
-        self.previousIntervalDate = Date()
-
-        self.logConsole(message: "\(self.byteCountFormatter.string(fromByteCount: Int64(totalWritten)))  \(self.relativeDateFormatter.localizedString(for: self.startDate ?? Date(), relativeTo: Date()))  \(self.byteCountFormatter.string(fromByteCount: Int64(Double(self.latestChunkSize) * 1.0 / self.timeDiff)))/s", sameLine: true)
-      })
   }
 }

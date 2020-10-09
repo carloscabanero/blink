@@ -45,8 +45,9 @@
 		8026D82A252C7FB70029C080 /* BlinkPaths.m in Sources */ = {isa = PBXBuildFile; fileRef = D23E142A20A970C3000FCF5C /* BlinkPaths.m */; };
 		8026D847252C8BFE0029C080 /* DownloadFileWithSFTP.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8026D846252C8BFE0029C080 /* DownloadFileWithSFTP.swift */; };
 		8026D84D252C9F900029C080 /* CloudKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = B700AED71DD0F2C200100EBF /* CloudKit.framework */; };
-		8026D855252CA94A0029C080 /* MemoryBuffer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8026D854252CA94A0029C080 /* MemoryBuffer.swift */; };
-		8026D856252CA94A0029C080 /* MemoryBuffer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8026D854252CA94A0029C080 /* MemoryBuffer.swift */; };
+		8026D855252CA94A0029C080 /* DownloadedFileBuffer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8026D854252CA94A0029C080 /* DownloadedFileBuffer.swift */; };
+		8026D856252CA94A0029C080 /* DownloadedFileBuffer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8026D854252CA94A0029C080 /* DownloadedFileBuffer.swift */; };
+		802D4EE2252DFA0E0067FFCA /* BKOutputStream.swift in Sources */ = {isa = PBXBuildFile; fileRef = 802D4EE1252DFA0E0067FFCA /* BKOutputStream.swift */; };
 		8054AE54252C6783000E41C3 /* BlinkIntents.intentdefinition in Sources */ = {isa = PBXBuildFile; fileRef = 8054AE53252C6782000E41C3 /* BlinkIntents.intentdefinition */; };
 		8083E20D252723FA00B8CE60 /* ArgumentParser in Frameworks */ = {isa = PBXBuildFile; productRef = 8083E20C252723FA00B8CE60 /* ArgumentParser */; };
 		80AEDE26252C73890006F939 /* Intents.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 8054AE3E252C66D3000E41C3 /* Intents.framework */; };
@@ -55,6 +56,7 @@
 		80D9BF64252B5DEE00FFB19D /* SSHCommon.swift in Sources */ = {isa = PBXBuildFile; fileRef = 80D9BF63252B5DEE00FFB19D /* SSHCommon.swift */; };
 		80E36A87252CBF7C00DE724C /* SSH.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = 80D095642525DA7F00E38173 /* SSH.xcframework */; };
 		80E36A88252CBF7C00DE724C /* SSH.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 80D095642525DA7F00E38173 /* SSH.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		80E94F5F252D97CF00A7AE71 /* SSHSessionNew.swift in Sources */ = {isa = PBXBuildFile; fileRef = 80E94F5E252D97CF00A7AE71 /* SSHSessionNew.swift */; };
 		85A34307200A837A009324F1 /* webfontloader.js in Resources */ = {isa = PBXBuildFile; fileRef = 85A34303200A837A009324F1 /* webfontloader.js */; };
 		85A34309200A8FAF009324F1 /* term.css in Resources */ = {isa = PBXBuildFile; fileRef = 85A34308200A8FAF009324F1 /* term.css */; };
 		B700AED81DD0F2C200100EBF /* CloudKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = B700AED71DD0F2C200100EBF /* CloudKit.framework */; };
@@ -461,12 +463,14 @@
 		8026D82C252C7FF50029C080 /* Blink-bridge.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "Blink-bridge.h"; sourceTree = "<group>"; };
 		8026D846252C8BFE0029C080 /* DownloadFileWithSFTP.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DownloadFileWithSFTP.swift; sourceTree = "<group>"; };
 		8026D84B252C9F800029C080 /* BlinkIntents.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = BlinkIntents.entitlements; sourceTree = "<group>"; };
-		8026D854252CA94A0029C080 /* MemoryBuffer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MemoryBuffer.swift; sourceTree = "<group>"; };
+		8026D854252CA94A0029C080 /* DownloadedFileBuffer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DownloadedFileBuffer.swift; sourceTree = "<group>"; };
+		802D4EE1252DFA0E0067FFCA /* BKOutputStream.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BKOutputStream.swift; sourceTree = "<group>"; };
 		8054AE3E252C66D3000E41C3 /* Intents.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Intents.framework; path = System/Library/Frameworks/Intents.framework; sourceTree = SDKROOT; };
 		8054AE53252C6782000E41C3 /* BlinkIntents.intentdefinition */ = {isa = PBXFileReference; lastKnownFileType = file.intentdefinition; path = BlinkIntents.intentdefinition; sourceTree = "<group>"; };
 		80D095642525DA7F00E38173 /* SSH.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; path = SSH.xcframework; sourceTree = "<group>"; };
 		80D0956E2525DAB300E38173 /* SFTPSession.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SFTPSession.swift; sourceTree = "<group>"; };
 		80D9BF63252B5DEE00FFB19D /* SSHCommon.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SSHCommon.swift; sourceTree = "<group>"; };
+		80E94F5E252D97CF00A7AE71 /* SSHSessionNew.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SSHSessionNew.swift; sourceTree = "<group>"; };
 		85A34303200A837A009324F1 /* webfontloader.js */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.javascript; path = webfontloader.js; sourceTree = "<group>"; };
 		85A34308200A8FAF009324F1 /* term.css */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.css; path = term.css; sourceTree = "<group>"; };
 		B700AED71DD0F2C200100EBF /* CloudKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CloudKit.framework; path = System/Library/Frameworks/CloudKit.framework; sourceTree = SDKROOT; };
@@ -1006,9 +1010,18 @@
 			isa = PBXGroup;
 			children = (
 				80D0956E2525DAB300E38173 /* SFTPSession.swift */,
-				8026D854252CA94A0029C080 /* MemoryBuffer.swift */,
+				8026D854252CA94A0029C080 /* DownloadedFileBuffer.swift */,
 			);
 			path = SFTP;
+			sourceTree = "<group>";
+		};
+		802D4EDF252DF9E10067FFCA /* SSH */ = {
+			isa = PBXGroup;
+			children = (
+				80E94F5E252D97CF00A7AE71 /* SSHSessionNew.swift */,
+				802D4EE1252DFA0E0067FFCA /* BKOutputStream.swift */,
+			);
+			path = SSH;
 			sourceTree = "<group>";
 		};
 		B75112C71DE4A7680040C693 /* UserConfiguration */ = {
@@ -1448,6 +1461,7 @@
 				D2F330D520A6F4F50074ADD7 /* history.m */,
 				D2A90ADB20D277DF0073BF3D /* ssh.m */,
 				D23742C921106ADF00366359 /* bench.m */,
+				802D4EDF252DF9E10067FFCA /* SSH */,
 				D2179F2E2136DBC600B0850A /* geo.m */,
 				D2C8D30921B544B100AC39C3 /* say.m */,
 				D2AC674A22031EE600177BC5 /* openurl.h */,
@@ -1780,7 +1794,7 @@
 			files = (
 				80085C89252C656400F291E8 /* IntentHandler.swift in Sources */,
 				8026D847252C8BFE0029C080 /* DownloadFileWithSFTP.swift in Sources */,
-				8026D856252CA94A0029C080 /* MemoryBuffer.swift in Sources */,
+				8026D856252CA94A0029C080 /* DownloadedFileBuffer.swift in Sources */,
 				80AEDE38252C766B0006F939 /* BlinkIntents.intentdefinition in Sources */,
 				8026D82A252C7FB70029C080 /* BlinkPaths.m in Sources */,
 			);
@@ -1867,7 +1881,7 @@
 				D2C0F31020E64FAD00E48F3A /* SSHClientConnectedChannel.m in Sources */,
 				D2071B86215135A9000156D7 /* openssl-compat.c in Sources */,
 				D241CBDC23040734003D64A5 /* KBKeyViewVertical2.swift in Sources */,
-				8026D855252CA94A0029C080 /* MemoryBuffer.swift in Sources */,
+				8026D855252CA94A0029C080 /* DownloadedFileBuffer.swift in Sources */,
 				D2C24423238E44AB0082C69C /* KBWebView.swift in Sources */,
 				D2C24417238E44AB0082C69C /* KeyConfig.swift in Sources */,
 				D28F301A21AD8A6B00E5259F /* DeviceInfo.m in Sources */,
@@ -1896,6 +1910,7 @@
 				D2F330D620A6F4F50074ADD7 /* history.m in Sources */,
 				D2EFE1F520B7FAFC0087888B /* link_files.m in Sources */,
 				D2C24418238E44AB0082C69C /* KBConfigView.swift in Sources */,
+				80E94F5F252D97CF00A7AE71 /* SSHSessionNew.swift in Sources */,
 				D2F330CA20A6CB840074ADD7 /* help.m in Sources */,
 				D2A90AE220D277E00073BF3D /* ssh.m in Sources */,
 				D241CBD223040734003D64A5 /* KBDevice.swift in Sources */,
@@ -1941,6 +1956,7 @@
 				80D9BF64252B5DEE00FFB19D /* SSHCommon.swift in Sources */,
 				D2FCB4DD2339F9DB00A88108 /* UIScrollView+Paging.swift in Sources */,
 				C989E5571D6CC4A1003E0079 /* BKFontCreateViewController.m in Sources */,
+				802D4EE2252DFA0E0067FFCA /* BKOutputStream.swift in Sources */,
 				D241CBD723040734003D64A5 /* KBKeyShape.swift in Sources */,
 				D2C24420238E44AB0082C69C /* Chevron.swift in Sources */,
 				D2AD9ADE22DB80DE00861F66 /* SessionRegistry.swift in Sources */,
@@ -2044,7 +2060,7 @@
 					"$(inherited)",
 				);
 				INFOPLIST_FILE = BlinkIntents/Info.plist;
-				IPHONEOS_DEPLOYMENT_TARGET = 13.2;
+				IPHONEOS_DEPLOYMENT_TARGET = 14.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -2085,7 +2101,7 @@
 				ENABLE_BITCODE = NO;
 				GCC_C_LANGUAGE_STANDARD = gnu11;
 				INFOPLIST_FILE = BlinkIntents/Info.plist;
-				IPHONEOS_DEPLOYMENT_TARGET = 13.2;
+				IPHONEOS_DEPLOYMENT_TARGET = 14.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -2302,7 +2318,7 @@
 				);
 				HEADER_SEARCH_PATHS = $SOURCE_ROOT/Frameworks/include;
 				INFOPLIST_FILE = Blink/Info.plist;
-				IPHONEOS_DEPLOYMENT_TARGET = 13.2;
+				IPHONEOS_DEPLOYMENT_TARGET = 14.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -2347,7 +2363,7 @@
 				GCC_PREPROCESSOR_DEFINITIONS = "";
 				HEADER_SEARCH_PATHS = $SOURCE_ROOT/Frameworks/include;
 				INFOPLIST_FILE = Blink/Info.plist;
-				IPHONEOS_DEPLOYMENT_TARGET = 13.2;
+				IPHONEOS_DEPLOYMENT_TARGET = 14.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
