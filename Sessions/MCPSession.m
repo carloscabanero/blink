@@ -176,11 +176,13 @@
       return NO;
     }
   } else if ([cmd isEqualToString:@"ssh2"]) {
-    [self _runSSHWithArgs:cmdline];
+    [self _runSSH2WithArgs:cmdline];
   } else if ([cmd isEqualToString:@"ssh-copy-id"]) {
     [self _runSSHCopyIDWithArgs:cmdline];
-  }else if ([cmd isEqualToString:@"sftp"]) {
+  } else if ([cmd isEqualToString:@"sftp"]) {
     [self _runSFTPWithArgs:cmdline];
+  } else if ([cmd isEqualToString:@"ssh"]) {
+    [self _runSSHWithArgs:cmdline];
   } else {
     
     _currentCmd = cmdline;
@@ -289,10 +291,26 @@
   _childSession = nil;
 }
 
-- (void)_runSSHWithArgs:(NSString *)args
+- (void)_runSSH2WithArgs:(NSString *)args
 {
   self.sessionParams.childSessionParams = nil;
   _childSession = [[SSHSession alloc] initWithDevice:_device andParams:self.sessionParams.childSessionParams];
+  self.sessionParams.childSessionType = @"ssh";
+  [_childSession executeAttachedWithArgs:args];
+  _childSession = nil;
+}
+
+- (void)_runSSHWithArgs:(NSString *)args {
+  
+  SFTPParams * sshParams = [[SFTPParams alloc] init];
+  
+  NSString * parsedCommand = [args stringByReplacingOccurrencesOfString:@"ssh " withString:@""];
+//  parsedCommand = [args stringByReplacingOccurrencesOfString:@"ssh" withString:@""];
+  
+  sshParams.command = parsedCommand;
+  
+  self.sessionParams.childSessionParams = sshParams;
+  _childSession = [[SSHSessionNew alloc] initWithDevice:_device andParams:self.sessionParams.childSessionParams];
   self.sessionParams.childSessionType = @"ssh";
   [_childSession executeAttachedWithArgs:args];
   _childSession = nil;

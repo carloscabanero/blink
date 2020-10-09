@@ -37,38 +37,30 @@ import ArgumentParser
 
 struct SSHCommand: ParsableCommand {
   
-  @Option(name:  [.customLong("port"), .customShort("P")],
+  @Flag(name: .customShort("v"), help: "Only warnings")
+  var verbosityLogWarning = false
+  
+  @Flag(name: .customLong("vv", withSingleDash: true), help: "High level protocol infomation")
+  var verbosityLogProtocol = false
+  
+  @Flag(name: .customLong("vvv", withSingleDash: true), help: "Lower level protocol information, packet level")
+  var verbosityLogPacket = false
+  
+  @Flag(name: .customLong("vvvv", withSingleDash: true), help: "Every function path")
+  var verbosityLogFunctions = false
+  
+  @Option(name:  [.customLong("port"), .customShort("p")],
           default: "22",
           help: "Specifies the port to connect to on the remote host.")
   var port: String
   
-  @Option(name:  [.customShort("v")],
-          help: "Verbose mode. Causes ssh to print debugging messages about its progress. This is helpful in debugging connection, authentication, and configuration problems. Multiple -v options increase the verbosity. The maximum is 3.")
-  var verboseLevelMinimum: String?
-  
-  @Option(name:  [.customLong("vv")],
-          help: "Verbose mode. Causes ssh to print debugging messages about its progress. This is helpful in debugging connection, authentication, and configuration problems. Multiple -v options increase the verbosity. The maximum is 3.")
-  var verboseLevelMedium: String?
-  
-  @Option(name:  [.customLong("vvv")],
-          help: "Verbose mode. Causes ssh to print debugging messages about its progress. This is helpful in debugging connection, authentication, and configuration problems. Multiple -v options increase the verbosity. The maximum is 3.")
-  var verboseLevelMaximum: String?
-  
   @Option(name:  [.customShort("i")],
           default: nil,
-          help: "Selects a file from which the identity (private key) for RSA or DSA authentication is read. The default is ~/.ssh/identity for protocol version 1, and ~/.ssh/id_rsa and ~/.ssh/id_dsa for protocol version 2. Identity files may also be specified on a per-host basis in the configuration file. It is possible to have multiple -i options (and multiple identities specified in configuration files).")
+          help: "Identity file")
   var identityFile: String?
   
-  @Argument(help: "user@]host[:file ...]")
+  @Argument(help: "user@host")
   var host: String
-  
-  static let configuration = CommandConfiguration(abstract: """
-  usage: sftp [-46aCfpqrv] [-B buffer_size] [-b batchfile] [-c cipher]
-          [-D sftp_server_path] [-F ssh_config] [-i identity_file]
-          [-J destination] [-l limit] [-o ssh_option] [-P port]
-          [-R num_requests] [-S program] [-s subsystem | sftp_server]
-          destination
-  """)
   
   var username: String {
     get {
@@ -106,23 +98,11 @@ struct SSHCommand: ParsableCommand {
   
   func validate() throws {
     
-    if host == nil || host.count == 0 {
-      throw  ValidationError("Missing '<host>'")
-    }
+//    if host == nil || host.count == 0 {
+//      throw  ValidationError("Missing '<host>'")
+//    }
     
   }
-}
-
-struct BKCommandError: Error {
-    let message: String
-
-    init(_ message: String) {
-        self.message = message
-    }
-
-    public var localizedDescription: String {
-        return message
-    }
 }
 
 @objc class SSHSessionNew: Session {
@@ -132,14 +112,19 @@ struct BKCommandError: Error {
   var _device: TermDevice?
   var _sessionParams: SessionParams?
   
-  var rLoop: RunLoop?
+  var currentRunLoop: RunLoop?
   
   var config: SSHClientConfig?
   var connection: SSH.SSHClient?
   
   var sshCommand: SSHCommand?
   
+  /**
+   On commands printed on the same line
+   */
   var latestConsolePrintedMessage: String = ""
+  
+  var libsshLoggingCancellable: AnyCancellable?
   
   var authMethods: [AuthMethod] = []
   
@@ -154,15 +139,24 @@ struct BKCommandError: Error {
   
   func parseAuthMethods() -> AuthMethod? {
     
-    /// Publickey authentication
+    /// `ssh -i <identity_file> <host>`
+    /// Identity file is provided explicitly
     if let identityFile = sshCommand?.identityFile {
       
       guard let privateKey = SSHCommons.getPrivateKey(from: identityFile) else { return nil }
       
       return AuthPublicKey(privateKey: privateKey)
     }
+    
+    /// Getting identity file from the host
+    else if sshCommand?.identityFile == nil && sshCommand?.host != nil {
+      
+      if let host = SSHCommons.getHosts(by: sshCommand!.host), let privateKey = SSHCommons.getPrivateKey(from: host.key) {
+        return AuthPublicKey(privateKey: privateKey)
+      }
+    
     /// Password authentication
-    else {
+    } else {
       let requestAnswers: AuthKeyboardInteractive.RequestAnswersCb = { prompt in
         dump(prompt)
         
@@ -184,18 +178,38 @@ struct BKCommandError: Error {
       
       return AuthKeyboardInteractive(requestAnswers: requestAnswers)
     }
+    
+    let requestAnswers: AuthKeyboardInteractive.RequestAnswersCb = { prompt in
+      dump(prompt)
+      
+      var answers: [String] = []
+      
+      if prompt.userPrompts.count > 0 {
+        for question in prompt.userPrompts {
+          if let input = self._device?.readline(question.prompt, secure: true) {
+            answers.append(input)
+          }
+        }
+        
+      } else {
+        answers = []
+      }
+      
+      return Just(answers).setFailureType(to: Error.self).eraseToAnyPublisher()
+    }
+    
+    return AuthKeyboardInteractive(requestAnswers: requestAnswers)
   }
   
   override func main(_ argc: Int32, argv: UnsafeMutablePointer<UnsafeMutablePointer<Int8>?>!) -> Int32 {
-    
+  
     do {
-      
-      _stream.out
-      
       sshCommand = try SSHCommand.parse((_sessionParams as! SFTPParams).command?.components(separatedBy: " "))
       
     } catch {
-      logConsole(message: (error as NSError).description)
+      // Show the user any possible command validation or missing parameters
+      let message = SSHCommand.message(for: error)
+      logConsole(message: message)
       
       return -1
     }
@@ -208,29 +222,73 @@ struct BKCommandError: Error {
     
     var connection: SSH.SSHClient?
     
-    rLoop = RunLoop.current
+    currentRunLoop = RunLoop.current
     
-    self.config = SSHClientConfig(user: sshCommand!.username, authMethods: authMethods)
-
+    var stream: SSH.Stream?
+    var output: DispatchData?
+    
+    var loggingLevelToUse = SSH_LOG_NOLOG
+    
+    if let sshCommand = sshCommand {
+      if sshCommand.verbosityLogFunctions {
+        loggingLevelToUse = SSH_LOG_FUNCTIONS
+      } else if sshCommand.verbosityLogPacket {
+        loggingLevelToUse = SSH_LOG_PROTOCOL
+      } else if sshCommand.verbosityLogProtocol {
+        loggingLevelToUse = SSH_LOG_PROTOCOL
+      } else if sshCommand.verbosityLogWarning {
+        loggingLevelToUse = SSH_LOG_WARNING
+      }
+    }
+    
+    self.config = SSHClientConfig(user: sshCommand!.username, authMethods: authMethods, loggingVerbosity: loggingLevelToUse)
+    
+    let bkOutputStream = BKOutputStream(stream: _stream!.out)
+    
+    self.libsshLoggingCancellable = SSHClient.sshLoggingPublisher.sink(receiveCompletion: { comp in
+      switch comp {
+      case .finished:
+        break
+      }
+    }, receiveValue: {msg in
+      self.logConsole(message: msg)
+    })
+    
     cancellable = SSHClient.dial(sshCommand!.remoteHost, with: config!)
-      .sink(receiveCompletion: { completion in
-        switch completion {
+      .flatMap() { conn -> AnyPublisher<SSH.Stream, Error> in
+          connection = conn
+          return conn.requestInteractiveShell()
+      }.sink(receiveCompletion: { comp in
+        switch comp {
+        
         case .finished:
           break
-        case .failure(let error):
-          self.logConsole(message: error.localizedDescription)
-          if let cfRunLoop = self.rLoop?.getCFRunLoop() {
-            CFRunLoopStop(cfRunLoop)
-          }
+        case .failure(let error as SSHError):
+          self.logConsole(message: error.description)
+          
+        case .failure(let genericError):
+          self.logConsole(message: genericError.localizedDescription)
+          self.kill()
         }
-      }, receiveValue: { conn in
-        connection = conn
+      }, receiveValue: { pty in
+        stream = pty
+        stream?.connect(stdout: bkOutputStream)
       })
-
     
     CFRunLoopRun()
-    
+        
     return 0
+  }
+  
+  override func kill() {
+    super.kill()
+    
+    if let cfRunLoop = self.currentRunLoop?.getCFRunLoop() {
+      CFRunLoopStop(cfRunLoop)
+    }
+    
+    self.cancellable?.cancel()
+    self.libsshLoggingCancellable?.cancel()
   }
   
   override func handleControl(_ control: String!) -> Bool {
@@ -239,14 +297,14 @@ struct BKCommandError: Error {
     
     logConsole(message: "\n", sameLine: false)
     
-    // Handle Ctrl-C key press
+    // Handle Ctrl-<C> key press
     if (control == "\u{03}") {
       self.cancellable?.cancel()
       cancellable = nil
       _stream?.close()
       
       /// Cancel the RunLoop of the executed command
-      if let cfRunLoop = rLoop?.getCFRunLoop() {
+      if let cfRunLoop = currentRunLoop?.getCFRunLoop() {
         CFRunLoopStop(cfRunLoop)
       } else {
         return false

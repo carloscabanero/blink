@@ -31,3 +31,29 @@
 
 
 import Foundation
+import Combine
+import SSH
+
+class BKOutputStream: Writer {
+  
+  var stream: UnsafeMutablePointer<FILE>?
+  
+  init(stream: UnsafeMutablePointer<FILE>) {
+    self.stream = stream
+  }
+
+  func write(_ buf: DispatchData, max length: Int) -> AnyPublisher<Int, Error> {
+    
+    if let outputStream = stream, let data = buf as AnyObject as? Data {
+      
+        fputs((String(data: data, encoding: .utf8)!).cString(using: .utf8), stream)
+    }
+    
+    return Just(buf.count).map { val in
+
+      print("==== Wrote \(buf.count)")
+
+      return val
+    }.mapError { $0 as Error }.eraseToAnyPublisher()
+  }
+}
