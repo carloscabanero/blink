@@ -37,16 +37,28 @@ import ArgumentParser
 
 struct SSHCommand: ParsableCommand {
   
-  @Flag(name: .customShort("v"), help: "Only warnings")
+  static var configuration = CommandConfiguration(
+          // Optional abstracts and discussions are used for help output.
+          abstract: "A LibSSH SSH client (remote login program)",
+      discussion: """
+    ssh (SSH client) is a program for logging into a remote machine and for executing commands on a remote machine. It is intended to replace rlogin and rsh, and provide secure encrypted communications between two untrusted hosts over an insecure network. X11 connections and arbitrary TCP ports can also be forwarded over the secure channel.
+
+    ssh connects and logs into the specified hostname (with optional user name). The user must prove his/her identity to the remote machine using one of several methods depending on the protocol version used (see below).
+    """,
+
+          // Commands can define a version for automatic '--version' support.
+          version: "1.0.0")
+  
+  @Flag(name: .customShort("v"), help: "First level of logging: Only warnings")
   var verbosityLogWarning = false
   
-  @Flag(name: .customLong("vv", withSingleDash: true), help: "High level protocol infomation")
+  @Flag(name: .customLong("vv", withSingleDash: true), help: "Second level of logging: High level protocol infomation")
   var verbosityLogProtocol = false
   
-  @Flag(name: .customLong("vvv", withSingleDash: true), help: "Lower level protocol information, packet level")
+  @Flag(name: .customLong("vvv", withSingleDash: true), help: "Third level of logging: Lower level protocol information, packet level")
   var verbosityLogPacket = false
   
-  @Flag(name: .customLong("vvvv", withSingleDash: true), help: "Every function path")
+  @Flag(name: .customLong("vvvv", withSingleDash: true), help: "Maximum level of logging: Every function path")
   var verbosityLogFunctions = false
   
   @Option(name:  [.customLong("port"), .customShort("p")],
@@ -56,7 +68,9 @@ struct SSHCommand: ParsableCommand {
   
   @Option(name:  [.customShort("i")],
           default: nil,
-          help: "Identity file")
+          help: """
+  Selects a file from which the identity (private key) for public key authentication is read. The default is ~/.ssh/id_dsa, ~/.ssh/id_ecdsa, ~/.ssh/id_ed25519 and ~/.ssh/id_rsa.  Identity files may also be specified on a per-host basis in the configuration pane in the Settings of Blink.
+  """)
   var identityFile: String?
   
   @Argument(help: "user@host")
@@ -97,10 +111,7 @@ struct SSHCommand: ParsableCommand {
   }
   
   func validate() throws {
-    
-//    if host == nil || host.count == 0 {
-//      throw  ValidationError("Missing '<host>'")
-//    }
+
     
   }
 }
@@ -128,6 +139,8 @@ struct SSHCommand: ParsableCommand {
   
   var authMethods: [AuthMethod] = []
   
+  var loggingLevelToUse = SSH_LOG_NOLOG
+  
   override init!(device: TermDevice!, andParams params: SessionParams!) {
     
     super.init(device: device, andParams: params)
@@ -137,75 +150,86 @@ struct SSHCommand: ParsableCommand {
     self._sessionParams = params
   }
   
-  func parseAuthMethods() -> AuthMethod? {
+  func getAuthMethodsFromExplicitParameter(sshCommand: SSHCommand) -> [AuthMethod] {
     
-    /// `ssh -i <identity_file> <host>`
-    /// Identity file is provided explicitly
-    if let identityFile = sshCommand?.identityFile {
-      
-      guard let privateKey = SSHCommons.getPrivateKey(from: identityFile) else { return nil }
-      
-      return AuthPublicKey(privateKey: privateKey)
+    var authMethods: [AuthMethod] = []
+    
+    /// Get the specified identity file by the user
+    if let identityFile = sshCommand.identityFile {
+      if let privateKey = SSHCommons.getPrivateKey(from: identityFile) {
+        authMethods.append(AuthPublicKey(privateKey: privateKey))
+      } else {
+        /// Log and warn the user that the requested file is not accessible
+        logConsole(message: "Warning: Identity file \"\(identityFile)\" not accessible: No such file or directory.")
+      }
     }
     
-    /// Getting identity file from the host
-    else if sshCommand?.identityFile == nil && sshCommand?.host != nil {
-      
-      if let host = SSHCommons.getHosts(by: sshCommand!.host), let privateKey = SSHCommons.getPrivateKey(from: host.key) {
-        return AuthPublicKey(privateKey: privateKey)
-      }
+    return authMethods
+  }
+  
+  /**
+   
+   */
+  func getAuthMethodsFromStoredHost(forHost named: String) -> [AuthMethod] {
+    /**
+     1. Get the private key for the host
+     2. Get password stored in host (if any)
+     3. AuthNone
+     */
     
-    /// Password authentication
-    } else {
-      let requestAnswers: AuthKeyboardInteractive.RequestAnswersCb = { prompt in
-        dump(prompt)
-        
-        var answers: [String] = []
-        
-        if prompt.userPrompts.count > 0 {
-          for question in prompt.userPrompts {
-            if let input = self._device?.readline(question.prompt, secure: true) {
-              answers.append(input)
-            }
-          }
-          
-        } else {
-          answers = []
-        }
-        
-        return Just(answers).setFailureType(to: Error.self).eraseToAnyPublisher()
-      }
-      
-      return AuthKeyboardInteractive(requestAnswers: requestAnswers)
+    var authMethods: [AuthMethod] = []
+    
+    if let privateKeyForHost = SSHCommons.getPrivateKey(from: named) {
+      authMethods.append(AuthPublicKey(privateKey: privateKeyForHost))
     }
     
+    if let passwordForHost = SSHCommons.getPassword(from: named) {
+      authMethods.append(AuthPassword(with: passwordForHost))
+    }
+    
+    return authMethods
+  }
+  
+  func getAuthMethodsManuallyNoStoredHost() -> [AuthMethod] {
+    
+    var authMethods: [AuthMethod] = []
+    
+    /// Get all private keys and append them
+    for key in SSHCommons.getAllPrivateKeys() {
+      authMethods.append(AuthPublicKey(privateKey: key.privateKey))
+    }
+    
+    /// Add an Interactive method
     let requestAnswers: AuthKeyboardInteractive.RequestAnswersCb = { prompt in
-      dump(prompt)
-      
+
       var answers: [String] = []
-      
+
       if prompt.userPrompts.count > 0 {
         for question in prompt.userPrompts {
           if let input = self._device?.readline(question.prompt, secure: true) {
             answers.append(input)
           }
         }
-        
+
       } else {
         answers = []
       }
-      
+
       return Just(answers).setFailureType(to: Error.self).eraseToAnyPublisher()
     }
+
+    authMethods.append(AuthKeyboardInteractive(requestAnswers: requestAnswers))
     
-    return AuthKeyboardInteractive(requestAnswers: requestAnswers)
+    /// Append a none auth method just in case
+    authMethods.append(AuthNone())
+    
+    return authMethods
   }
   
   override func main(_ argc: Int32, argv: UnsafeMutablePointer<UnsafeMutablePointer<Int8>?>!) -> Int32 {
   
     do {
       sshCommand = try SSHCommand.parse((_sessionParams as! SFTPParams).command?.components(separatedBy: " "))
-      
     } catch {
       // Show the user any possible command validation or missing parameters
       let message = SSHCommand.message(for: error)
@@ -214,11 +238,17 @@ struct SSHCommand: ParsableCommand {
       return -1
     }
     
-    if let authMethod = parseAuthMethods() {
-      authMethods.append(authMethod)
-    } else {
-      
+    if let sshCommand = sshCommand {
+      authMethods.append(contentsOf: getAuthMethodsFromExplicitParameter(sshCommand: sshCommand))
     }
+    
+    if let host = sshCommand?.host {
+      authMethods.append(contentsOf: getAuthMethodsFromStoredHost(forHost: host))
+    }
+
+    authMethods.append(contentsOf: getAuthMethodsManuallyNoStoredHost())
+    
+    // TODO: Add manual parameters like -i
     
     var connection: SSH.SSHClient?
     
@@ -226,8 +256,6 @@ struct SSHCommand: ParsableCommand {
     
     var stream: SSH.Stream?
     var output: DispatchData?
-    
-    var loggingLevelToUse = SSH_LOG_NOLOG
     
     if let sshCommand = sshCommand {
       if sshCommand.verbosityLogFunctions {
@@ -240,8 +268,29 @@ struct SSHCommand: ParsableCommand {
         loggingLevelToUse = SSH_LOG_WARNING
       }
     }
+
+    /// Asks the user for confirmation whenever the private key changes
+    let requestAnswers: SSHClientConfig.RequestVerifyHostCallback = { (prompt) in
+
+      var answers: String = ""
+        
+        for p in prompt.userPrompts {
+          print(p.prompt)
+          
+          if p.echo {
+            if let input = self._device?.readline(p.prompt, secure: false) {
+              answers.append(input)
+            }
+            
+          } else {
+            self.logConsole(message: p.prompt)
+          }
+        }
+      
+        return Just(answers).setFailureType(to: Error.self).eraseToAnyPublisher()
+    }
     
-    self.config = SSHClientConfig(user: sshCommand!.username, authMethods: authMethods, loggingVerbosity: loggingLevelToUse)
+    self.config = SSHClientConfig(user: sshCommand!.username, authMethods: authMethods, loggingVerbosity: loggingLevelToUse, verifyHostCallback: requestAnswers, sshDirectory: BlinkPaths.ssh()!)
     
     let bkOutputStream = BKOutputStream(stream: _stream!.out)
     
@@ -265,6 +314,7 @@ struct SSHCommand: ParsableCommand {
           break
         case .failure(let error as SSHError):
           self.logConsole(message: error.description)
+          self.kill()
           
         case .failure(let genericError):
           self.logConsole(message: genericError.localizedDescription)
@@ -283,12 +333,15 @@ struct SSHCommand: ParsableCommand {
   override func kill() {
     super.kill()
     
-    if let cfRunLoop = self.currentRunLoop?.getCFRunLoop() {
-      CFRunLoopStop(cfRunLoop)
-    }
-    
     self.cancellable?.cancel()
     self.libsshLoggingCancellable?.cancel()
+
+    _stream?.close()
+    
+    /// Cancel the RunLoop of the executed command
+    if let cfRunLoop = currentRunLoop?.getCFRunLoop() {
+      CFRunLoopStop(cfRunLoop)
+    }
   }
   
   override func handleControl(_ control: String!) -> Bool {

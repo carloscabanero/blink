@@ -34,18 +34,20 @@ import Foundation
 import Combine
 import SSH
 
+/**
+ Used to save a file downloaded using SFTP
+ */
 class DownloadedFileBuffer: Writer {
   
   let fast: Bool
   
-//  var outpuStream: OutputStream?
   var fileHandle = FileHandle()
 
   init(fast: Bool, localPath: String) {
     
     self.fast = fast
 
-    let pathString = BlinkPaths.iCloudDriveDocuments()! + "/" + localPath //URL(fileURLWithPath: )
+    let pathString = BlinkPaths.iCloudDriveDocuments()! + "/" + localPath
     let pathUrl = URL(fileURLWithPath: pathString)
     
     // Create file if it doesn't exist

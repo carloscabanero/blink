@@ -41,6 +41,14 @@ class SSHCommons {
   
   var clients: [SSHClient] = []
   
+  static func getAllPrivateKeys() -> [BKPubKey] {
+    guard let publicKeys = (BKPubKey.all() as? [BKPubKey]) else {
+      return []
+    }
+    
+    return publicKeys
+  }
+  
   static func getPrivateKey(from identifier: String) -> String? {
     
     guard let publicKeys = (BKPubKey.all() as? [BKPubKey]) else {
@@ -52,6 +60,23 @@ class SSHCommons {
     }
     
     return privateKey.privateKey
+  }
+  
+  static func getPassword(from host: String) -> String? {
+    
+    guard let hosts = (BKHosts.all() as? [BKHosts]) else {
+      return nil
+    }
+    
+    guard let host = hosts.first(where: { $0.host == host }) else {
+      return nil
+    }
+    
+    guard let password = host.password else {
+      return nil
+    }
+    
+    return password
   }
   
   static func getHosts(by identifier: String) -> BKHosts? {
