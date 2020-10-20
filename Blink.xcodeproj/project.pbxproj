@@ -47,7 +47,7 @@
 		8026D84D252C9F900029C080 /* CloudKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = B700AED71DD0F2C200100EBF /* CloudKit.framework */; };
 		8026D855252CA94A0029C080 /* DownloadedFileBuffer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8026D854252CA94A0029C080 /* DownloadedFileBuffer.swift */; };
 		8026D856252CA94A0029C080 /* DownloadedFileBuffer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8026D854252CA94A0029C080 /* DownloadedFileBuffer.swift */; };
-		802D4EE2252DFA0E0067FFCA /* BKOutputStream.swift in Sources */ = {isa = PBXBuildFile; fileRef = 802D4EE1252DFA0E0067FFCA /* BKOutputStream.swift */; };
+		802D4EE2252DFA0E0067FFCA /* BKIOStreams.swift in Sources */ = {isa = PBXBuildFile; fileRef = 802D4EE1252DFA0E0067FFCA /* BKIOStreams.swift */; };
 		8054AE54252C6783000E41C3 /* BlinkIntents.intentdefinition in Sources */ = {isa = PBXBuildFile; fileRef = 8054AE53252C6782000E41C3 /* BlinkIntents.intentdefinition */; };
 		8083E20D252723FA00B8CE60 /* ArgumentParser in Frameworks */ = {isa = PBXBuildFile; productRef = 8083E20C252723FA00B8CE60 /* ArgumentParser */; };
 		80AEDE26252C73890006F939 /* Intents.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 8054AE3E252C66D3000E41C3 /* Intents.framework */; };
@@ -326,13 +326,6 @@
 			remoteGlobalIDString = 80085C85252C656400F291E8;
 			remoteInfo = Intents;
 		};
-		80085C98252C656500F291E8 /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = 0732F1101D062C9F00AB5438 /* UICKeyChainStore.xcodeproj */;
-			proxyType = 2;
-			remoteGlobalIDString = 80FC965B252C6209006CF96B;
-			remoteInfo = BlinkShellIntents;
-		};
 		D24AFD5A222410E700CFD3C1 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = 0732F1051D062BF700AB5438 /* MBProgressHUD.xcodeproj */;
@@ -464,7 +457,7 @@
 		8026D846252C8BFE0029C080 /* DownloadFileWithSFTP.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DownloadFileWithSFTP.swift; sourceTree = "<group>"; };
 		8026D84B252C9F800029C080 /* BlinkIntents.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = BlinkIntents.entitlements; sourceTree = "<group>"; };
 		8026D854252CA94A0029C080 /* DownloadedFileBuffer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DownloadedFileBuffer.swift; sourceTree = "<group>"; };
-		802D4EE1252DFA0E0067FFCA /* BKOutputStream.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BKOutputStream.swift; sourceTree = "<group>"; };
+		802D4EE1252DFA0E0067FFCA /* BKIOStreams.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BKIOStreams.swift; sourceTree = "<group>"; };
 		8054AE3E252C66D3000E41C3 /* Intents.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Intents.framework; path = System/Library/Frameworks/Intents.framework; sourceTree = SDKROOT; };
 		8054AE53252C6782000E41C3 /* BlinkIntents.intentdefinition */ = {isa = PBXFileReference; lastKnownFileType = file.intentdefinition; path = BlinkIntents.intentdefinition; sourceTree = "<group>"; };
 		80D095642525DA7F00E38173 /* SSH.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; path = SSH.xcframework; sourceTree = "<group>"; };
@@ -946,7 +939,6 @@
 				0732F1191D062CA000AB5438 /* libUICKeyChainStore.a */,
 				0732F11B1D062CA000AB5438 /* UICKeyChainStoreTests.xctest */,
 				0747D63E2018182D00CF8F0C /* TestHost.app */,
-				80085C99252C656500F291E8 /* BlinkShellIntents.appex */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -1019,7 +1011,7 @@
 			isa = PBXGroup;
 			children = (
 				80E94F5E252D97CF00A7AE71 /* SSHSessionNew.swift */,
-				802D4EE1252DFA0E0067FFCA /* BKOutputStream.swift */,
+				802D4EE1252DFA0E0067FFCA /* BKIOStreams.swift */,
 			);
 			path = SSH;
 			sourceTree = "<group>";
@@ -1702,13 +1694,6 @@
 			remoteRef = 0747D63D2018182D00CF8F0C /* PBXContainerItemProxy */;
 			sourceTree = BUILT_PRODUCTS_DIR;
 		};
-		80085C99252C656500F291E8 /* BlinkShellIntents.appex */ = {
-			isa = PBXReferenceProxy;
-			fileType = "wrapper.app-extension";
-			path = BlinkShellIntents.appex;
-			remoteRef = 80085C98252C656500F291E8 /* PBXContainerItemProxy */;
-			sourceTree = BUILT_PRODUCTS_DIR;
-		};
 		D2A3F4DD206909A8006BB305 /* MBProgressHUD.framework */ = {
 			isa = PBXReferenceProxy;
 			fileType = wrapper.framework;
@@ -1956,7 +1941,7 @@
 				80D9BF64252B5DEE00FFB19D /* SSHCommon.swift in Sources */,
 				D2FCB4DD2339F9DB00A88108 /* UIScrollView+Paging.swift in Sources */,
 				C989E5571D6CC4A1003E0079 /* BKFontCreateViewController.m in Sources */,
-				802D4EE2252DFA0E0067FFCA /* BKOutputStream.swift in Sources */,
+				802D4EE2252DFA0E0067FFCA /* BKIOStreams.swift in Sources */,
 				D241CBD723040734003D64A5 /* KBKeyShape.swift in Sources */,
 				D2C24420238E44AB0082C69C /* Chevron.swift in Sources */,
 				D2AD9ADE22DB80DE00861F66 /* SessionRegistry.swift in Sources */,

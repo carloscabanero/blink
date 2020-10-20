@@ -227,7 +227,6 @@ struct SSHCommand: ParsableCommand {
   }
   
   override func main(_ argc: Int32, argv: UnsafeMutablePointer<UnsafeMutablePointer<Int8>?>!) -> Int32 {
-  
     do {
       sshCommand = try SSHCommand.parse((_sessionParams as! SFTPParams).command?.components(separatedBy: " "))
     } catch {
@@ -238,10 +237,11 @@ struct SSHCommand: ParsableCommand {
       return -1
     }
     
+    // TODO This sequence should be on a single function. geAllAuthMethods
     if let sshCommand = sshCommand {
       authMethods.append(contentsOf: getAuthMethodsFromExplicitParameter(sshCommand: sshCommand))
     }
-    
+
     if let host = sshCommand?.host {
       authMethods.append(contentsOf: getAuthMethodsFromStoredHost(forHost: host))
     }
@@ -292,7 +292,8 @@ struct SSHCommand: ParsableCommand {
     
     self.config = SSHClientConfig(user: sshCommand!.username, authMethods: authMethods, loggingVerbosity: loggingLevelToUse, verifyHostCallback: requestAnswers, sshDirectory: BlinkPaths.ssh()!)
     
-    let bkOutputStream = BKOutputStream(stream: _stream!.out)
+    let bkOutputStream = BKOutputStream(stream: fileno(_stream!.out))
+    let bkInputStream = BKInputStream(stream: fileno(_stream!.in))
     
     self.libsshLoggingCancellable = SSHClient.sshLoggingPublisher.sink(receiveCompletion: { comp in
       switch comp {
@@ -322,8 +323,11 @@ struct SSHCommand: ParsableCommand {
         }
       }, receiveValue: { pty in
         stream = pty
-        stream?.connect(stdout: bkOutputStream)
+        stream?.connect(stdout: bkOutputStream, stdin: bkInputStream)
       })
+    
+    // Set terminal to raw mode
+    _device?.rawMode = true
     
     CFRunLoopRun()
         
