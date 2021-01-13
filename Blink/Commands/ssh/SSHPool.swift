@@ -43,20 +43,21 @@ class SSHPool {
   
   private init() {}
 
-  static func dial(_ host: String, with config: SSHClientConfig, connectionOptions options: ConfigFileOptions) -> AnyPublisher<SSH.SSHClient, Error> {
+  static func dial(_ host: String, with config: SSHClientConfig, connectionOptions options: ConfigFileOptions, withProxy proxy: SSH.SSHClient.ExecProxyCommandCallback? = nil) -> AnyPublisher<SSH.SSHClient, Error> {
     // Do not use an existing socket.
     if !options.controlMaster {
       // TODO We may want a new socket, but still be able to manipulate it.
       // For now we will not allow that situation.
-      return shared.startConnection(host, with: config, exposeSocket: false)
+      return shared.startConnection(host, with: config, proxy: proxy, exposeSocket: false)
     }
     guard let conn = connection(for: host, with: config) else {
-      return shared.startConnection(host, with: config)
+      return shared.startConnection(host, with: config, proxy: proxy)
     }
     return Just(conn).mapError { $0 as Error }.eraseToAnyPublisher()
   }
 
   private func startConnection(_ host: String, with config: SSHClientConfig,
+                               proxy: SSH.SSHClient.ExecProxyCommandCallback? = nil,
                                exposeSocket exposed: Bool = true) -> AnyPublisher<SSH.SSHClient, Error> {
     let pb = PassthroughSubject<SSH.SSHClient, Error>()
     var cancel: AnyCancellable?
@@ -65,7 +66,7 @@ class SSHPool {
     let t = Thread {
       runLoop = RunLoop.current
 
-      cancel = SSH.SSHClient.dial(host, with: config)
+      cancel = SSH.SSHClient.dial(host, with: config, withProxy: proxy)
         .sink(receiveCompletion: { pb.send(completion: $0) },
               receiveValue: { conn in
                 let control = SSHClientControl(for: conn, on: host, with: config, running: runLoop!, exposed: exposed)
@@ -74,7 +75,7 @@ class SSHPool {
         })
 
       await(runLoop: runLoop!)
-      print("Thread out")
+      print("Pool Thread out")
     }
 
     t.start()
@@ -104,6 +105,11 @@ class SSHPool {
   static func register(_ client: SSHPortForwardClient, runningCommand command: SSHCommand, on connection: SSH.SSHClient) {
     let c = control(on: connection)
     c?.tunnelClients.append((command, client))
+  }
+  
+  static func register(_ stream: SSH.Stream, runningCommand command: SSHCommand, on connection: SSH.SSHClient) {
+    let c = control(on: connection)
+    c?.streams.append((command, stream))
   }
   
   // TODO connection won't be deinited if you are still keeping a reference.
@@ -156,6 +162,7 @@ fileprivate class SSHClientControl {
   //var shells: [(SSHCommand, SSH.Stream)] = []
   var tunnelListeners: [(SSHCommand, SSHPortForwardListener)] = []
   var tunnelClients: [(SSHCommand, SSHPortForwardClient)] = []
+  var streams: [(SSHCommand, SSH.Stream)] = []
   var numChannels: Int {
     get {
       return numShells + tunnelListeners.count + tunnelClients.count
@@ -188,6 +195,14 @@ fileprivate class SSHClientControl {
       // We may want to take care of the stream here as well.
       numShells -= 1
     }
+    
+    // TODO This may not look very good when we start multiple sessions
+    // on the same server. We will need multiple connections, and deinstancing the right ones. When do you deregister?
+//    if let stdio = command.stdioHostAndPort,
+//       let idx = streams.firstIndex(where: { (c, _) in c.stdioHostAndPort == stdio }) {
+//      let (_, stream) = streams[idx]
+//      stream.cancel()
+//    }
     
     // Remove the tunnels
     // TEST Once the tunnels are deinitalized, they shoul also be closed.

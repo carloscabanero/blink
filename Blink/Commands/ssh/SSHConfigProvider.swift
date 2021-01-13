@@ -61,7 +61,7 @@ class SSHClientConfigProvider {
     self.command = cmd
   }
   
-  static func config(command cmd: SSHCommand, using device: TermDevice) -> SSHClientConfig {
+  static func config(command cmd: SSHCommand, config options: ConfigFileOptions?, using device: TermDevice) -> SSHClientConfig {
     let prov = SSHClientConfigProvider(command: cmd, using: device)
     
     let user = cmd.user ?? "carlos"
@@ -69,8 +69,13 @@ class SSHClientConfigProvider {
     
     // TODO Apply connection options, that is different than config.
     // The config helps in the pool, but then you can connect there in many ways.
-    return SSHClientConfig(user: user, proxyJump: cmd.proxyJump, authMethods: authMethods, loggingVerbosity: SSHLogLevel(rawValue: cmd.verbose)!,
-                           verifyHostCallback: prov.cliVerifyHostCallback, sshDirectory: BlinkPaths.ssh()!)
+    return SSHClientConfig(user: user,
+                           proxyJump: cmd.proxyJump,
+                           proxyCommand: options?.proxyCommand,
+                           authMethods: authMethods,
+                           loggingVerbosity: .debug,
+                           verifyHostCallback: prov.cliVerifyHostCallback,
+                           sshDirectory: BlinkPaths.ssh()!)
   }
 }
 
@@ -113,6 +118,9 @@ extension SSHClientConfigProvider {
       for question in prompt.userPrompts {
         if let input = device.readline(question.prompt, secure: true) {
           answers.append(input)
+        } else {
+          return Fail(error: CommandError(message: "Couldn't read input"))
+            .eraseToAnyPublisher()
         }
       }
     }
