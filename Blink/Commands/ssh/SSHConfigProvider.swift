@@ -112,20 +112,13 @@ extension SSHClientConfigProvider {
   }
   
   fileprivate func authPrompt(_ prompt: Prompt) -> AnyPublisher<[String], Error> {
-    var answers: [String] = []
-
-    if prompt.userPrompts.count > 0 {
-      for question in prompt.userPrompts {
-        if let input = device.readline(question.prompt, secure: true) {
-          answers.append(input)
-        } else {
-          return Fail(error: CommandError(message: "Couldn't read input"))
-            .eraseToAnyPublisher()
-        }
+    return prompt.userPrompts.publisher.tryMap { question -> String in
+      guard let input = self.device.readline(question.prompt, secure: true) else {
+        throw CommandError(message: "Couldn't read input")
       }
-    }
-
-    return Just(answers).setFailureType(to: Error.self).eraseToAnyPublisher()
+      return input
+    }.collect()
+    .eraseToAnyPublisher()
   }
   
   fileprivate static func privateKey(fromIdentifier identifier: String) -> String? {
