@@ -265,7 +265,7 @@ struct PortForwardInfo: Equatable {
   }
 }
 
-struct StdioForwardInfo {
+struct StdioForwardInfo: Equatable {
   let bindAddress: String
   let remotePort: UInt16
 

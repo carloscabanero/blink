@@ -117,8 +117,8 @@ func blink_ssh_main(argc: Int32, argv: Argv) -> Int32 {
       return 0
     }
 
-    SSH.SSHClient.dial(cmd.host, with: config, //connectionOptions: options,
-                       withProxy: { [weak self] in self?.executeProxyCommand(command: $0, sockIn: $1, sockOut: $2) })
+    SSHPool.dial(cmd.host, with: config, connectionOptions: options,
+                 withProxy: { [weak self] in self?.executeProxyCommand(command: $0, sockIn: $1, sockOut: $2) })
       .sink(receiveCompletion: { completion in
         switch completion {
         case .failure(let error):
@@ -153,21 +153,18 @@ func blink_ssh_main(argc: Int32, argv: Argv) -> Int32 {
       print("Thread woke")
     }
 
-    // (Only the runloop needs to be executed here so it goes to the proper thread.)
     stream?.cancel()
     outStream?.close()
     inStream?.close()
+    // Dispatch streams need a cycle to close.
+    RunLoop.current.run(until: Date(timeIntervalSinceNow: 0.1))
+
     // Need to get rid of the stream because the channel needs a cycle to be closed.
     self.stream = nil
-    RunLoop.current.run(until: Date(timeIntervalSinceNow: 0.5))
-
-    if let conn = self.connection {
-      //SSHPool.deregister(runningCommand: cmd, on: conn)
+    //RunLoop.current.run(until: Date(timeIntervalSinceNow: 0.5))
+    if let conn = self.connection, cmd.stdioHostAndPort == nil {
+      SSHPool.deregister(runningCommand: cmd, on: conn)
     }
-
-    //self.connection = nil
-    // Deregister the command
-    // Do not get a reference here.
 
     device.rawMode = originalRawMode
     return exitCode
@@ -237,7 +234,7 @@ func blink_ssh_main(argc: Int32, argv: Argv) -> Int32 {
         s.connect(stdout: outs, stdin: ins)
         self.outStream = outs
         self.inStream = ins
-        //SSHPool.register(shellOn: conn)
+        SSHPool.register(shellOn: conn)
         self.stream = s
       }).store(in: &cancellableBag)
   }
@@ -255,23 +252,19 @@ func blink_ssh_main(argc: Int32, argv: Argv) -> Int32 {
           }
         },
         receiveValue: { s in
-          self.stream = s
-          let outStream = DispatchOutputStream(stream: self.outstream)
-          let inStream = DispatchInputStream(stream: self.instream)
+          SSHPool.register(stdioStream: s, runningCommand: command, on: conn)
+          let outStream = DispatchOutputStream(stream: dup(self.outstream))
+          let inStream = DispatchInputStream(stream: dup(self.instream))
           s.connect(stdout: outStream, stdin: inStream)
-          self.outStream = outStream
-          self.inStream = inStream
+
           s.handleCompletion = {
-            self.kill()
-//            outStream.close()
-//            inStream.close()
+            SSHPool.deregister(runningCommand: command, on: conn)
           }
           s.handleFailure = { error in
-            self.exitCode = -1
-            self.kill()
-//            outStream.close()
-//            inStream.close()
+            SSHPool.deregister(runningCommand: command, on: conn)
           }
+          // The tunnel is already stored, so we can close the process.
+          self.kill()
         }).store(in: &cancellableBag)
     }
   }

@@ -75,6 +75,7 @@ class SSHPool {
         })
 
       await(runLoop: runLoop!)
+      RunLoop.current.run(until: Date(timeIntervalSinceNow: 0.5))
       print("Pool Thread out")
     }
 
@@ -107,7 +108,7 @@ class SSHPool {
     c?.tunnelClients.append((command, client))
   }
   
-  static func register(_ stream: SSH.Stream, runningCommand command: SSHCommand, on connection: SSH.SSHClient) {
+  static func register(stdioStream stream: SSH.Stream, runningCommand command: SSHCommand, on connection: SSH.SSHClient) {
     let c = control(on: connection)
     c?.streams.append((command, stream))
   }
@@ -165,7 +166,7 @@ fileprivate class SSHClientControl {
   var streams: [(SSHCommand, SSH.Stream)] = []
   var numChannels: Int {
     get {
-      return numShells + tunnelListeners.count + tunnelClients.count
+      return numShells + streams.count + tunnelListeners.count + tunnelClients.count
     }
   }
   
@@ -184,7 +185,7 @@ fileprivate class SSHClientControl {
     if !self.exposed {
       return false
     }
-    return host == host ? true : false
+    return self.host == host ? true : false
   }
   
   func deregister(_ command: SSHCommand) {
@@ -198,11 +199,12 @@ fileprivate class SSHClientControl {
     
     // TODO This may not look very good when we start multiple sessions
     // on the same server. We will need multiple connections, and deinstancing the right ones. When do you deregister?
-//    if let stdio = command.stdioHostAndPort,
-//       let idx = streams.firstIndex(where: { (c, _) in c.stdioHostAndPort == stdio }) {
-//      let (_, stream) = streams[idx]
-//      stream.cancel()
-//    }
+    if let stdio = command.stdioHostAndPort,
+       let idx = streams.firstIndex(where: { (c, _) in c.stdioHostAndPort == stdio }) {
+      let (_, stream) = streams.remove(at: idx)
+      //let (_, stream) = streams[idx]
+      stream.cancel()
+    }
     
     // Remove the tunnels
     // TEST Once the tunnels are deinitalized, they shoul also be closed.
