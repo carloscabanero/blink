@@ -78,7 +78,7 @@ struct SSHCommand: ParsableCommand {
         help: "Do not execute a remote command. This is useful for just forwarding ports.")
   var noRemoteCommand: Bool = false
   var startsSession: Bool { get {
-    !noRemoteCommand && stdioHostAndPort == nil
+    control == nil && !noRemoteCommand && stdioHostAndPort == nil
   }}
   var blocks: Bool { get {
     !noRemoteCommand || stdioHostAndPort != nil

@@ -103,8 +103,8 @@ func blink_ssh_main(argc: Int32, argv: Argv) -> Int32 {
         return -1
       }
       switch control {
-//      case .stop:
-//        SSHPool.deregister(runningCommand: cmd, on: conn)
+      case .stop:
+        SSHPool.deregister(runningCommand: cmd, on: conn)
 //      case .cancel:
 //        SSHPool.deregister(allTunnelsFor: connection)
 //      case .exit:
@@ -161,6 +161,7 @@ func blink_ssh_main(argc: Int32, argv: Argv) -> Int32 {
 
     // Need to get rid of the stream because the channel needs a cycle to be closed.
     self.stream = nil
+    // The channel is responsibility of the other thread, so this runloop is not need atm.
     //RunLoop.current.run(until: Date(timeIntervalSinceNow: 0.5))
     if let conn = self.connection, cmd.stdioHostAndPort == nil {
       SSHPool.deregister(runningCommand: cmd, on: conn)
@@ -285,6 +286,9 @@ func blink_ssh_main(argc: Int32, argv: Argv) -> Int32 {
         }
       }, receiveValue: { event in
         print("Tunnel received \(event)")
+        if case .ready = event {
+          SSHPool.register(lis, runningCommand: command, on: conn)
+        }
       }).store(in: &cancellableBag)
     }
   }
