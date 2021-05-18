@@ -170,6 +170,7 @@ class FileProviderExtension: NSFileProviderExtension {
   override func enumerator(for containerItemIdentifier: NSFileProviderItemIdentifier) throws -> NSFileProviderEnumerator {
 
     let maybeEnumerator: NSFileProviderEnumerator? = nil
+    print("Called enumerator!!!")
     guard let domain = self.domain else {
       throw "No domain received. We need a domain to set a root for the provider."
     }

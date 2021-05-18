@@ -84,7 +84,6 @@
 		98271264262E4BDB00F883FA /* MainInterface.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 98271262262E4BDB00F883FA /* MainInterface.storyboard */; };
 		98271268262E4BDB00F883FA /* BlinkFileProviderUI.appex in Embed PlugIns */ = {isa = PBXBuildFile; fileRef = 9827125E262E4BDB00F883FA /* BlinkFileProviderUI.appex */; platformFilter = ios; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		9827126B262E4BDB00F883FA /* BlinkFileProvider.appex in Embed PlugIns */ = {isa = PBXBuildFile; fileRef = 98271250262E4BDB00F883FA /* BlinkFileProvider.appex */; platformFilter = ios; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
-		98DA49892630B8BF00732549 /* BlinkFileUtility.swift in Sources */ = {isa = PBXBuildFile; fileRef = 98DA49882630B8BF00732549 /* BlinkFileUtility.swift */; };
 		98E7D0B42638B3EA00758CF9 /* BlinkItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 98E7D0B32638B3EA00758CF9 /* BlinkItem.swift */; };
 		98E7D0BE2638B46400758CF9 /* BlinkItemReference.swift in Sources */ = {isa = PBXBuildFile; fileRef = 98E7D0BD2638B46400758CF9 /* BlinkItemReference.swift */; };
 		98E7D0D02638B64B00758CF9 /* FileProviderError.swift in Sources */ = {isa = PBXBuildFile; fileRef = 98E7D0CF2638B64B00758CF9 /* FileProviderError.swift */; };
@@ -100,6 +99,7 @@
 		B7D450361DD3A87200CE0DBE /* BKiCloudSyncHandler.m in Sources */ = {isa = PBXBuildFile; fileRef = B7D450351DD3A87200CE0DBE /* BKiCloudSyncHandler.m */; };
 		B7D4503C1DD4706000CE0DBE /* Reachability.m in Sources */ = {isa = PBXBuildFile; fileRef = B7D4503B1DD4706000CE0DBE /* Reachability.m */; };
 		B7D6A6291E2D43A800EDF7B0 /* BKSmartKeysConfigViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = B7D6A6281E2D43A800EDF7B0 /* BKSmartKeysConfigViewController.m */; };
+		BD4E021C2653F79B00362966 /* BlinkUtility.swift in Sources */ = {isa = PBXBuildFile; fileRef = BD4E02182653F79B00362966 /* BlinkUtility.swift */; };
 		BD8BBF5525F829B00084705F /* SEKeyTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = BD8BBF0825F819970084705F /* SEKeyTests.swift */; };
 		BD8BBF5B25F829C40084705F /* SEKey.swift in Sources */ = {isa = PBXBuildFile; fileRef = BDB713D425F133EF00129A55 /* SEKey.swift */; };
 		BD8BBF7E25F82B7F0084705F /* SEKey.swift in Sources */ = {isa = PBXBuildFile; fileRef = BDB713D425F133EF00129A55 /* SEKey.swift */; };
@@ -581,7 +581,6 @@
 		98271260262E4BDB00F883FA /* DocumentActionViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DocumentActionViewController.swift; sourceTree = "<group>"; };
 		98271263262E4BDB00F883FA /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/MainInterface.storyboard; sourceTree = "<group>"; };
 		98271265262E4BDB00F883FA /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
-		98DA49882630B8BF00732549 /* BlinkFileUtility.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BlinkFileUtility.swift; sourceTree = "<group>"; };
 		98E7D0B32638B3EA00758CF9 /* BlinkItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BlinkItem.swift; sourceTree = "<group>"; };
 		98E7D0BD2638B46400758CF9 /* BlinkItemReference.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BlinkItemReference.swift; sourceTree = "<group>"; };
 		98E7D0CF2638B64B00758CF9 /* FileProviderError.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FileProviderError.swift; sourceTree = "<group>"; };
@@ -604,6 +603,7 @@
 		B7D4503B1DD4706000CE0DBE /* Reachability.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = Reachability.m; sourceTree = "<group>"; };
 		B7D6A6271E2D43A800EDF7B0 /* BKSmartKeysConfigViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = BKSmartKeysConfigViewController.h; sourceTree = "<group>"; };
 		B7D6A6281E2D43A800EDF7B0 /* BKSmartKeysConfigViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = BKSmartKeysConfigViewController.m; sourceTree = "<group>"; };
+		BD4E02182653F79B00362966 /* BlinkUtility.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = BlinkUtility.swift; sourceTree = "<group>"; };
 		BD8BBF0825F819970084705F /* SEKeyTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SEKeyTests.swift; sourceTree = "<group>"; };
 		BD8BBFAF25F947710084705F /* Keys.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Keys.swift; sourceTree = "<group>"; };
 		BD8BBFF426001B020084705F /* AgentConstraints.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AgentConstraints.swift; sourceTree = "<group>"; };
@@ -1196,12 +1196,12 @@
 		98271251262E4BDB00F883FA /* BlinkFileProvider */ = {
 			isa = PBXGroup;
 			children = (
+				BD4E02172653F79B00362966 /* Manager */,
 				98E7D0AF2638B3AE00758CF9 /* Models */,
 				98271252262E4BDB00F883FA /* FileProviderExtension.swift */,
 				98271256262E4BDB00F883FA /* FileProviderEnumerator.swift */,
 				98271258262E4BDB00F883FA /* Info.plist */,
 				98271259262E4BDB00F883FA /* BlinkFileProvider.entitlements */,
-				98DA49882630B8BF00732549 /* BlinkFileUtility.swift */,
 			);
 			path = BlinkFileProvider;
 			sourceTree = "<group>";
@@ -1270,6 +1270,14 @@
 				D2D8DD8423C71CC500BFF223 /* LocalAuth.swift */,
 			);
 			path = Security;
+			sourceTree = "<group>";
+		};
+		BD4E02172653F79B00362966 /* Manager */ = {
+			isa = PBXGroup;
+			children = (
+				BD4E02182653F79B00362966 /* BlinkUtility.swift */,
+			);
+			path = Manager;
 			sourceTree = "<group>";
 		};
 		BD8D898025DC535600E55D9E /* keys */ = {
@@ -2170,9 +2178,9 @@
 			buildActionMask = 2147483647;
 			files = (
 				98E7D0D02638B64B00758CF9 /* FileProviderError.swift in Sources */,
+				BD4E021C2653F79B00362966 /* BlinkUtility.swift in Sources */,
 				98E7D0B42638B3EA00758CF9 /* BlinkItem.swift in Sources */,
 				98271253262E4BDB00F883FA /* FileProviderExtension.swift in Sources */,
-				98DA49892630B8BF00732549 /* BlinkFileUtility.swift in Sources */,
 				98E7D0BE2638B46400758CF9 /* BlinkItemReference.swift in Sources */,
 				98271255262E4BDB00F883FA /* FileProviderItem.swift in Sources */,
 				98271257262E4BDB00F883FA /* FileProviderEnumerator.swift in Sources */,
@@ -2827,7 +2835,7 @@
 				);
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
-				PRODUCT_BUNDLE_IDENTIFIER = Com.pigstycoders.BlinkShell.BlinkFileProviderUI;
+				PRODUCT_BUNDLE_IDENTIFIER = Com.CarlosCabanero.BlinkShell.BlinkFileProviderUI;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
@@ -2863,7 +2871,7 @@
 					"@executable_path/../../Frameworks",
 				);
 				MTL_FAST_MATH = YES;
-				PRODUCT_BUNDLE_IDENTIFIER = Com.pigstycoders.BlinkShell.BlinkFileProviderUI;
+				PRODUCT_BUNDLE_IDENTIFIER = Com.CarlosCabanero.BlinkShell.BlinkFileProviderUI;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
 				SWIFT_VERSION = 5.0;
@@ -2903,7 +2911,7 @@
 				);
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
-				PRODUCT_BUNDLE_IDENTIFIER = Com.pigstycoders.BlinkShell.BlinkFileProvider;
+				PRODUCT_BUNDLE_IDENTIFIER = Com.CarlosCabanero.BlinkShell.BlinkFileProvider;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
 				SUPPORTS_MACCATALYST = NO;
@@ -2942,7 +2950,7 @@
 					"@executable_path/../../Frameworks",
 				);
 				MTL_FAST_MATH = YES;
-				PRODUCT_BUNDLE_IDENTIFIER = Com.pigstycoders.BlinkShell.BlinkFileProvider;
+				PRODUCT_BUNDLE_IDENTIFIER = Com.CarlosCabanero.BlinkShell.BlinkFileProvider;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
 				SUPPORTS_MACCATALYST = NO;
