@@ -57,6 +57,7 @@ struct BlinkItemReference {
   
   // MARK: - Enumerator Entry Point:
   // objective is to convert to URL representation
+  // file://path_to_domain/path_to_file_encoded/name
   // a Database model -> domain://root/path/name[.extension]
   init(rootPath: String, attributes: BlinkFiles.FileAttributes) {
     let type = attributes[.type] as? FileAttributeType
@@ -83,6 +84,9 @@ struct BlinkItemReference {
   }
   
   // MARK: - DB Query Entry Point:
+  // The URL needs to be below the container.
+  // https://developer.apple.com/documentation/fileprovider/nsfileproviderextension/1623481-urlforitemwithpersistentidentifi?language=objc
+  // https://developer.apple.com/documentation/fileprovider/nsfileprovidermanager/2879513-documentstorageurl?language=objc
   //1.
   /*
    system provides the identifier passed to this method, and you return a FileProviderItem for that identifier.

@@ -29,14 +29,22 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-
+import BlinkFiles
 import FileProvider
+import Combine
+
 
 class FileProviderEnumerator: NSObject, NSFileProviderEnumerator {
-  var blinkUtility: BlinkUtility
+  let translator: AnyPublisher<Translator, Error>
+  var cancellableBag: Set<AnyCancellable> = []
+  //var translatorPub: AnyPublisher<Translator, Error>
 
   init(enumeratedItemIdentifier: NSFileProviderItemIdentifier, path: String, domain: NSFileProviderDomain) {
-    self.blinkUtility = BlinkUtility(enumeratedItemIdentifier: enumeratedItemIdentifier, domain: domain)
+    self.translator = FileTranslatorPool.translator(for: domain.pathRelativeToDocumentStorage)
+      .flatMap {
+        $0.cloneWalkTo(path)
+      }.eraseToAnyPublisher()
+    //self.blinkUtility = BlinkUtility(enumeratedItemIdentifier: enumeratedItemIdentifier, domain: domain)
     super.init()
   }
   
@@ -58,7 +66,30 @@ class FileProviderEnumerator: NSObject, NSFileProviderEnumerator {
      - inform the observer that you are finished with this page
      */
     
-    blinkUtility.enumerateLocalItems(for: observer, startingAt: page)
+    // blinkUtility.enumerateLocalItems(for: observer, startingAt: page)
+    var current: String!
+    print("enumeratingItems")
+    translator.print("Translator").flatMap { translator -> AnyPublisher<[FileAttributes], Error> in
+      current = translator.current
+      debugPrint(current)
+      return translator.directoryFilesAndAttributes()
+    }.sink(receiveCompletion: { completion in
+      switch completion {
+      case .failure(let error):
+        print("ERROR \(error.localizedDescription)")
+      default:
+        break
+      }
+    }, receiveValue: { attrs in
+      debugPrint("local blink current")
+      let items = attrs.map { blinkAttr -> FileProviderItem in
+        let ref = BlinkItemReference(rootPath: current,
+                                     attributes: blinkAttr)
+        return FileProviderItem(reference: ref)
+      }
+      observer.didEnumerate(items)
+      observer.finishEnumerating(upTo: nil)
+    }).store(in: &cancellableBag)
   }
 
   func enumerateChanges(for observer: NSFileProviderChangeObserver, from anchor: NSFileProviderSyncAnchor) {

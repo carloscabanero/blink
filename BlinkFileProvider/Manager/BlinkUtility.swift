@@ -58,18 +58,27 @@ class BlinkUtility {
     self.domain = domain
     
     let protoRaw = domain.identifier.rawValue
-    if ( protoRaw.hasPrefix("sftp")) {
+    //if ( protoRaw.hasPrefix("sftp")) {
 
       //Todo: We haven't initialise the translator yet
       self.path = "/"
       proto = .sshProtocol
-    } else if (protoRaw.hasPrefix("local")){
-      self.path = self.localBlink.current
-      proto = .localProtocol
-    } else {
-      self.path = self.localBlink.current
-      proto = .localProtocol
-    }
+//    } else if (protoRaw.hasPrefix("local")){
+//      self.path = self.localBlink.current
+//      proto = .localProtocol
+//    } else {
+//      self.path = self.localBlink.current
+//      proto = .localProtocol
+//    }
+    
+    // TODO The factory to instance an translators is the one that would have to care about how that is done for each of the
+    // protocols. But once that is done, everything is a Translator. So the enumerator can be unique, we just need that
+    // BlinkFilesFactory that instances the different protocols.
+    // TODO The enumerator here also has access to the path for the domain, so we can take a look at that
+    // and figure out where the relative path is.
+    // TODO It looks like paths cannot be ssh:// as those would collide with file:// but we can definitely
+    // do something like file://blinkfiles/ssh:host/path_to_file or whatever.
+    
   }
   
   func enumerateLocalItems(for observer: NSFileProviderEnumerationObserver, startingAt page: NSFileProviderPage) {
@@ -93,8 +102,10 @@ class BlinkUtility {
       if (proto == .localProtocol){
         blinkLocalWorker(observer: observer)
       }
-      if (proto == .sshProtocol){
-        blinkSSHWorker(observer: observer)
+      DispatchQueue.main.async {
+        if (self.proto == .sshProtocol){
+          self.blinkSSHWorker(observer: observer)
+        }
       }
       
       return
@@ -104,8 +115,10 @@ class BlinkUtility {
       if (proto == .localProtocol){
         blinkLocalWorker(observer: observer)
       }
-      if (proto == .sshProtocol){
-        blinkSSHWorker(observer: observer)
+      DispatchQueue.main.async {
+        if (self.proto == .sshProtocol){
+        self.blinkSSHWorker(observer: observer)
+      }
       }
       break
     }
@@ -136,18 +149,19 @@ class BlinkUtility {
     var sftp: SFTPClient?
     
     var c: AnyCancellable? = nil
-    c = SSHClient.dialWithTestConfig()
+    c = SSHClient.dial("localhost", with: SSHClientConfig(user: "carloscabanero", authMethods: [AuthPassword(with: "asdfzxcv")], loggingVerbosity: .debug))
+      .print("Dialing...")
       .flatMap() { conn -> AnyPublisher<SFTPClient, Error> in
         connection = conn
         return conn.requestSFTP()
       }.flatMap() { client -> AnyPublisher<Translator, Error> in
-              sftp = client
-              return client.walkTo(self.path)
-
+          sftp = client
+          return client.walkTo(self.path)
       }
       .flatMap { $0.directoryFilesAndAttributes() }
       .sink(receiveCompletion: { completion in
-        c = nil
+        c  = nil
+        connection = nil
         switch completion {
         case .finished:
           print("finished")
@@ -175,7 +189,7 @@ extension SSHClientConfig {
     authMethods: [
       AuthPassword(with: Credentials.localHost.password)
     ],
-    loggingVerbosity: .info
+    loggingVerbosity: .debug
   )
 }
 
@@ -190,8 +204,7 @@ struct Credentials {
   let password: String
   let host: String
 
-  static let localHost = Credentials(user: "xx", password: "xx", host: "xx")
+  static let localHost = Credentials(user: "carloscabanero", password: "asdfzxcv", host: "localhost")
   static let port: String = "22"
-
 }
 

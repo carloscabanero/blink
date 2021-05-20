@@ -128,29 +128,31 @@ void __setupProcessEnv() {
 //  }];
 
   // TODO: Not used
-  NSUUID *uuid = [NSUUID UUID];
-  NSString *uuidString = @"uuid";
-  NSString *sshProtocol = @"local";
-  NSString *domainID1 = [NSString stringWithFormat:@"%@://%@/", sshProtocol, uuidString];
-
-  NSFileProviderDomain *domainOne = [[NSFileProviderDomain alloc]
-                                     initWithIdentifier:domainID1
-                                                                      displayName: @"local"
-                                                    pathRelativeToDocumentStorage: uuidString];
+//  NSUUID *uuid = [NSUUID UUID];
+//  NSString *uuidString = @"uuid";
+//  NSString *sshProtocol = @"ssh";
+  // protocol://
+//  NSString *domainID1 = [NSString stringWithFormat:@"%@://%@/", sshProtocol, uuidString];
+//
+//  NSFileProviderDomain *domainOne = [[NSFileProviderDomain alloc]
+//                                     initWithIdentifier:domainID1
+//                                                                      displayName: @"ssh"
+//                                                    pathRelativeToDocumentStorage: uuidString];
 
   
   NSUUID *uuid2 = [NSUUID UUID];
   NSString *uuid2String = @"uuid2";
-  NSString *local = @"sftp";
-  NSString *domainID2 = [NSString stringWithFormat:@"%@://%@/", local, uuid2String];
+  NSString *local = @"local";
+  NSString *domainID2 = [NSString stringWithFormat:@"%@", local, uuid2String];
 
-  NSFileProviderDomain *domainTwo = [[NSFileProviderDomain alloc] initWithIdentifier: domainID2
-                                                                         displayName: @"sftp"
-                                                       pathRelativeToDocumentStorage: uuid2String];
+  NSFileProviderDomain *domainTwo = [[NSFileProviderDomain alloc] initWithIdentifier: NSFileProviderRootContainerItemIdentifier
+                                                                         displayName: @"SFTP"
+                                     // The path of the domain's subdirectory relative to the file provider's shared container. "<ssh:host:path>/asdfasdf/"
+                                                       pathRelativeToDocumentStorage: @"s3:spaces.digitalocean.com:/"];
 
-  [NSFileProviderManager addDomain:domainOne completionHandler:^(NSError * _Nullable error) {
-    NSLog(@"domainID1 %@ one error %@", domainID1, error);
-  }];
+//  [NSFileProviderManager addDomain:domainOne completionHandler:^(NSError * _Nullable error) {
+//    NSLog(@"domainID1 %@ one error %@", domainID1, error);
+//  }];
 
   [NSFileProviderManager addDomain:domainTwo completionHandler:^(NSError * _Nullable error) {
     NSLog(@"domainID2 %@ two error %@", domainID2, error);

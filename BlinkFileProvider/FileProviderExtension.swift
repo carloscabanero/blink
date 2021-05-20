@@ -31,8 +31,48 @@
 
 
 import FileProvider
+import BlinkFiles
+import Combine
 
 extension String: Error {}
+
+enum BlinkFilesProtocol: String {
+  case ssh = "ssh"
+  case local = "local"
+}
+
+class FileTranslatorPool {
+  static let shared = FileTranslatorPool()
+  private var translators: [String: AnyPublisher<Translator, Error>] = [:]
+  
+  private init() {}
+  
+  static func translator(for path: String) -> AnyPublisher<Translator, Error> {
+    // path: ssh:host:root_folder
+    let components = path.split(separator: ":")
+    //  TODO At least two components
+    let p = BlinkFilesProtocol(rawValue: String(components[0]))
+    let pathAtFiles: String
+    if components.count == 2 {
+      pathAtFiles = String(components[1])
+    } else {
+      pathAtFiles = String(components[2])
+    }
+    
+    if let translator = shared.translators[path] {
+      return translator
+    }
+    
+    switch p {
+    case .local:
+      let translatorPub = Local().walkTo(pathAtFiles)
+      shared.translators[path] = translatorPub
+      return translatorPub
+    default:
+      return Fail(error: "Not implemented").eraseToAnyPublisher()
+    }
+  }
+}
 
 class FileProviderExtension: NSFileProviderExtension {
   
@@ -189,7 +229,6 @@ class FileProviderExtension: NSFileProviderExtension {
       // TODO: determine if the item is a directory or a file
       // - for a directory, instantiate an enumerator of its subitems
       // - for a file, instantiate an enumerator that observes changes to the file
-      
       guard
         let ref = BlinkItemReference(itemIdentifier: containerItemIdentifier),
         ref.isDirectory
