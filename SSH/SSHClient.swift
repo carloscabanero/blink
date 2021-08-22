@@ -369,7 +369,7 @@ public class SSHClient {
   func connection() -> SSHConnection {
     AnyPublisher
       .just(self.session).print("Before rloop")
-      .subscribe(on: rloop).print("After rloop")
+      .receive(on: rloop).print("Receive rloop")
       .eraseToAnyPublisher()
   }
   
@@ -378,9 +378,8 @@ public class SSHClient {
       return .fail(error: SSHError(title: "Could not create channel"))
     }
     ssh_channel_set_blocking(channel, 0)
-    return Just(channel)
-      .setFailureType(to: Error.self)
-      .subscribe(on: rloop)
+    return AnyPublisher.just(channel)
+      .receive(on: rloop)
       .eraseToAnyPublisher()
   }
   
@@ -566,6 +565,7 @@ public class SSHClient {
           throw SSHError(rc, forSession: session)
         } else {
           timer?.invalidate()
+          timer = nil
         }
         
         return self
@@ -661,7 +661,7 @@ public class SSHClient {
           throw SSHError(rc, forSession: self.session)
         }
         return channel
-      }
+      }.share().eraseToAnyPublisher()
       .flatMap { channel -> AnyPublisher<ssh_channel, Error> in
         if !forwardAgent {
           return AnyPublisher.just(channel)
@@ -669,6 +669,7 @@ public class SSHClient {
         
         return self.requestAgentForward(on: channel)
       }.eraseToAnyPublisher()
+      .share().eraseToAnyPublisher()
       .tryChannel { channel in
         guard let pty = pty else {
           return channel
@@ -684,6 +685,7 @@ public class SSHClient {
         return channel
       }
       .flatMap { self.requestEnvVars(channel: $0, vars: vars) }.eraseToAnyPublisher()
+      .share().eraseToAnyPublisher()
       .tryChannel { channel in
         self.log.message("SHELL Start", SSH_LOG_INFO)
         
