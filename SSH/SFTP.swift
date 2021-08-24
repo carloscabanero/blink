@@ -107,7 +107,10 @@ public class SFTPClient : BlinkFiles.Translator {
   }
   
   func connection() -> AnyPublisher<sftp_session, Error> {
-    return Just(sftp).subscribe(on: rloop).setFailureType(to: Error.self)
+    return Just(sftp)
+      .subscribe(on: rloop)
+      .receive(on: rloop)
+      .setFailureType(to: Error.self)
       .eraseToAnyPublisher()
   }
   
@@ -267,6 +270,8 @@ public class SFTPClient : BlinkFiles.Translator {
       
       return self.parseItemAttributes(attrs)
     }
+    .receive(on: rloop)
+    .subscribe(on: rloop).eraseToAnyPublisher()
   }
   
   public func wstat(_ attrs: FileAttributes) -> AnyPublisher<Bool, Error> {

@@ -369,6 +369,7 @@ public class SSHClient {
   func connection() -> SSHConnection {
     AnyPublisher
       .just(self.session).print("Before rloop")
+      .subscribe(on: rloop).print("Subscribe rloop")
       .receive(on: rloop).print("Receive rloop")
       .eraseToAnyPublisher()
   }
@@ -380,6 +381,7 @@ public class SSHClient {
     ssh_channel_set_blocking(channel, 0)
     return AnyPublisher.just(channel)
       .receive(on: rloop)
+      .subscribe(on: rloop)
       .eraseToAnyPublisher()
   }
   

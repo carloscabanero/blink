@@ -43,31 +43,38 @@ extension Publisher {
   -> AnyPublisher<T, Error> where Self == AnyPublisher<U, Error> {
     var doTry = true
     
-    return self.tryMap { p -> T in
-        while doTry {
-          do {
-            return try operation(p)
-          } catch SSHError.again {
-            CFRunLoopRunInMode(.defaultMode, 0.5, true)
-            continue
-          }
-        }
-        throw SSHError(title: "Operation cancelled")
-      }
     
-      .handleEvents(receiveCancel: {
-        doTry = false
-      })
-      .subscribe(on: RunLoop.current)
-      .eraseToAnyPublisher()
+    return self.tryMap { p -> T in
+      if RunLoop.current != RunLoop.main {
+        Swift.print("?????????")
+      }
+      while doTry {
+        do {
+          return try operation(p)
+        } catch SSHError.again {
+          CFRunLoopRunInMode(.defaultMode, 0.5, true)
+          continue
+        }
+      }
+      throw SSHError(title: "Operation cancelled")
     }
-
+    
+    .handleEvents(receiveCancel: {
+      if RunLoop.current != RunLoop.main {
+        Swift.print("?????????")
+      }
+      doTry = false
+    })
+    .eraseToAnyPublisher()
+  }
+  
   func tryChannel<T>(_ operation: @escaping (ssh_channel) throws -> T)
   -> AnyPublisher<T, Error> where Self == AnyPublisher<ssh_channel, Error> {
     
     var doTry = true
     
     return tryMap { chan -> T in
+      
       while doTry {
         do {
           return try operation(chan)
@@ -85,10 +92,9 @@ extension Publisher {
     .handleEvents(receiveCancel: {
       doTry = false
     })
-    .subscribe(on: RunLoop.current)
     .eraseToAnyPublisher()
   }
-    
+  
   func trySFTP<T>(_ operation: @escaping (sftp_session) throws -> T) ->
   AnyPublisher<T, Error> where Self == AnyPublisher<sftp_session, Error> {
     tryOperation(operation)
@@ -130,7 +136,6 @@ extension AnyPublisher where Output == ssh_session, Failure == Error {
     .handleEvents(receiveCancel: {
       doTry = false
     })
-    .subscribe(on: RunLoop.current)
     .eraseToAnyPublisher()
   }
 }
