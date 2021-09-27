@@ -34,6 +34,11 @@ import Foundation
 import SSHConfig
 
 
+// TODO We need this if we want to indicate to the user which of the
+// extra ssh attributes we support, and obviously, when we don't.
+// fileprivate enum ExtendedSSHConfigAttributes {
+//   case
+// }
 extension BKHosts {
   
   @objc public static func saveAllToSSHConfig() {
@@ -60,11 +65,15 @@ extension BKHosts {
         
         try config.add(alias: h.host, cfg: cfg)
       }
-      
+
+      // TODO Maybe add a comment to not modify the file on your own.
+      // TODO Add the .ssh/config import
       guard
         let data = config.string().data(using: .utf8),
         let url = BlinkPaths.blinkSSHConfigFileURL()
       else {
+        // TODO As this file is basically our own, we may want to report
+        // errors during transformation by writing somewhere as well.
         print("can't convert to data")
         return
       }
