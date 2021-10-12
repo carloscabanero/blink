@@ -261,11 +261,11 @@ struct SSHCommand: ParsableCommand {
 // TODO Working with half baked strings may be error prone.
 // We could use an enum, so the structure would be from the [Enum: Any].
 extension SSHCommand {
-  func bkSSHHost() -> BKSSHHost {
+  func bkSSHHost() throws -> BKSSHHost {
     // Create an SSH Config dictionary with the content of the command.
     // Note that the Host is actually not defined by the command, as it may be just an alias.
     // If the resulting Host calculation does not have a host, then we set it up.
-    var params = try! sshOptions()
+    var params = try sshOptions()
 
     if let user = self.user {
       params["user"] = user
@@ -287,8 +287,7 @@ extension SSHCommand {
       params["loglevel"] = logLevel
     }
 
-    // TODO Tunnels, etc...
-    return BKSSHHost(content: params)
+    return try BKSSHHost(content: params)
   }
 
   func sshOptions() throws -> [String: Any] {

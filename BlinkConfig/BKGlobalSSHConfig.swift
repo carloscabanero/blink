@@ -88,12 +88,15 @@ public class BKGlobalSSHConfig: NSObject, NSSecureCoding {
     do {
       let config = SSHConfig()
 
-      try config.add(alias: "*", cfg: [("User", self.user)])
+      // TODO High level migration mechanism.
+      try config.add(alias: "*", cfg: [("User", self.user), 
+                                       ("ControlMaster", "auto"),
+                                       ("SendEnv", "LANG")])
    
-      // Config does not currently allow for single lines
-      // TODO How do we add .ssh/config?
+      // Config does not currently allow for single lines
       let configString = """
 Include ssh_config
+Include ../.ssh/config
 
 \(config.string())
 """

@@ -40,31 +40,51 @@ import SSHConfig
 //   case
 // }
 extension BKHosts {
+  static func sshConfig() throws -> SSHConfig {
+    let config = SSHConfig()
+    let hosts = BKHosts.allHosts() ?? []
+    for h in hosts {
+      var cfg: [(String, Any)] = []
+      if let user = h.user, !user.isEmpty {
+        cfg.append(("User", user))
+      }
+      if let port = h.port {
+        cfg.append(("Port", port.intValue))
+      }
+      if let hostName = h.hostName, !hostName.isEmpty {
+        cfg.append(("HostName", hostName))
+      }
+      if let key = h.key, !key.isEmpty, key != "None" {
+        cfg.append(("IdentityFile", key))
+      }
+      if let proxyCmd = h.proxyCmd, !proxyCmd.isEmpty {
+        cfg.append(("ProxyCommand", proxyCmd))
+      }
+      if let proxyJump = h.proxyJump, !proxyJump.isEmpty {
+        cfg.append(("ProxyJump", proxyJump))
+      }
+      if let sshConfigAttachment = h.sshConfigAttachment, !sshConfigAttachment.isEmpty {
+        sshConfigAttachment.split(whereSeparator: \.isNewline).forEach { line in
+          let components = line
+            .trimmingCharacters(in: .whitespaces)
+            .components(separatedBy: CharacterSet(charactersIn: " \t"))
+          if components.count == 2,
+             // TODO Comments may be doable with ("//", "content")
+             components[0] != "//" {
+            cfg.append((components[0], components[1]))
+          }
+        }
+      }
+      
+      try config.add(alias: h.host, cfg: cfg)
+    }
+    
+    return config
+  }
   
   @objc public static func saveAllToSSHConfig() {
     do {
-      let config = SSHConfig()
-      let hosts = BKHosts.allHosts() ?? []
-      for h in hosts {
-        var cfg: [(String, Any)] = []
-        if let user = h.user, !user.isEmpty {
-          cfg.append(("User", user))
-        }
-        if let port = h.port {
-          cfg.append(("Port", port.intValue))
-        }
-        if let hostName = h.hostName, !hostName.isEmpty {
-          cfg.append(("HostName", hostName))
-        }
-        if let key = h.key, !key.isEmpty, key != "None" {
-          cfg.append(("IdentityFile", key))
-        }
-        if let proxyCmd = h.proxyCmd, !proxyCmd.isEmpty {
-          cfg.append(("ProxyCommand", proxyCmd))
-        }
-        
-        try config.add(alias: h.host, cfg: cfg)
-      }
+      let config = try sshConfig()
 
       // TODO Maybe add a comment to not modify the file on your own.
       // TODO Add the .ssh/config import
@@ -81,6 +101,7 @@ extension BKHosts {
       try data.write(to: url)
       
     } catch {
+      // TODO Throw and capture somewhere else.
       print(error)
     }
   }

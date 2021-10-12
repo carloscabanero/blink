@@ -31,8 +31,8 @@
 
 
 import Foundation
-import SSH
 
+import SSH
 import SSHConfig
 
 
@@ -58,8 +58,8 @@ public struct BKConfig {
   }
 
   // Return the stored configuration given the host.
-  // We are assuming that configuration will be just coming from .blink/ssh_config.
-  public func bkSSHHost(_ alias: String) -> BKSSHHost? {
+  // The root for the configuration is now the file sequence from .blink/ssh_config.
+  public func bkSSHHost(_ alias: String) throws -> BKSSHHost? {
     guard var sshConfig = try? bkSSHConfig?.resolve(alias: alias) else {
       return nil
     }
@@ -69,16 +69,15 @@ public struct BKConfig {
       sshConfig["password"] = password
     }
 
-    // TODO If the default information cannot be passed, we could enforce it here.
-    return BKSSHHost(content: sshConfig)
+    return try BKSSHHost(content: sshConfig)
   }
   
-  public func bkSSHHost(_ alias: String, extending baseHost: BKSSHHost) -> BKSSHHost {
-    guard let sshConfigHost = self.bkSSHHost(alias) else {
+  public func bkSSHHost(_ alias: String, extending baseHost: BKSSHHost) throws -> BKSSHHost {
+    guard let sshConfigHost = try self.bkSSHHost(alias) else {
       return baseHost
     }
     
-    return baseHost.merge(sshConfigHost)
+    return try baseHost.merge(sshConfigHost)
   }
 
   public func privateKey(forIdentifier identifier: String) -> (String, String)? {
@@ -101,14 +100,14 @@ public struct BKConfig {
     return (signer, identity)
   }
   
-  public func signer(forHost host: BKSSHHost) -> (Signer, String)? {
+  public func signer(forHost host: BKSSHHost) -> [(Signer, String)]? {
     guard
       let identity = host.identityFile
     else {
       return nil
     }
     
-    return signer(forIdentity: identity)
+    return identity.compactMap { signer(forIdentity: $0) }
   }
 
   public func defaultSigners() -> [(Signer, String)] {
@@ -135,94 +134,4 @@ public struct BKConfig {
       }
   }
 
-}
-
-public struct BKSSHHost {
-  private let content: [String:Any]
-
-  public var hostName: String? { content["hostname"] as? String }
-  public var identityFile: String? { content["identityfile"] as? String }
-  public var password: String? { content["password"] as? String }
-  public var user: String? { content["user"] as? String }
-  public var port: String? { content["port"] as? String }
-  public var proxyCommand: String? { content["proxycommand"] as? String }
-  public var proxyJump: String? { content["proxyjump"] as? String }
-  public var compression: Bool? {
-    guard let compression = content["compression"] as? String else {
-      return nil
-    }
-    return Bool(yesNoValue: compression)
-  }
-  public var compressionLevel: Int? {
-    guard let compressionLevel = content["compressionlevel"] as? String else {
-      return nil
-    }
-    return Int(compressionLevel)
-  }
-  public var connectionTimeout: Int? {
-    guard let connectionTimeout = content["connectiontimeout"] as? Int else {
-      return nil
-    }
-    return Int(connectionTimeout)
-  }
-  public var logLevel: SSHLogLevel? {
-    guard let logLevel = content["loglevel"] as? String else {
-      return nil
-    }
-    return SSHLogLevel(logLevel)
-  }
-  public var controlMaster: Bool? {
-    guard let controlMaster = content["controlmaster"] as? String else {
-      return nil
-    }
-    return Bool(yesNoValue: controlMaster)
-  }
-
-  public var forwardAgent: Bool? {
-    guard let forwardAgent = content["forwardAgent"] as? String else {
-      return nil
-    }
-    return Bool(yesNoValue: forwardAgent)
-  }
-
-  public init(content: [String: Any]) {
-    self.content = content
-  }
-
-  public func merge(_ host: BKSSHHost) -> BKSSHHost {
-    return BKSSHHost(content: content.merging(host.content, uniquingKeysWith: { (curr, _) in curr }))
-  }
-
-  public func sshClientConfig(authMethods: [SSH.AuthMethod]?,
-                              verifyHostCallback: SSHClientConfig.RequestVerifyHostCallback? = nil,
-                              agent: SSHAgent? = nil,
-                              logger: SSHLogPublisher? = nil) -> SSHClientConfig {
-    SSHClientConfig(
-      user: user ?? "root",
-      port: port,
-      proxyJump: proxyJump,
-      proxyCommand: proxyCommand,
-      authMethods: authMethods,
-      agent: agent,
-      loggingVerbosity: logLevel,
-      verifyHostCallback: verifyHostCallback,
-      connectionTimeout: connectionTimeout,
-      logger: logger,
-      compression: compression,
-      compressionLevel: compressionLevel
-    )
-  }
-}
-
-extension Bool {
-  fileprivate init?(yesNoValue description: String) {
-    switch description.lowercased() {
-    case "yes":
-      self.init(true)
-    case "no":
-      self.init(false)
-    default:
-      return nil
-    }
-  }
 }

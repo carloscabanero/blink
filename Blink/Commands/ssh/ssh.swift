@@ -102,9 +102,16 @@ public func blink_ssh_main(argc: Int32, argv: Argv) -> Int32 {
     }
     
     // TODO BKConfig.shared.host()
-    let host = BKConfig().bkSSHHost(cmd.hostAlias, extending: cmd.bkSSHHost())
-    let hostName = host.hostName ?? cmd.hostAlias
+    let host: BKSSHHost
+    do {
+      let commandHost = cmd.bkSSHHost()
+      host = try BKConfig().bkSSHHost(cmd.hostAlias, extending: commandHost)
+    } catch {
+      print("Configuration error - \(error)", to: &stderr)
+      return -1
+    }
 
+    let hostName = host.hostName ?? cmd.hostAlias
     let config = SSHClientConfigProvider.config(host: host, using: device)
     // The HostName is the defined by "host", or the one from the command.
 
@@ -142,7 +149,7 @@ public func blink_ssh_main(argc: Int32, argv: Argv) -> Int32 {
       connect = SSHPool.dial(
         hostName,
         with: config,
-        withControlMaster: host.controlMaster ?? true,
+        withControlMaster: host.controlMaster ?? .no,
         withProxy: { [weak self] in
           guard let self = self
           else {
@@ -153,6 +160,12 @@ public func blink_ssh_main(argc: Int32, argv: Argv) -> Int32 {
         })
     }
 
+    let environment: [String:String] = host.sendEnv?.reduce([String:String]()) { (result, env) in
+      var result = result
+      result[env] = String(cString: getenv(env))
+      return result
+    } ?? [:]
+
     connect.flatMap { conn -> SSHConnection in
       if cmd.startsSession {
         if let addr = conn.clientAddressIP() {
@@ -161,8 +174,7 @@ public func blink_ssh_main(argc: Int32, argv: Argv) -> Int32 {
 
         return self.startInteractiveSessions(conn,
                                              command: cmd,
-                                             // TODO Env vars should come from Host
-                                             withEnvVars: [:],
+                                             withEnvVars: environment,
                                              sendAgent: host.forwardAgent ?? false)
       }
       return .just(conn)
@@ -241,9 +253,12 @@ public func blink_ssh_main(argc: Int32, argv: Argv) -> Int32 {
       pty = SSH.SSHClient.PTY(rows: rows, columns: cols)
       self.device.rawMode = true
     }
-    
+
     let session: AnyPublisher<SSH.Stream, Error>
-        
+
+    var envVars = envVars
+    envVars["TERM"] = String(cString: getenv("TERM"))
+
     if command.command.isEmpty {
       session = conn.requestInteractiveShell(withPTY: pty,
                                              withEnvVars: envVars,

@@ -269,6 +269,7 @@ public class BlinkCopy: NSObject {
     // TODO ConfigFileOptions should now come from proper BKconfig
     // let sshOptions: ConfigFileOptions
     var params = [hostPath]
+    let host: BKSSHHost
     
     do {
       // Pass verbosity
@@ -277,13 +278,12 @@ public class BlinkCopy: NSObject {
         params.append(v)
       }
       sshCommand = try SSHCommand.parse(params)
-      // sshOptions = try sshCommand.connectionOptions.get()
+      host = try BKConfig().bkSSHHost(sshCommand.hostAlias, extending: sshCommand.bkSSHHost())
     } catch {
       let message = SSHCommand.message(for: error)
       return .fail(error: CommandError(message: message))
     }
 
-    let host = BKConfig().bkSSHHost(sshCommand.hostAlias, extending: sshCommand.bkSSHHost())
     let hostName = host.hostName ?? sshCommand.hostAlias
     let config = SSHClientConfigProvider.config(host: host, using: device)
 

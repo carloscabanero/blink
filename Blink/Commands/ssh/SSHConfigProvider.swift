@@ -90,9 +90,12 @@ extension SSHClientConfigProvider {
     var authMethods: [AuthMethod] = []
 
     // Explicit identity
-    if let identityFile = host.identityFile,
-       let (identityKey, name) = config.privateKey(forIdentifier: identityFile) {
-      authMethods.append(AuthPublicKey(privateKey: identityKey, keyName: name))
+    if let identities = host.identityFile {
+      identities.forEach { identity in
+        if let (identityKey, name) = config.privateKey(forIdentifier: identity) {
+            authMethods.append(AuthPublicKey(privateKey: identityKey, keyName: name))
+        }
+      }
     } else {
       // All default keys
       for (defaultKey, name) in config.defaultKeys() {
@@ -135,11 +138,13 @@ extension SSHClientConfigProvider {
 
     let consts: [SSHAgentConstraint] = [SSHConstraintTrustedConnectionOnly()]
 
-    if let (signer, name) = config.signer(forHost: host) {
-      // NOTE We could also keep the reference and just read the key at the proper time.
-      // TODO Errors. Either pass or log here, or if we create a different
-      // type of key, then let the Agent fail.
-      _ = agent.loadKey(signer, aka: name, constraints: consts)
+    if let signers = config.signer(forHost: host) {
+      signers.forEach { (signer, name) in
+        // NOTE We could also keep the reference and just read the key at the proper time.
+        // TODO Errors. Either pass or log here, or if we create a different
+        // type of key, then let the Agent fail.
+        _ = agent.loadKey(signer, aka: name, constraints: consts)
+      }
     } else {
       for (signer, name) in config.defaultSigners() {
         _ = agent.loadKey(signer, aka: name, constraints: consts)

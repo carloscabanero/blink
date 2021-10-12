@@ -82,15 +82,23 @@ fileprivate func local(path: String) -> AnyPublisher<Translator, Error> {
 }
 
 fileprivate func sftp(host: String, path: String) -> AnyPublisher<Translator, Error> {
-  guard let (host, config) = SSHClientConfigProvider.config(host: host) else {
-    return .fail(error: "Could not find config for given host.")
+  let hostName: String
+  let config: SSHClientConfig
+  do {
+    guard let (name, cfg) = try SSHClientConfigProvider.config(host: host) else {
+      return .fail(error: "Could not find config for given host.")
+    }
+    hostName = name
+    config = cfg
+  } catch {
+    return .fail(error: "Configuration error - \(error)")
   }
   
   // NOTE We use main queue as this is an extension. Should move it to a different one though,
   // in case of future changes.
   return Just(config).receive(on: DispatchQueue.main).flatMap {
     SSHClient
-      .dial(host, with: $0)
+      .dial(hostName, with: $0)
       .print("Dialing...")
     //.receive(on: FileTranslatorPool.shared.backgroundRunLoop)
       .flatMap { conn -> AnyPublisher<SFTPClient, Error> in
@@ -103,7 +111,7 @@ fileprivate func sftp(host: String, path: String) -> AnyPublisher<Translator, Er
 
 class SSHClientConfigProvider {
   
-  static func config(host title: String) -> (String, SSHClientConfig)? {
+  static func config(host title: String) throws -> (String, SSHClientConfig)? {
    
     // TODO We could assume this is just regular config initialization.
     // No need to pass it to the BKConfig itself then.
@@ -113,15 +121,17 @@ class SSHClientConfigProvider {
     
     let bkConfig = BKConfig()
     let agent = SSHAgent()
-    let consts: [SSHAgentConstraint] = [SSHConstraintTrustedConnectionOnly()]    
+    let consts: [SSHAgentConstraint] = [SSHConstraintTrustedConnectionOnly()]
 
-    guard let host = bkConfig.bkSSHHost(title),
+    guard let host = try bkConfig.bkSSHHost(title),
           let hostName = host.hostName else {
       return nil
     }
     
-    if let (signer, name) = bkConfig.signer(forHost: host) {
-      _ = agent.loadKey(signer, aka: name, constraints: consts)
+    if let signers = bkConfig.signer(forHost: host) {
+      signers.forEach { (signer, name) in
+        _ = agent.loadKey(signer, aka: name, constraints: consts)
+      }
     } else {
       for (signer, name) in bkConfig.defaultSigners() {
         _ = agent.loadKey(signer, aka: name, constraints: consts)
