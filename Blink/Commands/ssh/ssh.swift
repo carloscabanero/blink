@@ -104,7 +104,7 @@ public func blink_ssh_main(argc: Int32, argv: Argv) -> Int32 {
     // TODO BKConfig.shared.host()
     let host: BKSSHHost
     do {
-      let commandHost = cmd.bkSSHHost()
+      let commandHost = try cmd.bkSSHHost()
       host = try BKConfig().bkSSHHost(cmd.hostAlias, extending: commandHost)
     } catch {
       print("Configuration error - \(error)", to: &stderr)
