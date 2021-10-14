@@ -104,5 +104,11 @@ func testBKHostsToSSHConfig() throws {
                                            "sendenv": "TERM LC*"])
 
     let _ = try BKConfig().bkSSHHost(hostAlias, extending: baseHost)
+    guard let env = baseHost.sendEnv else {
+      XCTFail("No env received")
+      return
+    }
+    XCTAssert(env.contains("TERM") &&
+              env.contains("LC*"), "List mapping failed")
   }
 }

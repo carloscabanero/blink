@@ -54,7 +54,7 @@ public struct BKSSHHost {
   public var sendEnv: [String]?
   // TODO SendEnv, Tunnels, etc...
   
-  struct ValidationError: Error {
+  public struct ValidationError: Error {
     let message: String
     public var description: String { message }
   }
@@ -62,25 +62,41 @@ public struct BKSSHHost {
   public init(content: [String: Any]) throws {
     self.content = content
     
-    // TODO May get rid of the for loop
-    // TODO Maybe the castValue functions could be part of the library?
+    func castValue<T: SSHValue>(_ value: Any) throws -> T {
+      // Values must be mapped to a String
+      let value = value as! String
+      return try T(castSSHValue: value)
+    }
+    
+    func castList<T: SSHValue>(_ value: Any) throws -> [T] {
+      if let list = value as? [String] {
+        return try list.map { try T(castSSHValue: $0) }
+      } else {
+        return try (value as! String)
+          .split(separator: " ")
+          .map { try T(castSSHValue: String($0)) }
+      }
+    }
+    
     for (key, value) in content {
       do {
-        switch key.lowercased() {
-        case "hostname":            self.hostName           = try Self.castValue(value)
-        case "identityfile":        self.identityFile       = try Self.castValue(value)
-        case "password":            self.password           = try Self.castValue(value)
-        case "user":                self.user               = try Self.castValue(value)
-        case "port":                self.port               = try Self.castValue(value)
-        case "proxycommand":        self.proxyCommand       = try Self.castValue(value)
-        case "proxyjump":           self.proxyJump          = try Self.castValue(value)
-        case "compression":         self.compression        = try Self.castValue(value)
-        case "compressionlevel":    self.compressionLevel   = try Self.castValue(value)
-        case "connectiontimeout":   self.connectionTimeout  = try Self.castValue(value)
-        case "loglevel":            self.logLevel           = try Self.castValue(value)
-        case "controlmaster":       self.controlMaster      = try Self.castValue(value)
-        case "forwardagent":        self.forwardAgent       = try Self.castValue(value)
-        case "sendenv":             self.sendEnv            = try Self.castValue(value)
+        let key = key.lowercased()
+        
+        switch key {
+        case "hostname":            self.hostName           = try castValue(value)
+        case "password":            self.password           = try castValue(value)
+        case "user":                self.user               = try castValue(value)
+        case "port":                self.port               = try castValue(value)
+        case "proxycommand":        self.proxyCommand       = try castValue(value)
+        case "proxyjump":           self.proxyJump          = try castValue(value)
+        case "compression":         self.compression        = try castValue(value)
+        case "compressionlevel":    self.compressionLevel   = try castValue(value)
+        case "connectiontimeout":   self.connectionTimeout  = try castValue(value)
+        case "loglevel":            self.logLevel           = try castValue(value)
+        case "controlmaster":       self.controlMaster      = try castValue(value)
+        case "forwardagent":        self.forwardAgent       = try castValue(value)
+        case "sendenv":             self.sendEnv            = try castList(value)
+        case "identityfile":        self.identityFile       = try castList(value)
         default:
           // Skip unknown
           break
@@ -89,55 +105,8 @@ public struct BKSSHHost {
         throw ValidationError(message: "\(key) \(value) - \(error.message)")
       }
     }
-    
   }
 
-  // TODO Refactor into separate functions.
-  static private func castValue<T>(_ value: Any) throws -> T {
-    switch T.self {
-    case is String?.Type:
-      guard let value = value as? T else {
-        throw ValidationError(message: "Type requires String")
-      }
-      return value
-    case is Bool?.Type:
-      guard let str = value as? String,
-            let value = Bool(yesNoValue: str) as? T else {
-        throw ValidationError(message: "Type requires yes/no")
-      }
-      return value
-    case is Int?.Type:
-      guard let str = value as? String,
-            let value = Int(str) as? T else {
-        throw ValidationError(message: "Type requires number")
-      }
-      return value
-    case is SSHLogLevel?.Type:
-      guard let str = value as? String,
-            let value = SSHLogLevel(str) as? T else {
-        throw ValidationError(message: "Type requires log level: QUIET, etc")
-      }
-      return value
-    case is [String]?.Type:
-      guard let value = value as? T else {
-        // Try separating a single string
-        guard let value = value as? String else {
-          throw ValidationError(message: "Type requires list of strings")
-        }
-        return value.split(separator: " ").map { String($0) } as! T
-      }
-      return value
-    case is ControlMasterOption?.Type:
-      guard let str = value as? String,
-            let value = ControlMasterOption(rawValue: str) as? T else {
-        throw ValidationError(message: "Wrong option")
-      }
-      return value
-    default:
-      throw ValidationError(message: "Unknown type")
-    }
-  }
-  
   public func merge(_ host: BKSSHHost) throws -> BKSSHHost {
     // TODO In the standard, some properties are additive, like sendenv, identities and tunnels.
     return try BKSSHHost(content: content.merging(host.content, uniquingKeysWith: { (curr, _) in curr }))
@@ -164,23 +133,58 @@ public struct BKSSHHost {
   }
 }
 
-extension Bool {
-  fileprivate init?(yesNoValue description: String) {
-    switch description.lowercased() {
+fileprivate protocol SSHValue {
+  init(castSSHValue val: String) throws
+}
+
+extension Bool: SSHValue {
+  fileprivate init(castSSHValue val: String) throws {
+    switch val.lowercased() {
     case "yes":
       self.init(true)
     case "no":
       self.init(false)
     default:
-      return nil
+      throw BKSSHHost.ValidationError(message: "Value must be yes/no")
     }
   }
 }
 
-public enum ControlMasterOption: String {
+extension Int: SSHValue {
+  fileprivate init(castSSHValue val: String) throws {
+    guard let _ = Int(val) else {
+      throw BKSSHHost.ValidationError(message: "Value must be a number")
+    }
+    self.init(val)!
+  }
+}
+
+extension String: SSHValue {
+  fileprivate init(castSSHValue val: String) throws {
+    self.init(val)
+  }
+}
+
+extension SSHLogLevel: SSHValue {
+  fileprivate init(castSSHValue val: String) throws {
+    guard let _ = SSHLogLevel(val) else {
+      throw BKSSHHost.ValidationError(message: "Value must be QUIET, etc...")
+    }
+    self.init(val)!
+  }
+}
+
+public enum ControlMasterOption: String, SSHValue {
   case auto     = "auto"
   case ask      = "ask"
   case autoask  = "autoask"
   case yes      = "yes"
   case no       = "no"
+  
+  fileprivate init(castSSHValue val: String) throws {
+    guard let _ = ControlMasterOption(rawValue: val) else {
+      throw BKSSHHost.ValidationError(message: "Value must be auto, ask, autoask, yes or no")
+    }
+    self.init(rawValue: val)!
+  }
 }
