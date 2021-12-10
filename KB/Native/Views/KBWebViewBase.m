@@ -113,7 +113,7 @@ NSString *_encodeString(NSString *str);
     UIView * mayBeUs = [[me superview] superview];
     if ([mayBeUs isKindOfClass:[KBWebViewBase class]]) {
       KBWebViewBase * base = (KBWebViewBase *)mayBeUs;
-      arg1 = [base _canBeFocused];
+      arg1 = [base canBeFocused];
       if (arg1) {
         ((void (*)(id, SEL, void*, BOOL, BOOL, BOOL, id))original)(me, selector, arg0, arg1, arg2, arg3, arg4);
       }
@@ -125,7 +125,7 @@ NSString *_encodeString(NSString *str);
   method_setImplementation(method, override);
 }
 
-- (BOOL)_canBeFocused {
+- (BOOL)canBeFocused {
   return self.userInteractionEnabled && _focused;
 }
 
@@ -135,6 +135,7 @@ NSString *_encodeString(NSString *str);
   traits.autocorrectionType = UITextAutocorrectionTypeNo;
   traits.autocapitalizationType = UITextAutocapitalizationTypeNone;
   traits.spellCheckingType = UITextSpellCheckingTypeNo;
+  traits.smartInsertDeleteType = UITextSmartInsertDeleteTypeNo;
 }
 
 - (KeyCommand *)_modifiersCommand:(UIKeyModifierFlags) flags {
@@ -372,11 +373,11 @@ NSString *_encodeString(NSString *str);
 }
 
 - (void)ready {
-//  [self removeAssistantsFromView];
+  [self removeAssistantsFromView];
 }
 
 - (void)removeAssistantsFromView {
-//  [self _removeAssistantsFromView:self];
+  [self _removeAssistantsFromView:self];
 }
 
 - (void)_removeAssistantsFromView:(UIView *)view {
@@ -445,6 +446,7 @@ NSString *_encodeString(NSString *str);
   } else if ([@"selection" isEqual:op]) {
     [self onSelection:body];
   }
+  
 }
 
 @end

@@ -63,6 +63,7 @@ final class FileTranslatorCache {
 
     return buildTranslator(for: encodedRootPath)
       .map { t -> Translator in
+        // Next time, the translator does not need to be built again (authentication, etc...)
         shared.translators[encodedRootPath] = t
         return t
       }.eraseToAnyPublisher()
@@ -76,6 +77,9 @@ final class FileTranslatorCache {
 //    }
 //    shared.fileList[parent]!.append(reference)
     shared.references[reference.itemIdentifier.rawValue] = reference
+  }
+  static func remove(reference: BlinkItemReference) {
+    shared.references.removeValue(forKey: reference.itemIdentifier.rawValue)
   }
 
   static func reference(identifier: BlinkItemIdentifier) -> BlinkItemReference? {

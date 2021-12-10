@@ -40,9 +40,9 @@ import UIKit
     return UIHostingController(rootView: NavView(navController: nav)  { view } )
   }
 
-  @objc static func createSubscriptionControllerWith(nav: UINavigationController?) -> UIViewController {
-    _createWith(view: SubscriptionsView().environmentObject(UserModel()), nav: nav)
-  }
+//  @objc static func createSubscriptionControllerWith(nav: UINavigationController?) -> UIViewController {
+//    //_createWith(view: SubscriptionsView().environmentObject(UserModel()), nav: nav)
+//  }
   
   @objc static func createKeyboardControllerWith(nav: UINavigationController?) -> UIViewController {
     _createWith(view: KBConfigView(config: KBTracker.shared.loadConfig()), nav: nav)

@@ -81,7 +81,7 @@ struct BlinkCopyCommand: ParsableCommand {
 
   @Argument(help: "DEST",
             transform: { try FileLocationPath($0) })
-  var destination: FileLocationPath
+  var destination: FileLocationPath = try! FileLocationPath(".")
   
   var preserveFlags: CopyAttributesFlag {
     preserve ? CopyAttributesFlag([.permissions, .timestamp]) : CopyAttributesFlag([])
@@ -129,7 +129,7 @@ class FileLocationPath {
       }
       self.proto = BlinkFilesProtocols(rawValue: proto)
     default:
-      throw ArgumentParser.ValidationError("Path format can only have three components /<protocol>:<host>:<path>")
+      throw ArgumentParser.ValidationError("Path format can only have three components <protocol>:<host>:<path>")
     }
   }
 }
@@ -266,8 +266,8 @@ public class BlinkCopy: NSObject {
   func remoteTranslator(toFilePath filePath: String, atHost hostPath: String, using proto: BlinkFilesProtocols, isSource: Bool = true) -> AnyPublisher<Translator, Error> {
     // At the moment everything is just SSH. At some point we should have a factory.
     let sshCommand: SSHCommand
-    let sshOptions: ConfigFileOptions
     var params = [hostPath]
+    let host: BKSSHHost
     
     do {
       // Pass verbosity
@@ -276,13 +276,15 @@ public class BlinkCopy: NSObject {
         params.append(v)
       }
       sshCommand = try SSHCommand.parse(params)
-      sshOptions = try sshCommand.connectionOptions.get()
+      host = try BKConfig().bkSSHHost(sshCommand.hostAlias, extending: sshCommand.bkSSHHost())
     } catch {
       let message = SSHCommand.message(for: error)
       return .fail(error: CommandError(message: message))
     }
 
-    let (hostName, config) = SSHClientConfigProvider.config(command: sshCommand, using: device)
+    let hostName = host.hostName ?? sshCommand.hostAlias
+    let config = SSHClientConfigProvider.config(host: host, using: device)
+
     return SSHClient.dial(hostName, with: config)
     //return SSHPool.dial(hostName, with: config, connectionOptions: sshOptions)
       .flatMap { conn -> AnyPublisher<Translator, Error> in

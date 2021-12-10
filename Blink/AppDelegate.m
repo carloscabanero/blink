@@ -59,6 +59,7 @@ void __on_pipebroken_signal(int signum){
 }
 
 void __setupProcessEnv() {
+  
   NSBundle *mainBundle = [NSBundle mainBundle];
   int forceOverwrite = 1;
   NSString *SSL_CERT_FILE = [mainBundle pathForResource:@"cacert" ofType:@"pem"];
@@ -85,7 +86,7 @@ void __setupProcessEnv() {
   [self _loadProfileVars];
   [[UIView appearance] setTintColor:[UIColor blinkTint]];
   
-  [SubscriptionNag.shared start];
+  //[SubscriptionNag.shared start];
   
   signal(SIGPIPE, __on_pipebroken_signal);
  
@@ -101,6 +102,11 @@ void __setupProcessEnv() {
     addCommandList([[NSBundle mainBundle] pathForResource:@"blinkCommandsDictionary" ofType:@"plist"]); // Load blink commands to ios_system
       __setupProcessEnv(); // we should call this after ios_system initializeEnvironment to override its defaults.
   });
+  
+  NSString *homePath = BlinkPaths.homePath;
+  setenv("HOME", homePath.UTF8String, 1);
+  setenv("SSH_HOME", homePath.UTF8String, 1);
+  setenv("CURL_HOME", homePath.UTF8String, 1);
   
   NSNotificationCenter *nc = NSNotificationCenter.defaultCenter;
   [nc addObserver:self

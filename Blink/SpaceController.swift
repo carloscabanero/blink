@@ -197,11 +197,15 @@ class SpaceController: UIViewController {
     super.viewWillTransition(to: size, with: coordinator)
     if view.window?.isKeyWindow == true {
       DispatchQueue.main.async {
+//        KBTracker.shared.attach(input: KBTracker.shared.input)
+//        input?.sync(traits: kbTraits, device: kbDevice, hideSmartKeysWithHKB: hideSmartKeysWithHKB)
 //        self.currentTerm()?.termDevice.view?.webView?.kbView.reset()
 //        SmarterTermInput.shared.contentView()?.reloadInputViews()
       }
     }
   }
+  
+  
   
   override var editingInteractionConfiguration: UIEditingInteractionConfiguration {
     DispatchQueue.main.async {
@@ -234,6 +238,9 @@ class SpaceController: UIViewController {
     
     
     nc.addObserver(self, selector: #selector(_termViewIsReady(n:)), name: NSNotification.Name(TermViewReadyNotificationKey), object: nil)
+    nc.addObserver(self, selector: #selector(_termViewBrowserIsReady(n:)), name: NSNotification.Name(TermViewBrowserReadyNotificationKey), object: nil)
+    
+    
     
     nc.addObserver(self, selector: #selector(_UISceneDidEnterBackgroundNotification(_:)),
                    name: UIScene.didEnterBackgroundNotification, object: nil)
@@ -411,24 +418,41 @@ class SpaceController: UIViewController {
     _attachInputToCurrentTerm()
   }
   
+  @objc private func _termViewBrowserIsReady(n: Notification) {
+    _attachInputToCurrentTerm();
+  }
+  
   private func _attachInputToCurrentTerm() {
-    guard let device = currentDevice else {
+    guard
+      let device = currentDevice,
+      let deviceView = device.view
+    else {
       return
     }
     
     _termViewToFocus = nil
     
-    guard device.view.isReady else {
-      _termViewToFocus = device.view
+    guard deviceView.isReady else {
+      _termViewToFocus = deviceView
+      return
+    }
+    
+    let input = KBTracker.shared.input
+    
+    if deviceView.browserView != nil {
+      KBTracker.shared.attach(input: deviceView.browserView)
+      device.attachInput(deviceView.browserView)
+      _ = deviceView.browserView.becomeFirstResponder()
+      if input != KBTracker.shared.input {
+        input?.reportFocus(false)
+      }
       return
     }
 
-    let input = KBTracker.shared.input
     
-    KBTracker.shared.attach(input: device.view?.webView)
-
-    device.attachInput(device.view.webView)
-    device.view.webView.reportFocus(true)
+    KBTracker.shared.attach(input: deviceView.webView)
+    device.attachInput(deviceView.webView)
+    deviceView.webView.reportFocus(true)
     device.focus()
     if input != KBTracker.shared.input {
       input?.reportFocus(false)

@@ -82,13 +82,24 @@ fileprivate func local(path: String) -> AnyPublisher<Translator, Error> {
 }
 
 fileprivate func sftp(host: String, path: String) -> AnyPublisher<Translator, Error> {
-  let (host, config) = SSHClientConfigProvider.config(host: host)
   let log = BlinkLogger("SFTP")
+  let hostName: String
+  let config: SSHClientConfig
+  do {
+    guard let (name, cfg) = try SSHClientConfigProvider.config(host: host) else {
+      return .fail(error: "Could not find config for given host.")
+    }
+    hostName = name
+    config = cfg
+  } catch {
+    return .fail(error: "Configuration error - \(error)")
+  }
+  
   // NOTE We use main queue as this is an extension. Should move it to a different one though,
   // in case of future changes.
   return Just(config).receive(on: DispatchQueue.main).flatMap {
     SSHClient
-      .dial(host, with: $0)
+      .dial(hostName, with: $0)
       .print("Dialing...")
     //.receive(on: FileTranslatorPool.shared.backgroundRunLoop)
       .flatMap { conn -> AnyPublisher<SFTPClient, Error> in
@@ -109,49 +120,41 @@ fileprivate func sftp(host: String, path: String) -> AnyPublisher<Translator, Er
 }
 
 class SSHClientConfigProvider {
-
-  static func config(host: String) -> (String, SSHClientConfig) {
-
+  
+  static func config(host title: String) throws -> (String, SSHClientConfig)? {
+   
+    // NOTE This is just regular config initialization. Usually happens on AppDelegate, but the
+    // FileProvider doesn't get another chance.
     BKHosts.loadHosts()
     BKPubKey.loadIDS()
-
-    let bkConfig = BKConfig(allHosts: BKHosts.allHosts(), allIdentities: BKPubKey.all())
+    
+    let bkConfig = BKConfig()
     let agent = SSHAgent()
-
     let consts: [SSHAgentConstraint] = [SSHConstraintTrustedConnectionOnly()]
 
-    if let (signer, name) = bkConfig.signer(forHost: host) {
-      _ = agent.loadKey(signer, aka: name, constraints: consts)
+    guard let host = try bkConfig.bkSSHHost(title),
+          let hostName = host.hostName else {
+      return nil
+    }
+    
+    if let signers = bkConfig.signer(forHost: host) {
+      signers.forEach { (signer, name) in
+        _ = agent.loadKey(signer, aka: name, constraints: consts)
+      }
     } else {
-      for identity in ["id_dsa", "id_rsa", "id_ecdsa", "id_ed25519"] {
-        if let (signer, name) = bkConfig.signer(forIdentity: identity) {
-          _ = agent.loadKey(signer, aka: name, constraints: consts)
-        }
+      for (signer, name) in bkConfig.defaultSigners() {
+        _ = agent.loadKey(signer, aka: name, constraints: consts)
       }
     }
 
     var availableAuthMethods: [AuthMethod] = [AuthAgent(agent)]
-    if let password = bkConfig.password(forHost: host), !password.isEmpty {
+    if let password = host.password, !password.isEmpty {
       availableAuthMethods.append(AuthPassword(with: password))
     }
-
-    return (
-      bkConfig.hostName(forHost: host)!,
-      SSHClientConfig(
-        user: bkConfig.user(forHost: host) ?? "root",
-        port: bkConfig.port(forHost: host) ?? "22",
-        proxyJump: nil,
-        proxyCommand: bkConfig.proxyCommand(forHost: host),
-        authMethods: availableAuthMethods,
-        agent: agent,
-        loggingVerbosity: SSHLogLevel.debug,
-        verifyHostCallback: nil,
-        connectionTimeout: 300,
-        sshDirectory: BlinkPaths.ssh()!,
-        logger: PassthroughSubject<String, Never>(),
-        compression: false,
-        compressionLevel: 6
-      )
+    
+    return (hostName,
+            host.sshClientConfig(authMethods: availableAuthMethods,
+                                 agent: agent)
     )
   }
 }

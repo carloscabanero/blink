@@ -62,7 +62,7 @@ class FileProviderExtension: NSFileProviderExtension {
           .sinkToOutput()
       }
     )
-    
+
     guard let file = try? FileLogging(to: BlinkPaths.fileProviderErrorLogURL()) else {
       print("File logging not configured")
       return
@@ -331,13 +331,168 @@ class FileProviderExtension: NSFileProviderExtension {
   override func createDirectory(withName directoryName: String,
                                 inParentItemIdentifier parentItemIdentifier: NSFileProviderItemIdentifier,
                                 completionHandler: @escaping (NSFileProviderItem?, Error?) -> Void) {
+    let log = BlinkLogger("createDirectory")
+    log.info("\(directoryName) at \(parentItemIdentifier.rawValue)")
 
-    // TODO:
+    let parentBlinkIdentifier: BlinkItemIdentifier!
+    if parentItemIdentifier == .rootContainer {
+      parentBlinkIdentifier = BlinkItemIdentifier(domain!.pathRelativeToDocumentStorage)
+    } else {
+      parentBlinkIdentifier = BlinkItemIdentifier(parentItemIdentifier)
+    }
 
-    // 1. Check for collisions
+    let translator = FileTranslatorCache.translator(for: parentBlinkIdentifier.encodedRootPath)
 
-    // 2. Create a directory (locally?)
-    completionHandler(nil, NSError(domain: NSCocoaErrorDomain, code: NSFeatureUnsupportedError, userInfo:[:]))
+    var directoryBlinkIdentifier = BlinkItemIdentifier(parentItemIdentifier: parentBlinkIdentifier, filename: directoryName)
+
+    translator
+      .flatMap {
+        $0.cloneWalkTo(parentBlinkIdentifier.path)
+      }
+      .flatMap { t -> AnyPublisher<Translator, Error> in
+        var tries = 1
+        while (FileTranslatorCache.reference(identifier: directoryBlinkIdentifier) != nil) {
+          tries += 1
+
+          directoryBlinkIdentifier = BlinkItemIdentifier(parentItemIdentifier: parentBlinkIdentifier,
+                                                         filename: "\(directoryName) \(tries)")
+        }
+
+        return t.mkdir(name: directoryBlinkIdentifier.filename,
+                       mode: S_IRWXU | S_IRWXG | S_IRWXO)
+          .eraseToAnyPublisher()
+      }
+      .flatMap {
+        $0.stat()
+      }
+      .sink(
+        receiveCompletion: { completion in
+          if case let .failure(error) = completion {
+            log.error("\(error)")
+            completionHandler(nil, NSFileProviderError.operationError(dueTo: error))
+          }
+        },
+        receiveValue: { attrs in
+          let ref = BlinkItemReference(directoryBlinkIdentifier, remote: attrs)
+          FileTranslatorCache.store(reference: ref)
+          completionHandler(ref, nil)
+        }
+      ).store(in: &cancellableBag)
+  }
+
+  override func renameItem(withIdentifier itemIdentifier: NSFileProviderItemIdentifier, toName itemName: String, completionHandler: @escaping (NSFileProviderItem?, Error?) -> Void) {
+    let log = BlinkLogger("renameItem")
+    log.info("\(itemIdentifier) as \(itemName)")
+
+    let blinkItemIdentifier = BlinkItemIdentifier(itemIdentifier)
+    guard let blinkItemReference = FileTranslatorCache.reference(identifier: blinkItemIdentifier) else {
+      completionHandler(nil, NSFileProviderError(.noSuchItem))
+      return
+    }
+    let parentItemIdentifier = BlinkItemIdentifier(blinkItemIdentifier.parentIdentifier)
+
+    let newItemIdentifier = BlinkItemIdentifier(parentItemIdentifier: parentItemIdentifier,
+                                                filename: itemName)
+
+    if let _ = FileTranslatorCache.reference(identifier: newItemIdentifier) {
+      completionHandler(nil, NSFileProviderError(.filenameCollision))
+      return
+    }
+
+    FileTranslatorCache.translator(for: blinkItemIdentifier.encodedRootPath)
+      .flatMap { t in
+        t.cloneWalkTo(blinkItemIdentifier.path)
+         .flatMap { $0.wstat([.name: itemName]) }
+         .map { _ in t }
+      }
+      .flatMap { $0.cloneWalkTo(newItemIdentifier.path) }
+      .flatMap { $0.stat() }
+      .sink(
+        receiveCompletion: { completion in
+          if case let .failure(error) = completion {
+            log.error("\(error)")
+            completionHandler(nil, NSFileProviderError.operationError(dueTo: error))
+          }
+        },
+        receiveValue: { attrs in
+          FileTranslatorCache.remove(reference: blinkItemReference)
+          let newBlinkItemReference = BlinkItemReference(newItemIdentifier, remote: attrs)
+          FileTranslatorCache.store(reference: newBlinkItemReference)
+          completionHandler(newBlinkItemReference, nil)
+        }
+      ).store(in: &cancellableBag)
+  }
+
+  override func deleteItem(withIdentifier itemIdentifier: NSFileProviderItemIdentifier, completionHandler: @escaping (Error?) -> Void) {
+    let log = BlinkLogger("deleteItem")
+    log.info("\(itemIdentifier)")
+
+    let blinkItemIdentifier = BlinkItemIdentifier(itemIdentifier)
+    guard let blinkItemReference = FileTranslatorCache.reference(identifier: blinkItemIdentifier) else {
+      completionHandler(NSFileProviderError(.noSuchItem))
+      return
+    }
+
+    let recursive = true
+
+    func delete(_ translators: [Translator]) -> AnyPublisher<Void, Error> {
+      translators.publisher
+        .flatMap(maxPublishers: .max(1)) { t -> AnyPublisher<Void, Error> in
+          print(t.current)
+          if t.fileType == .typeDirectory {
+            return [deleteDirectoryContent(t), AnyPublisher(t.rmdir().map {_ in})]
+              .compactMap { $0 }
+              .publisher
+              .flatMap(maxPublishers: .max(1)) { $0 }
+              .collect()
+              .map {_ in}
+              .eraseToAnyPublisher()
+          }
+
+          return AnyPublisher(t.remove().map { _ in })
+        }.eraseToAnyPublisher()
+    }
+
+    func deleteDirectoryContent(_ t: Translator) -> AnyPublisher<Void, Error>? {
+      if recursive == false {
+        return nil
+      }
+
+      return t.directoryFilesAndAttributes().flatMap {
+        $0.compactMap { i -> FileAttributes? in
+          if (i[.name] as! String) == "." || (i[.name] as! String) == ".." {
+            return nil
+          } else {
+            return i
+          }
+        }.publisher
+      }
+      .flatMap {
+        t.cloneWalkTo($0[.name] as! String) }
+      .collect()
+      .flatMap {
+        delete($0) }
+      .eraseToAnyPublisher()
+    }
+
+    FileTranslatorCache.translator(for: blinkItemIdentifier.encodedRootPath)
+      .flatMap {
+        $0.cloneWalkTo(blinkItemIdentifier.path)
+          .flatMap { delete([$0]) }
+      }
+      .sink(
+        receiveCompletion: { completion in
+          if case let .failure(error) = completion {
+            log.error("\(error)")
+            completionHandler(NSFileProviderError.operationError(dueTo: error))
+          } else {
+            // NOTE We may want to delete the other references as well.
+            FileTranslatorCache.remove(reference: blinkItemReference)
+            completionHandler(nil)
+          }
+        },
+        receiveValue: { _ in }
+      ).store(in: &cancellableBag)
   }
 
   // MARK: - Enumeration

@@ -46,6 +46,7 @@
 
 + (NSURL *) blinkURL;
 + (NSURL *) blinkSSHConfigFileURL;
++ (NSURL *) blinkGlobalSSHConfigFileURL;
 + (NSURL *) blinkKBConfigURL;
 
 + (NSString *) blinkKeysFile;
@@ -59,6 +60,7 @@
 + (NSString *) knownHostsFile;
 
 + (NSURL *)fileProviderErrorLogURL;
++ (NSURL *)blinkCodeErrorLogURL;
 
 + (void)linkICloudDriveIfNeeded;
 + (void)linkDocumentsIfNeeded;

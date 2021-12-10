@@ -237,7 +237,6 @@ class CaretHider {
         }
       }
       
-      
       if needToReload {
         DispatchQueue.main.async {
           self._refreshInputViews()
@@ -371,6 +370,16 @@ extension SmarterTermInput {
       default:  device?.view?.cleanSelection()
       }
     }
+  }
+  
+  override func canBeFocused() -> Bool {
+    let res = super.canBeFocused()
+   
+    if res == false {
+      return KBTracker.shared.input == self
+    }
+    
+    return res
   }
   
   override func onMods() {

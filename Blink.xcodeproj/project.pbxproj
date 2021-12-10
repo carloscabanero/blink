@@ -96,13 +96,17 @@
 		BD1758AC26EA8C5400AEC545 /* MenuController.swift in Sources */ = {isa = PBXBuildFile; fileRef = BD1758AB26EA8C5400AEC545 /* MenuController.swift */; };
 		BD44DCE626D6BEAC00054338 /* BlinkItemIdentifier.swift in Sources */ = {isa = PBXBuildFile; fileRef = BD44DCE526D6BEAC00054338 /* BlinkItemIdentifier.swift */; };
 		BD44DCF126D9802900054338 /* TranslatorFactory.swift in Sources */ = {isa = PBXBuildFile; fileRef = BD44DCED26D9802900054338 /* TranslatorFactory.swift */; };
+		BD67FC79272B30F300C1EE75 /* Messages.swift in Sources */ = {isa = PBXBuildFile; fileRef = BD67FC78272B30F300C1EE75 /* Messages.swift */; };
+		BD67FC80272DF19B00C1EE75 /* TranslatorFactory.swift in Sources */ = {isa = PBXBuildFile; fileRef = BD67FC7F272DF19B00C1EE75 /* TranslatorFactory.swift */; };
+		BD67FC81272DF22700C1EE75 /* BlinkConfig.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BDCB715E268E1577007D7047 /* BlinkConfig.framework */; };
+		BD67FC85272E3FF800C1EE75 /* SSH.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 07FABB8425C9AEC000E1CC2C /* SSH.framework */; };
+		BD67FC89272E401000C1EE75 /* openssl.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = D2F64C9425CA99AD00F2225D /* openssl.xcframework */; };
+		BD67FC9B2732D4D300C1EE75 /* BackgroundTaskMonitor.swift in Sources */ = {isa = PBXBuildFile; fileRef = BD67FC9A2732D4D300C1EE75 /* BackgroundTaskMonitor.swift */; };
 		BD7810A52640C36100114700 /* NWConnection+WriterTo.swift in Sources */ = {isa = PBXBuildFile; fileRef = BD7810A42640C36100114700 /* NWConnection+WriterTo.swift */; };
-		BD815235273D7A09002BB169 /* Purchases in Frameworks */ = {isa = PBXBuildFile; productRef = BD815234273D7A09002BB169 /* Purchases */; };
-		BD81523F273DB964002BB169 /* CompatibilityAccessManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = BD81523C273DB964002BB169 /* CompatibilityAccessManager.swift */; };
-		BD815240273DB964002BB169 /* SubscriptionNag.swift in Sources */ = {isa = PBXBuildFile; fileRef = BD81523D273DB964002BB169 /* SubscriptionNag.swift */; };
-		BD815241273DB964002BB169 /* Purchases.swift in Sources */ = {isa = PBXBuildFile; fileRef = BD81523E273DB964002BB169 /* Purchases.swift */; };
-		BD815243273DBEDE002BB169 /* UserModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = BD815242273DBEDE002BB169 /* UserModel.swift */; };
-		BD81524A273EFA1A002BB169 /* SubscriptionsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BD815249273EFA1A002BB169 /* SubscriptionsView.swift */; };
+		BD81522027387D1F002BB169 /* Certificates.swift in Sources */ = {isa = PBXBuildFile; fileRef = BD81521C27387D1F002BB169 /* Certificates.swift */; };
+		BD81522D2739A91D002BB169 /* BlinkLogging.swift in Sources */ = {isa = PBXBuildFile; fileRef = BD9EA20A271F62ED00874007 /* BlinkLogging.swift */; };
+		BD81522E2739A91D002BB169 /* Publisher.swift in Sources */ = {isa = PBXBuildFile; fileRef = BD9EA20C271F664D00874007 /* Publisher.swift */; };
+		BD8152542743FF84002BB169 /* skstore.swift in Sources */ = {isa = PBXBuildFile; fileRef = BD8152532743FF84002BB169 /* skstore.swift */; };
 		BD896F7B26CEAD37004313E6 /* FileTranslatorCache.swift in Sources */ = {isa = PBXBuildFile; fileRef = BD896F7A26CEAD37004313E6 /* FileTranslatorCache.swift */; };
 		BD896F8926CFDB17004313E6 /* Atomics in Frameworks */ = {isa = PBXBuildFile; productRef = BD896F8826CFDB17004313E6 /* Atomics */; };
 		BD8BBF5525F829B00084705F /* SEKeyTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = BD8BBF0825F819970084705F /* SEKeyTests.swift */; };
@@ -135,6 +139,14 @@
 		BD9EA216271F83B400874007 /* BlinkLoggingTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = BD9EA215271F83B400874007 /* BlinkLoggingTests.swift */; };
 		BD9EA217271F846100874007 /* BlinkLogging.swift in Sources */ = {isa = PBXBuildFile; fileRef = BD9EA20A271F62ED00874007 /* BlinkLogging.swift */; };
 		BD9EA218271F846400874007 /* Publisher.swift in Sources */ = {isa = PBXBuildFile; fileRef = BD9EA20C271F664D00874007 /* Publisher.swift */; };
+		BDBFA30D2728914F00C77798 /* BlinkCode.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BDBFA3052728914F00C77798 /* BlinkCode.framework */; };
+		BDBFA3122728914F00C77798 /* BlinkCodeTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = BDBFA3112728914F00C77798 /* BlinkCodeTests.swift */; };
+		BDBFA3132728914F00C77798 /* BlinkCode.h in Headers */ = {isa = PBXBuildFile; fileRef = BDBFA3072728914F00C77798 /* BlinkCode.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		BDBFA31E272891DE00C77798 /* WebSocketServerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = BDBFA31D272891DE00C77798 /* WebSocketServerTests.swift */; };
+		BDBFA3212728925C00C77798 /* WebSocketServer.swift in Sources */ = {isa = PBXBuildFile; fileRef = BDBFA31F2728925C00C77798 /* WebSocketServer.swift */; };
+		BDBFA3222728925C00C77798 /* FileSystem.swift in Sources */ = {isa = PBXBuildFile; fileRef = BDBFA3202728925C00C77798 /* FileSystem.swift */; };
+		BDBFA3232728927000C77798 /* BlinkFiles.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 07FABBAF25C9AECF00E1CC2C /* BlinkFiles.framework */; };
+		BDBFA3282728927E00C77798 /* BlinkFiles.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 07FABBAF25C9AECF00E1CC2C /* BlinkFiles.framework */; };
 		BDCB7165268E1577007D7047 /* BlinkConfig.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BDCB715E268E1577007D7047 /* BlinkConfig.framework */; };
 		BDCB7166268E1577007D7047 /* BlinkConfig.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = BDCB715E268E1577007D7047 /* BlinkConfig.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		BDCB7178268E15A2007D7047 /* BKHosts.swift in Sources */ = {isa = PBXBuildFile; fileRef = BDCB716B268E15A0007D7047 /* BKHosts.swift */; };
@@ -153,6 +165,12 @@
 		BDCB718D268E16CE007D7047 /* BlinkConfig.h in Headers */ = {isa = PBXBuildFile; fileRef = BDCB718C268E16CE007D7047 /* BlinkConfig.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		BDCB718E268E173D007D7047 /* SSH.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 07FABB8425C9AEC000E1CC2C /* SSH.framework */; };
 		BDCB7194268E175A007D7047 /* SSHConfig in Frameworks */ = {isa = PBXBuildFile; productRef = BDCB7193268E175A007D7047 /* SSHConfig */; };
+		BDCCBDD427638C3B002942B0 /* Purchases in Frameworks */ = {isa = PBXBuildFile; productRef = BD815234273D7A09002BB169 /* Purchases */; };
+		BDD6D13A27594BF900E76F1F /* BlinkConfigTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = BDD6D13927594BF900E76F1F /* BlinkConfigTests.swift */; };
+		BDD6D13B27594BF900E76F1F /* BlinkConfig.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BDCB715E268E1577007D7047 /* BlinkConfig.framework */; };
+		BDD6D14527594E6500E76F1F /* BKSSHHost.swift in Sources */ = {isa = PBXBuildFile; fileRef = BDD6D14427594E6500E76F1F /* BKSSHHost.swift */; };
+		BDD6D14727594E8700E76F1F /* SSHClientConfig.swift in Sources */ = {isa = PBXBuildFile; fileRef = BDD6D14627594E8700E76F1F /* SSHClientConfig.swift */; };
+		BDD6D149275951D900E76F1F /* BKGlobalSSHConfig.swift in Sources */ = {isa = PBXBuildFile; fileRef = BDD6D148275951D900E76F1F /* BKGlobalSSHConfig.swift */; };
 		BDF471BA268CD17B00A7A41B /* SSH.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 07FABB8425C9AEC000E1CC2C /* SSH.framework */; };
 		C94437571D8311960096F84E /* BKResource.m in Sources */ = {isa = PBXBuildFile; fileRef = C94437561D8311960096F84E /* BKResource.m */; };
 		C94437601D831CD30096F84E /* Themes in Resources */ = {isa = PBXBuildFile; fileRef = C944375F1D831CD30096F84E /* Themes */; };
@@ -267,6 +285,8 @@
 		D265FBC52317E5090017EAC4 /* SessionParamsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D265FBC42317E5090017EAC4 /* SessionParamsTests.swift */; };
 		D265FBC62317E54C0017EAC4 /* SessionParams.swift in Sources */ = {isa = PBXBuildFile; fileRef = D248E67D22DE14100057FE67 /* SessionParams.swift */; };
 		D265FBC9231905AC0017EAC4 /* NSCoder+CodingKey.swift in Sources */ = {isa = PBXBuildFile; fileRef = D265FBC8231905AC0017EAC4 /* NSCoder+CodingKey.swift */; };
+		D266A9DA27295ECE00C85EED /* blink-uio.min.js in Resources */ = {isa = PBXBuildFile; fileRef = D266A9D627295ECE00C85EED /* blink-uio.min.js */; };
+		D266A9DC272A77A100C85EED /* code.swift in Sources */ = {isa = PBXBuildFile; fileRef = D266A9DB272A77A100C85EED /* code.swift */; };
 		D2673735265BD77B002036FF /* BuildCLIConfig.swift in Sources */ = {isa = PBXBuildFile; fileRef = D2673734265BD77B002036FF /* BuildCLIConfig.swift */; };
 		D26A37F026A0AB7000534A4D /* facecam.swift in Sources */ = {isa = PBXBuildFile; fileRef = D26A37EF26A0AB7000534A4D /* facecam.swift */; };
 		D275492D26A033CC0039CC95 /* FaceCam.swift in Sources */ = {isa = PBXBuildFile; fileRef = D275492C26A033CC0039CC95 /* FaceCam.swift */; };
@@ -284,6 +304,7 @@
 		D29392B72004D785001FB2AA /* hterm_all.patches.js in Resources */ = {isa = PBXBuildFile; fileRef = D29392B62004D785001FB2AA /* hterm_all.patches.js */; };
 		D29568B921BE629100480A83 /* bk_getopts.c in Sources */ = {isa = PBXBuildFile; fileRef = D29568B821BE629100480A83 /* bk_getopts.c */; };
 		D298D67D2110803600992CA4 /* SSHClientPortListener.m in Sources */ = {isa = PBXBuildFile; fileRef = D298D67C2110803600992CA4 /* SSHClientPortListener.m */; };
+		D29B4A92274D206C00C66ED9 /* BrowserController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D29B4A8D274D1E9F00C66ED9 /* BrowserController.swift */; };
 		D29D6C3122DB9CA700A84173 /* TermController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D29D6C3022DB9CA700A84173 /* TermController.swift */; };
 		D29FE54A208DC860004679D0 /* commandDictionary.plist in Resources */ = {isa = PBXBuildFile; fileRef = D29FE548208DC860004679D0 /* commandDictionary.plist */; };
 		D29FE54B208DC860004679D0 /* extraCommandsDictionary.plist in Resources */ = {isa = PBXBuildFile; fileRef = D29FE549208DC860004679D0 /* extraCommandsDictionary.plist */; };
@@ -294,6 +315,8 @@
 		D2A80979270713D200CD0FAF /* FeatureFlags.swift in Sources */ = {isa = PBXBuildFile; fileRef = D2A80978270713D200CD0FAF /* FeatureFlags.swift */; };
 		D2A86D6920EB86F2000DF1DA /* SSHClientOptions.m in Sources */ = {isa = PBXBuildFile; fileRef = D2A86D6820EB86F2000DF1DA /* SSHClientOptions.m */; };
 		D2A90AE220D277E00073BF3D /* ssh.m in Sources */ = {isa = PBXBuildFile; fileRef = D2A90ADB20D277DF0073BF3D /* ssh.m */; };
+		D2A9B2F7272E6F26009FCBDE /* BlinkCode.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BDBFA3052728914F00C77798 /* BlinkCode.framework */; };
+		D2A9B2F8272E6F26009FCBDE /* BlinkCode.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = BDBFA3052728914F00C77798 /* BlinkCode.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		D2AB611E23AB5ACD00BE6585 /* UIApplication+Version.m in Sources */ = {isa = PBXBuildFile; fileRef = D2AB611D23AB5ACD00BE6585 /* UIApplication+Version.m */; };
 		D2AB612023AB5AE000BE6585 /* UIApplication+Version.h in Sources */ = {isa = PBXBuildFile; fileRef = D2AB611F23AB5AE000BE6585 /* UIApplication+Version.h */; };
 		D2AC6749220303D900177BC5 /* openurl.m in Sources */ = {isa = PBXBuildFile; fileRef = D2AC6742220303D900177BC5 /* openurl.m */; };
@@ -448,12 +471,40 @@
 			remoteGlobalIDString = 07FABBAE25C9AECF00E1CC2C;
 			remoteInfo = BlinkFiles;
 		};
+		BD67FC83272DF22700C1EE75 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = EA0BA1831C0CC57B00719C1A /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = BDCB715D268E1577007D7047;
+			remoteInfo = BlinkConfig;
+		};
+		BD67FC87272E3FF800C1EE75 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = EA0BA1831C0CC57B00719C1A /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 07FABB8325C9AEC000E1CC2C;
+			remoteInfo = SSH;
+		};
 		BD9EA1D12718E19000874007 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = EA0BA1831C0CC57B00719C1A /* Project object */;
 			proxyType = 1;
 			remoteGlobalIDString = BD9EA1C82718E19000874007;
 			remoteInfo = BlinkFileProviderUI;
+		};
+		BDBFA30E2728914F00C77798 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = EA0BA1831C0CC57B00719C1A /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = BDBFA3042728914F00C77798;
+			remoteInfo = BlinkCode;
+		};
+		BDBFA3252728927000C77798 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = EA0BA1831C0CC57B00719C1A /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 07FABBAE25C9AECF00E1CC2C;
+			remoteInfo = BlinkFiles;
 		};
 		BDCB7163268E1577007D7047 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
@@ -475,6 +526,13 @@
 			proxyType = 1;
 			remoteGlobalIDString = 07FABB8325C9AEC000E1CC2C;
 			remoteInfo = SSH;
+		};
+		BDD6D13C27594BF900E76F1F /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = EA0BA1831C0CC57B00719C1A /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = BDCB715D268E1577007D7047;
+			remoteInfo = BlinkConfig;
 		};
 		BDF471BC268CD17B00A7A41B /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
@@ -511,6 +569,13 @@
 			remoteGlobalIDString = 1777D3DF1D757AF50037C7F1;
 			remoteInfo = "MBProgressHUD Framework tvOS";
 		};
+		D2A9B2F9272E6F26009FCBDE /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = EA0BA1831C0CC57B00719C1A /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = BDBFA3042728914F00C77798;
+			remoteInfo = BlinkCode;
+		};
 		D2BF5F712659522C0070F839 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = EA0BA1831C0CC57B00719C1A /* Project object */;
@@ -534,6 +599,7 @@
 			dstPath = "";
 			dstSubfolderSpec = 10;
 			files = (
+				D2A9B2F8272E6F26009FCBDE /* BlinkCode.framework in Embed Frameworks */,
 				D2C7710826EA49AA001B5659 /* openssl.xcframework in Embed Frameworks */,
 				D2334F0125C1C28F00385378 /* shell.xcframework in Embed Frameworks */,
 				07FABB9A25C9AEC100E1CC2C /* SSH.framework in Embed Frameworks */,
@@ -691,12 +757,12 @@
 		BD1758AB26EA8C5400AEC545 /* MenuController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MenuController.swift; sourceTree = "<group>"; };
 		BD44DCE526D6BEAC00054338 /* BlinkItemIdentifier.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = BlinkItemIdentifier.swift; sourceTree = "<group>"; };
 		BD44DCED26D9802900054338 /* TranslatorFactory.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = TranslatorFactory.swift; sourceTree = "<group>"; };
+		BD67FC78272B30F300C1EE75 /* Messages.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Messages.swift; sourceTree = "<group>"; };
+		BD67FC7F272DF19B00C1EE75 /* TranslatorFactory.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = TranslatorFactory.swift; sourceTree = "<group>"; };
+		BD67FC9A2732D4D300C1EE75 /* BackgroundTaskMonitor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BackgroundTaskMonitor.swift; sourceTree = "<group>"; };
 		BD7810A42640C36100114700 /* NWConnection+WriterTo.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "NWConnection+WriterTo.swift"; sourceTree = "<group>"; };
-		BD81523C273DB964002BB169 /* CompatibilityAccessManager.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CompatibilityAccessManager.swift; sourceTree = "<group>"; };
-		BD81523D273DB964002BB169 /* SubscriptionNag.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SubscriptionNag.swift; sourceTree = "<group>"; };
-		BD81523E273DB964002BB169 /* Purchases.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Purchases.swift; sourceTree = "<group>"; };
-		BD815242273DBEDE002BB169 /* UserModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserModel.swift; sourceTree = "<group>"; };
-		BD815249273EFA1A002BB169 /* SubscriptionsView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SubscriptionsView.swift; sourceTree = "<group>"; };
+		BD81521C27387D1F002BB169 /* Certificates.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Certificates.swift; sourceTree = "<group>"; };
+		BD8152532743FF84002BB169 /* skstore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = skstore.swift; sourceTree = "<group>"; };
 		BD896F7A26CEAD37004313E6 /* FileTranslatorCache.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FileTranslatorCache.swift; sourceTree = "<group>"; };
 		BD8BBF0825F819970084705F /* SEKeyTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SEKeyTests.swift; sourceTree = "<group>"; };
 		BD8BBFAF25F947710084705F /* Keys.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Keys.swift; sourceTree = "<group>"; };
@@ -725,6 +791,13 @@
 		BD9EA20C271F664D00874007 /* Publisher.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Publisher.swift; sourceTree = "<group>"; };
 		BD9EA215271F83B400874007 /* BlinkLoggingTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BlinkLoggingTests.swift; sourceTree = "<group>"; };
 		BDB8BEA726E008190093BF48 /* OwnAlertController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OwnAlertController.swift; sourceTree = "<group>"; };
+		BDBFA3052728914F00C77798 /* BlinkCode.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = BlinkCode.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		BDBFA3072728914F00C77798 /* BlinkCode.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = BlinkCode.h; sourceTree = "<group>"; };
+		BDBFA30C2728914F00C77798 /* BlinkCodeTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = BlinkCodeTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		BDBFA3112728914F00C77798 /* BlinkCodeTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BlinkCodeTests.swift; sourceTree = "<group>"; };
+		BDBFA31D272891DE00C77798 /* WebSocketServerTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = WebSocketServerTests.swift; sourceTree = "<group>"; };
+		BDBFA31F2728925C00C77798 /* WebSocketServer.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = WebSocketServer.swift; sourceTree = "<group>"; };
+		BDBFA3202728925C00C77798 /* FileSystem.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = FileSystem.swift; sourceTree = "<group>"; };
 		BDCB715E268E1577007D7047 /* BlinkConfig.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = BlinkConfig.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		BDCB7161268E1577007D7047 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		BDCB716B268E15A0007D7047 /* BKHosts.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = BKHosts.swift; sourceTree = "<group>"; };
@@ -740,6 +813,11 @@
 		BDCB7175268E15A2007D7047 /* SEKey.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SEKey.swift; sourceTree = "<group>"; };
 		BDCB7176268E15A2007D7047 /* BKConfig.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = BKConfig.swift; sourceTree = "<group>"; };
 		BDCB718C268E16CE007D7047 /* BlinkConfig.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = BlinkConfig.h; sourceTree = "<group>"; };
+		BDD6D13727594BF900E76F1F /* BlinkConfigTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = BlinkConfigTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		BDD6D13927594BF900E76F1F /* BlinkConfigTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BlinkConfigTests.swift; sourceTree = "<group>"; };
+		BDD6D14427594E6500E76F1F /* BKSSHHost.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = BKSSHHost.swift; sourceTree = "<group>"; };
+		BDD6D14627594E8700E76F1F /* SSHClientConfig.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SSHClientConfig.swift; sourceTree = "<group>"; };
+		BDD6D148275951D900E76F1F /* BKGlobalSSHConfig.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = BKGlobalSSHConfig.swift; sourceTree = "<group>"; };
 		C94437551D8311960096F84E /* BKResource.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = BKResource.h; sourceTree = "<group>"; };
 		C94437561D8311960096F84E /* BKResource.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = BKResource.m; sourceTree = "<group>"; };
 		C944375F1D831CD30096F84E /* Themes */ = {isa = PBXFileReference; lastKnownFileType = folder; path = Themes; sourceTree = "<group>"; };
@@ -858,6 +936,8 @@
 		D265FBBE2317DD3C0017EAC4 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		D265FBC42317E5090017EAC4 /* SessionParamsTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionParamsTests.swift; sourceTree = "<group>"; };
 		D265FBC8231905AC0017EAC4 /* NSCoder+CodingKey.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "NSCoder+CodingKey.swift"; sourceTree = "<group>"; };
+		D266A9D627295ECE00C85EED /* blink-uio.min.js */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.javascript; path = "blink-uio.min.js"; sourceTree = "<group>"; };
+		D266A9DB272A77A100C85EED /* code.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = code.swift; sourceTree = "<group>"; };
 		D2673734265BD77B002036FF /* BuildCLIConfig.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BuildCLIConfig.swift; sourceTree = "<group>"; };
 		D26A37EF26A0AB7000534A4D /* facecam.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = facecam.swift; sourceTree = "<group>"; };
 		D275492C26A033CC0039CC95 /* FaceCam.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FaceCam.swift; sourceTree = "<group>"; };
@@ -880,6 +960,7 @@
 		D29568B821BE629100480A83 /* bk_getopts.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = bk_getopts.c; sourceTree = "<group>"; };
 		D298D67B2110803600992CA4 /* SSHClientPortListener.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = SSHClientPortListener.h; sourceTree = "<group>"; };
 		D298D67C2110803600992CA4 /* SSHClientPortListener.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = SSHClientPortListener.m; sourceTree = "<group>"; };
+		D29B4A8D274D1E9F00C66ED9 /* BrowserController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BrowserController.swift; sourceTree = "<group>"; };
 		D29D6C3022DB9CA700A84173 /* TermController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TermController.swift; sourceTree = "<group>"; };
 		D29FE548208DC860004679D0 /* commandDictionary.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = commandDictionary.plist; sourceTree = "<group>"; };
 		D29FE549208DC860004679D0 /* extraCommandsDictionary.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = extraCommandsDictionary.plist; sourceTree = "<group>"; };
@@ -1025,12 +1106,40 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		BDBFA3022728914F00C77798 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				BDBFA3232728927000C77798 /* BlinkFiles.framework in Frameworks */,
+				BD67FC85272E3FF800C1EE75 /* SSH.framework in Frameworks */,
+				BD67FC89272E401000C1EE75 /* openssl.xcframework in Frameworks */,
+				BD67FC81272DF22700C1EE75 /* BlinkConfig.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		BDBFA3092728914F00C77798 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				BDBFA3282728927E00C77798 /* BlinkFiles.framework in Frameworks */,
+				BDBFA30D2728914F00C77798 /* BlinkCode.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		BDCB715B268E1577007D7047 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
 				BDCB718E268E173D007D7047 /* SSH.framework in Frameworks */,
 				BDCB7194268E175A007D7047 /* SSHConfig in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		BDD6D13427594BF900E76F1F /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				BDD6D13B27594BF900E76F1F /* BlinkConfig.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1074,13 +1183,13 @@
 				D2B9E21E268084E40084B2C4 /* Machines in Frameworks */,
 				D2A0C2162600D16300F0DF97 /* Protobuf_C_.xcframework in Frameworks */,
 				D2334F0C25C1C3C600385378 /* OpenSSH.xcframework in Frameworks */,
+				BDCCBDD427638C3B002942B0 /* Purchases in Frameworks */,
 				D2C7710726EA49AA001B5659 /* openssl.xcframework in Frameworks */,
 				D2F64CAF25CAAA3300F2225D /* libssh2.xcframework in Frameworks */,
 				D2334EF425C1C28F00385378 /* ios_system.xcframework in Frameworks */,
 				07FABBC425C9AECF00E1CC2C /* BlinkFiles.framework in Frameworks */,
 				0732F1291D06324200AB5438 /* libcurses.tbd in Frameworks */,
 				D2F64CA925CAA92700F2225D /* curl_ios_static.framework in Frameworks */,
-				BD815235273D7A09002BB169 /* Purchases in Frameworks */,
 				0732F1271D06323A00AB5438 /* libz.tbd in Frameworks */,
 				D2F64CB125CAAAD100F2225D /* ssh_cmd.xcframework in Frameworks */,
 				07FAB90F25C8E94E00E1CC2C /* ArgumentParser in Frameworks */,
@@ -1088,6 +1197,7 @@
 				D24AFD58222410E700CFD3C1 /* MBProgressHUD.framework in Frameworks */,
 				B700AED81DD0F2C200100EBF /* CloudKit.framework in Frameworks */,
 				D2334F0425C1C28F00385378 /* tar.xcframework in Frameworks */,
+				D2A9B2F7272E6F26009FCBDE /* BlinkCode.framework in Frameworks */,
 				D2334EF225C1C28F00385378 /* files.xcframework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -1108,6 +1218,7 @@
 				D2F330C520A6C8E20074ADD7 /* Commands */,
 				0795F29B1DC11C6B00CC8B83 /* Blink.entitlements */,
 				0716B53C1CFFAB9300268B5B /* Info.plist */,
+				D29B4A8D274D1E9F00C66ED9 /* BrowserController.swift */,
 				0716B5291CFFAB9300268B5B /* AppDelegate.h */,
 				0716B52A1CFFAB9300268B5B /* AppDelegate.m */,
 				0716B52C1CFFAB9300268B5B /* LaunchScreen.storyboard */,
@@ -1165,6 +1276,7 @@
 				D29FE549208DC860004679D0 /* extraCommandsDictionary.plist */,
 				D209465B204D3FC5003C4F72 /* cacert.pem */,
 				D2F30EAC205009CD008C5F35 /* base64js.min.js */,
+				D266A9D627295ECE00C85EED /* blink-uio.min.js */,
 				85A34303200A837A009324F1 /* webfontloader.js */,
 				0732F04B1D062B9A00AB5438 /* term.html */,
 				D2496F402003941B00E75FE9 /* term.js */,
@@ -1295,6 +1407,7 @@
 				BD9BF7E3262A6B0300B02074 /* SOCKS.swift */,
 				07FABBD325C9AF5F00E1CC2C /* SSHClient.swift */,
 				07FABBD925C9AF5F00E1CC2C /* SSHClient+KnownHostsHelpers.swift */,
+				BDD6D14627594E8700E76F1F /* SSHClientConfig.swift */,
 				07FABBD225C9AF5F00E1CC2C /* SSHError.swift */,
 				BD8D892125DC428300E55D9E /* SSHKeys.swift */,
 				07FABBDB25C9AF5F00E1CC2C /* SSHPortForward.swift */,
@@ -1433,10 +1546,6 @@
 		BD81523B273DB964002BB169 /* Subscriptions */ = {
 			isa = PBXGroup;
 			children = (
-				BD81523C273DB964002BB169 /* CompatibilityAccessManager.swift */,
-				BD81523D273DB964002BB169 /* SubscriptionNag.swift */,
-				BD81523E273DB964002BB169 /* Purchases.swift */,
-				BD815242273DBEDE002BB169 /* UserModel.swift */,
 			);
 			path = Subscriptions;
 			sourceTree = "<group>";
@@ -1444,7 +1553,6 @@
 		BD815248273EFA1A002BB169 /* Subscriptions */ = {
 			isa = PBXGroup;
 			children = (
-				BD815249273EFA1A002BB169 /* SubscriptionsView.swift */,
 			);
 			path = Subscriptions;
 			sourceTree = "<group>";
@@ -1491,15 +1599,40 @@
 			path = BlinkLogging;
 			sourceTree = "<group>";
 		};
+		BDBFA3062728914F00C77798 /* BlinkCode */ = {
+			isa = PBXGroup;
+			children = (
+				BD81521C27387D1F002BB169 /* Certificates.swift */,
+				BD67FC7F272DF19B00C1EE75 /* TranslatorFactory.swift */,
+				BDBFA3202728925C00C77798 /* FileSystem.swift */,
+				BDBFA31F2728925C00C77798 /* WebSocketServer.swift */,
+				BDBFA3072728914F00C77798 /* BlinkCode.h */,
+				BD67FC78272B30F300C1EE75 /* Messages.swift */,
+				BD67FC9A2732D4D300C1EE75 /* BackgroundTaskMonitor.swift */,
+			);
+			path = BlinkCode;
+			sourceTree = "<group>";
+		};
+		BDBFA3102728914F00C77798 /* BlinkCodeTests */ = {
+			isa = PBXGroup;
+			children = (
+				BDBFA31D272891DE00C77798 /* WebSocketServerTests.swift */,
+				BDBFA3112728914F00C77798 /* BlinkCodeTests.swift */,
+			);
+			path = BlinkCodeTests;
+			sourceTree = "<group>";
+		};
 		BDCB715F268E1577007D7047 /* BlinkConfig */ = {
 			isa = PBXGroup;
 			children = (
 				BDCB718C268E16CE007D7047 /* BlinkConfig.h */,
 				BDB8BEA726E008190093BF48 /* OwnAlertController.swift */,
 				BDCB7176268E15A2007D7047 /* BKConfig.swift */,
+				BDD6D148275951D900E76F1F /* BKGlobalSSHConfig.swift */,
 				BDCB7171268E15A1007D7047 /* BKHosts.h */,
 				BDCB716C268E15A1007D7047 /* BKHosts.m */,
 				BDCB716B268E15A0007D7047 /* BKHosts.swift */,
+				BDD6D14427594E6500E76F1F /* BKSSHHost.swift */,
 				BDCB716F268E15A1007D7047 /* BKPubKey.h */,
 				BDCB7174268E15A2007D7047 /* BKPubKey.m */,
 				BDCB7170268E15A1007D7047 /* BKPubKey.swift */,
@@ -1513,6 +1646,14 @@
 				BDCB7161268E1577007D7047 /* Info.plist */,
 			);
 			path = BlinkConfig;
+			sourceTree = "<group>";
+		};
+		BDD6D13827594BF900E76F1F /* BlinkConfigTests */ = {
+			isa = PBXGroup;
+			children = (
+				BDD6D13927594BF900E76F1F /* BlinkConfigTests.swift */,
+			);
+			path = BlinkConfigTests;
 			sourceTree = "<group>";
 		};
 		C989E53B1D6CC488003E0079 /* BKHosts */ = {
@@ -1851,6 +1992,8 @@
 				D2F330D120A6EF020074ADD7 /* showkey.m */,
 				D2DDD70A2657E35C00DAB52A /* build.swift */,
 				D26A37EF26A0AB7000534A4D /* facecam.swift */,
+				D266A9DB272A77A100C85EED /* code.swift */,
+				BD8152532743FF84002BB169 /* skstore.swift */,
 			);
 			path = Commands;
 			sourceTree = "<group>";
@@ -1873,6 +2016,9 @@
 				98271251262E4BDB00F883FA /* BlinkFileProvider */,
 				D2BF5F6D2659522C0070F839 /* BlinkIntents */,
 				BDCB715F268E1577007D7047 /* BlinkConfig */,
+				BDD6D13827594BF900E76F1F /* BlinkConfigTests */,
+				BDBFA3062728914F00C77798 /* BlinkCode */,
+				BDBFA3102728914F00C77798 /* BlinkCodeTests */,
 				0732F04F1D062BB300AB5438 /* Frameworks */,
 				0732F0481D062B9A00AB5438 /* Resources */,
 				074F30781D062A2800A73445 /* main.m */,
@@ -1899,6 +2045,9 @@
 				D2BF5F6A2659522C0070F839 /* BlinkIntents.appex */,
 				BDCB715E268E1577007D7047 /* BlinkConfig.framework */,
 				BD9EA1C92718E19000874007 /* BlinkFileProviderUI.appex */,
+				BDBFA3052728914F00C77798 /* BlinkCode.framework */,
+				BDBFA30C2728914F00C77798 /* BlinkCodeTests.xctest */,
+				BDD6D13727594BF900E76F1F /* BlinkConfigTests.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -1919,6 +2068,14 @@
 			buildActionMask = 2147483647;
 			files = (
 				07FABBC125C9AECF00E1CC2C /* BlinkFiles.h in Headers */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		BDBFA3002728914F00C77798 /* Headers */ = {
+			isa = PBXHeadersBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				BDBFA3132728914F00C77798 /* BlinkCode.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -2054,6 +2211,45 @@
 			productReference = BD9EA1C92718E19000874007 /* BlinkFileProviderUI.appex */;
 			productType = "com.apple.product-type.app-extension";
 		};
+		BDBFA3042728914F00C77798 /* BlinkCode */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = BDBFA31B2728914F00C77798 /* Build configuration list for PBXNativeTarget "BlinkCode" */;
+			buildPhases = (
+				BDBFA3002728914F00C77798 /* Headers */,
+				BDBFA3012728914F00C77798 /* Sources */,
+				BDBFA3022728914F00C77798 /* Frameworks */,
+				BDBFA3032728914F00C77798 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				BDBFA3262728927000C77798 /* PBXTargetDependency */,
+				BD67FC84272DF22700C1EE75 /* PBXTargetDependency */,
+				BD67FC88272E3FF800C1EE75 /* PBXTargetDependency */,
+			);
+			name = BlinkCode;
+			productName = BlinkCode;
+			productReference = BDBFA3052728914F00C77798 /* BlinkCode.framework */;
+			productType = "com.apple.product-type.framework";
+		};
+		BDBFA30B2728914F00C77798 /* BlinkCodeTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = BDBFA31C2728914F00C77798 /* Build configuration list for PBXNativeTarget "BlinkCodeTests" */;
+			buildPhases = (
+				BDBFA3082728914F00C77798 /* Sources */,
+				BDBFA3092728914F00C77798 /* Frameworks */,
+				BDBFA30A2728914F00C77798 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				BDBFA30F2728914F00C77798 /* PBXTargetDependency */,
+			);
+			name = BlinkCodeTests;
+			productName = BlinkCodeTests;
+			productReference = BDBFA30C2728914F00C77798 /* BlinkCodeTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
 		BDCB715D268E1577007D7047 /* BlinkConfig */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = BDCB7167268E1577007D7047 /* Build configuration list for PBXNativeTarget "BlinkConfig" */;
@@ -2075,6 +2271,24 @@
 			productName = BlinkConfig;
 			productReference = BDCB715E268E1577007D7047 /* BlinkConfig.framework */;
 			productType = "com.apple.product-type.framework";
+		};
+		BDD6D13627594BF900E76F1F /* BlinkConfigTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = BDD6D14327594BF900E76F1F /* Build configuration list for PBXNativeTarget "BlinkConfigTests" */;
+			buildPhases = (
+				BDD6D13327594BF900E76F1F /* Sources */,
+				BDD6D13427594BF900E76F1F /* Frameworks */,
+				BDD6D13527594BF900E76F1F /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				BDD6D13D27594BF900E76F1F /* PBXTargetDependency */,
+			);
+			name = BlinkConfigTests;
+			productName = BlinkConfigTests;
+			productReference = BDD6D13727594BF900E76F1F /* BlinkConfigTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
 		};
 		D218068625CC277900B98902 /* AppKitBridge */ = {
 			isa = PBXNativeTarget;
@@ -2153,6 +2367,7 @@
 				D2BF5F722659522C0070F839 /* PBXTargetDependency */,
 				BDCB7164268E1577007D7047 /* PBXTargetDependency */,
 				BD9EA1D22718E19000874007 /* PBXTargetDependency */,
+				D2A9B2FA272E6F26009FCBDE /* PBXTargetDependency */,
 			);
 			name = Blink;
 			packageProductDependencies = (
@@ -2172,7 +2387,7 @@
 			isa = PBXProject;
 			attributes = {
 				CLASSPREFIX = "";
-				LastSwiftUpdateCheck = 1300;
+				LastSwiftUpdateCheck = 1310;
 				LastUpgradeCheck = 0920;
 				ORGANIZATIONNAME = "Carlos Cabañero Projects SL";
 				TargetAttributes = {
@@ -2197,9 +2412,19 @@
 					BD9EA1C82718E19000874007 = {
 						CreatedOnToolsVersion = 13.0;
 					};
+					BDBFA3042728914F00C77798 = {
+						CreatedOnToolsVersion = 13.1;
+						LastSwiftMigration = 1310;
+					};
+					BDBFA30B2728914F00C77798 = {
+						CreatedOnToolsVersion = 13.1;
+					};
 					BDCB715D268E1577007D7047 = {
 						CreatedOnToolsVersion = 12.5;
 						LastSwiftMigration = 1250;
+					};
+					BDD6D13627594BF900E76F1F = {
+						CreatedOnToolsVersion = 13.1;
 					};
 					D218068625CC277900B98902 = {
 						CreatedOnToolsVersion = 12.4;
@@ -2284,6 +2509,9 @@
 				D2BF5F692659522C0070F839 /* BlinkIntents */,
 				BDCB715D268E1577007D7047 /* BlinkConfig */,
 				BD9EA1C82718E19000874007 /* BlinkFileProviderUI */,
+				BDBFA3042728914F00C77798 /* BlinkCode */,
+				BDBFA30B2728914F00C77798 /* BlinkCodeTests */,
+				BDD6D13627594BF900E76F1F /* BlinkConfigTests */,
 			);
 		};
 /* End PBXProject section */
@@ -2370,7 +2598,28 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		BDBFA3032728914F00C77798 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		BDBFA30A2728914F00C77798 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		BDCB715C268E1577007D7047 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		BDD6D13527594BF900E76F1F /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -2425,6 +2674,7 @@
 				85A34307200A837A009324F1 /* webfontloader.js in Resources */,
 				D21A3FE121943BE200269705 /* dark-notification-iphone-20pt@2x.png in Resources */,
 				D2C21F3920FCD7B800F125E0 /* blinkCommandsDictionary.plist in Resources */,
+				D266A9DA27295ECE00C85EED /* blink-uio.min.js in Resources */,
 				D2496F412003941B00E75FE9 /* term.js in Resources */,
 				D21A3FE621943BE200269705 /* dark-spotlight-iphone-40pt@3x.png in Resources */,
 				D21A3FDA21943BE200269705 /* dark-app-iphone-60pt@2x.png in Resources */,
@@ -2469,6 +2719,7 @@
 				BD8D892325DC428300E55D9E /* SSHKeys.swift in Sources */,
 				07FABBE525C9AF5F00E1CC2C /* AuthMethods.swift in Sources */,
 				07FABBE025C9AF5F00E1CC2C /* Streams.swift in Sources */,
+				BDD6D14727594E8700E76F1F /* SSHClientConfig.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -2537,10 +2788,35 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		BDBFA3012728914F00C77798 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				BD81522D2739A91D002BB169 /* BlinkLogging.swift in Sources */,
+				BD81522E2739A91D002BB169 /* Publisher.swift in Sources */,
+				BDBFA3222728925C00C77798 /* FileSystem.swift in Sources */,
+				BD67FC80272DF19B00C1EE75 /* TranslatorFactory.swift in Sources */,
+				BD67FC79272B30F300C1EE75 /* Messages.swift in Sources */,
+				BDBFA3212728925C00C77798 /* WebSocketServer.swift in Sources */,
+				BD67FC9B2732D4D300C1EE75 /* BackgroundTaskMonitor.swift in Sources */,
+				BD81522027387D1F002BB169 /* Certificates.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		BDBFA3082728914F00C77798 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				BDBFA31E272891DE00C77798 /* WebSocketServerTests.swift in Sources */,
+				BDBFA3122728914F00C77798 /* BlinkCodeTests.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		BDCB715A268E1577007D7047 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				BDD6D149275951D900E76F1F /* BKGlobalSSHConfig.swift in Sources */,
 				D2DE9CA626EA1CC000A0B29C /* BKMiniLog.m in Sources */,
 				BDCB7179268E15A2007D7047 /* BKHosts.m in Sources */,
 				BDCB7182268E15A2007D7047 /* SEKey.swift in Sources */,
@@ -2551,6 +2827,15 @@
 				D238675426EA76E6003A82A1 /* OwnAlertController.swift in Sources */,
 				BDCB717F268E15A2007D7047 /* BlinkPaths.m in Sources */,
 				BDCB717B268E15A2007D7047 /* UICKeyChainStore.m in Sources */,
+				BDD6D14527594E6500E76F1F /* BKSSHHost.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		BDD6D13327594BF900E76F1F /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				BDD6D13A27594BF900E76F1F /* BlinkConfigTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -2601,7 +2886,9 @@
 				B7A4876D1DC7C709007BA809 /* BKSettingsViewController.m in Sources */,
 				D241CBD923040734003D64A5 /* KBKeyView.swift in Sources */,
 				803B99D72582869200DC99C8 /* BKNotificationsView.swift in Sources */,
+				BD8152542743FF84002BB169 /* skstore.swift in Sources */,
 				C94E9B631D6BA21C00DA4DD6 /* DismissSegue.m in Sources */,
+				D29B4A92274D206C00C66ED9 /* BrowserController.swift in Sources */,
 				803B99E3258381B200DC99C8 /* SettingsHostingController.swift in Sources */,
 				D2C2441C238E44AB0082C69C /* NavButton.swift in Sources */,
 				0716B5721CFFAB9300268B5B /* AppDelegate.m in Sources */,
@@ -2609,7 +2896,6 @@
 				07F670731D05EEE200C0A53C /* MoshSession.m in Sources */,
 				07F670721D05EEE200C0A53C /* MCPSession.m in Sources */,
 				D23742CA21106ADF00366359 /* bench.m in Sources */,
-				BD81524A273EFA1A002BB169 /* SubscriptionsView.swift in Sources */,
 				D2673735265BD77B002036FF /* BuildCLIConfig.swift in Sources */,
 				D240806120BC8DF800F30099 /* tool_main.c in Sources */,
 				B7D6A6291E2D43A800EDF7B0 /* BKSmartKeysConfigViewController.m in Sources */,
@@ -2647,11 +2933,11 @@
 				D2DDD70B2657E35C00DAB52A /* build.swift in Sources */,
 				D2B1F8DF23265A4700634D67 /* CommandControl.swift in Sources */,
 				D2A52227231304FF0010AC04 /* UIGestureRecognizer.swift in Sources */,
+				D266A9DC272A77A100C85EED /* code.swift in Sources */,
 				D2C24425238E44AB0082C69C /* KeyModifierPicker.swift in Sources */,
 				D259479C269C671F008B5305 /* MoshPredictionPickerView.swift in Sources */,
 				07FAB8F025C8E6C500E1CC2C /* Helpers.swift in Sources */,
 				C989E5561D6CC4A1003E0079 /* BKAppearanceViewController.m in Sources */,
-				BD815241273DB964002BB169 /* Purchases.swift in Sources */,
 				D2D8DD9823C8506900BFF223 /* LockView.swift in Sources */,
 				B7A487691DC7C48D007BA809 /* UIDevice+DeviceName.m in Sources */,
 				D298D67D2110803600992CA4 /* SSHClientPortListener.m in Sources */,
@@ -2659,7 +2945,6 @@
 				D2C0F31020E64FAD00E48F3A /* SSHClientConnectedChannel.m in Sources */,
 				D241CBDC23040734003D64A5 /* KBKeyViewVertical2.swift in Sources */,
 				D2C24423238E44AB0082C69C /* KBWebView.swift in Sources */,
-				BD815240273DB964002BB169 /* SubscriptionNag.swift in Sources */,
 				BD9EA1FE271A148700874007 /* Migrator.swift in Sources */,
 				D2C24417238E44AB0082C69C /* KeyConfig.swift in Sources */,
 				D28F301A21AD8A6B00E5259F /* DeviceInfo.m in Sources */,
@@ -2715,7 +3000,6 @@
 				D2BC514D2355C3AE0034FDD4 /* History.swift in Sources */,
 				D23EA9592604CB4C00BCF1FF /* FixedTextField.swift in Sources */,
 				D2C24437239104250082C69C /* ShortcutsConfigView.swift in Sources */,
-				BD81523F273DB964002BB169 /* CompatibilityAccessManager.swift in Sources */,
 				07E3AEB01D8F6758007BC086 /* BKFeedbackViewController.m in Sources */,
 				B7D450361DD3A87200CE0DBE /* BKiCloudSyncHandler.m in Sources */,
 				D248E67622DDDF130057FE67 /* UIStateRestorable.swift in Sources */,
@@ -2743,7 +3027,6 @@
 				D2887A5622DC676F00701BD5 /* SpaceController.swift in Sources */,
 				D2AC6749220303D900177BC5 /* openurl.m in Sources */,
 				D2CB353B23339D5C00088765 /* UIView+Touches.swift in Sources */,
-				BD815243273DBEDE002BB169 /* UserModel.swift in Sources */,
 				D2887A5E22DCA6D500701BD5 /* SceneDelegate.swift in Sources */,
 				D2C2441F238E44AB0082C69C /* Row.swift in Sources */,
 				D21DEE51260E1DCF00D8E640 /* KeyPickerView.swift in Sources */,
@@ -2816,10 +3099,30 @@
 			target = 07FABBAE25C9AECF00E1CC2C /* BlinkFiles */;
 			targetProxy = 98E7D0E6263971C000758CF9 /* PBXContainerItemProxy */;
 		};
+		BD67FC84272DF22700C1EE75 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = BDCB715D268E1577007D7047 /* BlinkConfig */;
+			targetProxy = BD67FC83272DF22700C1EE75 /* PBXContainerItemProxy */;
+		};
+		BD67FC88272E3FF800C1EE75 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 07FABB8325C9AEC000E1CC2C /* SSH */;
+			targetProxy = BD67FC87272E3FF800C1EE75 /* PBXContainerItemProxy */;
+		};
 		BD9EA1D22718E19000874007 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			target = BD9EA1C82718E19000874007 /* BlinkFileProviderUI */;
 			targetProxy = BD9EA1D12718E19000874007 /* PBXContainerItemProxy */;
+		};
+		BDBFA30F2728914F00C77798 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = BDBFA3042728914F00C77798 /* BlinkCode */;
+			targetProxy = BDBFA30E2728914F00C77798 /* PBXContainerItemProxy */;
+		};
+		BDBFA3262728927000C77798 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 07FABBAE25C9AECF00E1CC2C /* BlinkFiles */;
+			targetProxy = BDBFA3252728927000C77798 /* PBXContainerItemProxy */;
 		};
 		BDCB7164268E1577007D7047 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
@@ -2835,6 +3138,11 @@
 			isa = PBXTargetDependency;
 			target = 07FABB8325C9AEC000E1CC2C /* SSH */;
 			targetProxy = BDCB7190268E173D007D7047 /* PBXContainerItemProxy */;
+		};
+		BDD6D13D27594BF900E76F1F /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = BDCB715D268E1577007D7047 /* BlinkConfig */;
+			targetProxy = BDD6D13C27594BF900E76F1F /* PBXContainerItemProxy */;
 		};
 		BDF471BD268CD17B00A7A41B /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
@@ -2856,6 +3164,11 @@
 			isa = PBXTargetDependency;
 			target = EA0BA18A1C0CC57B00719C1A /* Blink */;
 			targetProxy = D265FBBF2317DD3C0017EAC4 /* PBXContainerItemProxy */;
+		};
+		D2A9B2FA272E6F26009FCBDE /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = BDBFA3042728914F00C77798 /* BlinkCode */;
+			targetProxy = D2A9B2F9272E6F26009FCBDE /* PBXContainerItemProxy */;
 		};
 		D2BF5F722659522C0070F839 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
@@ -2908,7 +3221,7 @@
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 363;
+				CURRENT_PROJECT_VERSION = 399;
 				DEFINES_MODULE = YES;
 				DEVELOPMENT_TEAM = "$(TEAM_ID)";
 				DYLIB_COMPATIBILITY_VERSION = 1;
@@ -2921,13 +3234,13 @@
 				);
 				INFOPLIST_FILE = SSH/Info.plist;
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
-				IPHONEOS_DEPLOYMENT_TARGET = 14.1;
+				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
 					"@loader_path/Frameworks",
 				);
-				MARKETING_VERSION = 14.0.3;
+				MARKETING_VERSION = 14.0.5;
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
 				PRODUCT_BUNDLE_IDENTIFIER = "$(BUNDLE_ID).SSH";
@@ -2958,7 +3271,7 @@
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 363;
+				CURRENT_PROJECT_VERSION = 399;
 				DEFINES_MODULE = YES;
 				DEVELOPMENT_TEAM = "$(TEAM_ID)";
 				DYLIB_COMPATIBILITY_VERSION = 1;
@@ -2967,13 +3280,13 @@
 				GCC_C_LANGUAGE_STANDARD = gnu11;
 				INFOPLIST_FILE = SSH/Info.plist;
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
-				IPHONEOS_DEPLOYMENT_TARGET = 14.1;
+				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
 					"@loader_path/Frameworks",
 				);
-				MARKETING_VERSION = 14.0.3;
+				MARKETING_VERSION = 14.0.5;
 				MTL_FAST_MATH = YES;
 				PRODUCT_BUNDLE_IDENTIFIER = "$(BUNDLE_ID).SSH";
 				PRODUCT_NAME = "$(TARGET_NAME:c99extidentifier)";
@@ -3070,7 +3383,7 @@
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 363;
+				CURRENT_PROJECT_VERSION = 399;
 				DEFINES_MODULE = YES;
 				DEVELOPMENT_TEAM = "$(TEAM_ID)";
 				DYLIB_COMPATIBILITY_VERSION = 1;
@@ -3083,13 +3396,13 @@
 				);
 				INFOPLIST_FILE = BlinkFiles/Info.plist;
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
-				IPHONEOS_DEPLOYMENT_TARGET = 14.1;
+				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
 					"@loader_path/Frameworks",
 				);
-				MARKETING_VERSION = 14.0.3;
+				MARKETING_VERSION = 14.0.5;
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
 				PRODUCT_BUNDLE_IDENTIFIER = "$(BUNDLE_ID).BlinkFiles";
@@ -3122,7 +3435,7 @@
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 363;
+				CURRENT_PROJECT_VERSION = 399;
 				DEFINES_MODULE = YES;
 				DEVELOPMENT_TEAM = "$(TEAM_ID)";
 				DYLIB_COMPATIBILITY_VERSION = 1;
@@ -3131,13 +3444,13 @@
 				GCC_C_LANGUAGE_STANDARD = gnu11;
 				INFOPLIST_FILE = BlinkFiles/Info.plist;
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
-				IPHONEOS_DEPLOYMENT_TARGET = 14.1;
+				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
 					"@loader_path/Frameworks",
 				);
-				MARKETING_VERSION = 14.0.3;
+				MARKETING_VERSION = 14.0.5;
 				MTL_FAST_MATH = YES;
 				PRODUCT_BUNDLE_IDENTIFIER = "$(BUNDLE_ID).BlinkFiles";
 				PRODUCT_NAME = "$(TARGET_NAME:c99extidentifier)";
@@ -3241,7 +3554,7 @@
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 363;
+				CURRENT_PROJECT_VERSION = 399;
 				DEVELOPMENT_TEAM = "$(TEAM_ID)";
 				GCC_C_LANGUAGE_STANDARD = gnu11;
 				GCC_PREPROCESSOR_DEFINITIONS = (
@@ -3249,13 +3562,13 @@
 					"$(inherited)",
 				);
 				INFOPLIST_FILE = BlinkFileProvider/Info.plist;
-				IPHONEOS_DEPLOYMENT_TARGET = 14.4;
+				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
 					"@executable_path/../../Frameworks",
 				);
-				MARKETING_VERSION = 14.0.3;
+				MARKETING_VERSION = 14.0.5;
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
 				PRODUCT_BUNDLE_IDENTIFIER = "$(BUNDLE_ID).BlinkShellFileProvider";
@@ -3287,17 +3600,17 @@
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 363;
+				CURRENT_PROJECT_VERSION = 399;
 				DEVELOPMENT_TEAM = "$(TEAM_ID)";
 				GCC_C_LANGUAGE_STANDARD = gnu11;
 				INFOPLIST_FILE = BlinkFileProvider/Info.plist;
-				IPHONEOS_DEPLOYMENT_TARGET = 14.4;
+				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
 					"@executable_path/../../Frameworks",
 				);
-				MARKETING_VERSION = 14.0.3;
+				MARKETING_VERSION = 14.0.5;
 				MTL_FAST_MATH = YES;
 				PRODUCT_BUNDLE_IDENTIFIER = "$(BUNDLE_ID).BlinkShellFileProvider";
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -3325,7 +3638,7 @@
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 363;
+				CURRENT_PROJECT_VERSION = 399;
 				DEVELOPMENT_TEAM = "$(TEAM_ID)";
 				GCC_C_LANGUAGE_STANDARD = gnu11;
 				GCC_PREPROCESSOR_DEFINITIONS = (
@@ -3334,15 +3647,15 @@
 				);
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = BlinkFileProviderUI/Info.plist;
-				INFOPLIST_KEY_CFBundleDisplayName = BlinkFileProviderUI;
+				INFOPLIST_KEY_CFBundleDisplayName = Blink;
 				INFOPLIST_KEY_NSHumanReadableCopyright = "Copyright © 2021 Carlos Cabañero Projects SL. All rights reserved.";
-				IPHONEOS_DEPLOYMENT_TARGET = 14.1;
+				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
 					"@executable_path/../../Frameworks",
 				);
-				MARKETING_VERSION = 14.0.3;
+				MARKETING_VERSION = 14.0.5;
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
 				PRODUCT_BUNDLE_IDENTIFIER = "$(BUNDLE_ID).BlinkFileProviderUI";
@@ -3372,25 +3685,197 @@
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 363;
+				CURRENT_PROJECT_VERSION = 399;
 				DEVELOPMENT_TEAM = "$(TEAM_ID)";
 				GCC_C_LANGUAGE_STANDARD = gnu11;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = BlinkFileProviderUI/Info.plist;
-				INFOPLIST_KEY_CFBundleDisplayName = BlinkFileProviderUI;
+				INFOPLIST_KEY_CFBundleDisplayName = Blink;
 				INFOPLIST_KEY_NSHumanReadableCopyright = "Copyright © 2021 Carlos Cabañero Projects SL. All rights reserved.";
-				IPHONEOS_DEPLOYMENT_TARGET = 14.1;
+				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
 					"@executable_path/../../Frameworks",
 				);
-				MARKETING_VERSION = 14.0.3;
+				MARKETING_VERSION = 14.0.5;
 				MTL_FAST_MATH = YES;
 				PRODUCT_BUNDLE_IDENTIFIER = "$(BUNDLE_ID).BlinkFileProviderUI";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
 				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+		BDBFA3142728914F00C77798 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++17";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEFINES_MODULE = YES;
+				DEVELOPMENT_TEAM = HV2S48975V;
+				DYLIB_COMPATIBILITY_VERSION = 1;
+				DYLIB_CURRENT_VERSION = 1;
+				DYLIB_INSTALL_NAME_BASE = "@rpath";
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "Copyright © 2021 Carlos Cabañero Projects SL. All rights reserved.";
+				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
+				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				PRODUCT_BUNDLE_IDENTIFIER = Com.CarlosCabanero.BlinkCode;
+				PRODUCT_NAME = "$(TARGET_NAME:c99extidentifier)";
+				SKIP_INSTALL = YES;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				VERSIONING_SYSTEM = "apple-generic";
+				VERSION_INFO_PREFIX = "";
+			};
+			name = Debug;
+		};
+		BDBFA3152728914F00C77798 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++17";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEFINES_MODULE = YES;
+				DEVELOPMENT_TEAM = HV2S48975V;
+				DYLIB_COMPATIBILITY_VERSION = 1;
+				DYLIB_CURRENT_VERSION = 1;
+				DYLIB_INSTALL_NAME_BASE = "@rpath";
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "Copyright © 2021 Carlos Cabañero Projects SL. All rights reserved.";
+				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
+				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				MTL_FAST_MATH = YES;
+				PRODUCT_BUNDLE_IDENTIFIER = Com.CarlosCabanero.BlinkCode;
+				PRODUCT_NAME = "$(TARGET_NAME:c99extidentifier)";
+				SKIP_INSTALL = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				VERSIONING_SYSTEM = "apple-generic";
+				VERSION_INFO_PREFIX = "";
+			};
+			name = Release;
+		};
+		BDBFA3162728914F00C77798 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++17";
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = HV2S48975V;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				PRODUCT_BUNDLE_IDENTIFIER = Com.CarlosCabanero.BlinkCodeTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		BDBFA3172728914F00C77798 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++17";
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = HV2S48975V;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				MTL_FAST_MATH = YES;
+				PRODUCT_BUNDLE_IDENTIFIER = Com.CarlosCabanero.BlinkCodeTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = NO;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};
@@ -3414,7 +3899,7 @@
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
 				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 363;
+				CURRENT_PROJECT_VERSION = 399;
 				DEFINES_MODULE = YES;
 				DEVELOPMENT_TEAM = HV2S48975V;
 				DYLIB_COMPATIBILITY_VERSION = 1;
@@ -3427,12 +3912,13 @@
 				);
 				INFOPLIST_FILE = BlinkConfig/Info.plist;
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
+				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
 					"@loader_path/Frameworks",
 				);
-				MARKETING_VERSION = 14.0.3;
+				MARKETING_VERSION = 14.0.5;
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
 				PRODUCT_BUNDLE_IDENTIFIER = "$(BUNDLE_ID).BlinkConfig";
@@ -3467,7 +3953,7 @@
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
 				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 363;
+				CURRENT_PROJECT_VERSION = 399;
 				DEFINES_MODULE = YES;
 				DEVELOPMENT_TEAM = HV2S48975V;
 				DYLIB_COMPATIBILITY_VERSION = 1;
@@ -3476,12 +3962,13 @@
 				GCC_C_LANGUAGE_STANDARD = gnu11;
 				INFOPLIST_FILE = BlinkConfig/Info.plist;
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
+				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
 					"@loader_path/Frameworks",
 				);
-				MARKETING_VERSION = 14.0.3;
+				MARKETING_VERSION = 14.0.5;
 				MTL_FAST_MATH = YES;
 				PRODUCT_BUNDLE_IDENTIFIER = "$(BUNDLE_ID).BlinkConfig";
 				PRODUCT_NAME = "$(TARGET_NAME:c99extidentifier)";
@@ -3492,6 +3979,79 @@
 				TARGETED_DEVICE_FAMILY = "1,2";
 				VERSIONING_SYSTEM = "apple-generic";
 				VERSION_INFO_PREFIX = "";
+			};
+			name = Release;
+		};
+		BDD6D13E27594BF900E76F1F /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++17";
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = HV2S48975V;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GENERATE_INFOPLIST_FILE = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				PRODUCT_BUNDLE_IDENTIFIER = cc.carloscabanero.BlinkConfigTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		BDD6D13F27594BF900E76F1F /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++17";
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = HV2S48975V;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GENERATE_INFOPLIST_FILE = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				MTL_FAST_MATH = YES;
+				PRODUCT_BUNDLE_IDENTIFIER = cc.carloscabanero.BlinkConfigTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
 			};
 			name = Release;
 		};
@@ -3638,7 +4198,7 @@
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 363;
+				CURRENT_PROJECT_VERSION = 399;
 				DEVELOPMENT_TEAM = "$(TEAM_ID)";
 				GCC_C_LANGUAGE_STANDARD = gnu11;
 				GCC_PREPROCESSOR_DEFINITIONS = (
@@ -3646,13 +4206,13 @@
 					"$(inherited)",
 				);
 				INFOPLIST_FILE = BlinkIntents/Info.plist;
-				IPHONEOS_DEPLOYMENT_TARGET = 14.5;
+				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
 					"@executable_path/../../Frameworks",
 				);
-				MARKETING_VERSION = 14.0.3;
+				MARKETING_VERSION = 14.0.5;
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
 				PRODUCT_BUNDLE_IDENTIFIER = "$(BUNDLE_ID).BlinkShellIntents";
@@ -3683,17 +4243,17 @@
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 363;
+				CURRENT_PROJECT_VERSION = 399;
 				DEVELOPMENT_TEAM = "$(TEAM_ID)";
 				GCC_C_LANGUAGE_STANDARD = gnu11;
 				INFOPLIST_FILE = BlinkIntents/Info.plist;
-				IPHONEOS_DEPLOYMENT_TARGET = 14.5;
+				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
 					"@executable_path/../../Frameworks",
 				);
-				MARKETING_VERSION = 14.0.3;
+				MARKETING_VERSION = 14.0.5;
 				MTL_FAST_MATH = YES;
 				PRODUCT_BUNDLE_IDENTIFIER = "$(BUNDLE_ID).BlinkShellIntents";
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -3748,8 +4308,8 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 14.1;
-				MACOSX_DEPLOYMENT_TARGET = 11.1;
+				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
+				MACOSX_DEPLOYMENT_TARGET = 12.0;
 				MTL_ENABLE_DEBUG_INFO = YES;
 				ONLY_ACTIVE_ARCH = YES;
 				SDKROOT = iphoneos;
@@ -3800,8 +4360,8 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 14.1;
-				MACOSX_DEPLOYMENT_TARGET = 11.1;
+				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
+				MACOSX_DEPLOYMENT_TARGET = 12.0;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				SDKROOT = iphoneos;
 				SWIFT_COMPILATION_MODE = wholemodule;
@@ -3820,7 +4380,7 @@
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 363;
+				CURRENT_PROJECT_VERSION = 399;
 				DEAD_CODE_STRIPPING = NO;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				DEFINES_MODULE = YES;
@@ -3832,11 +4392,12 @@
 					"$(inherited)",
 				);
 				INFOPLIST_FILE = Blink/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 14.0.3;
+				MARKETING_VERSION = 14.0.5;
 				OTHER_LDFLAGS = "-ObjC";
 				PRODUCT_BUNDLE_IDENTIFIER = "$(BUNDLE_ID)";
 				PRODUCT_NAME = Blink;
@@ -3861,18 +4422,19 @@
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 363;
+				CURRENT_PROJECT_VERSION = 399;
 				DEAD_CODE_STRIPPING = NO;
 				DEFINES_MODULE = YES;
 				DEVELOPMENT_TEAM = "$(TEAM_ID)";
 				ENABLE_BITCODE = NO;
 				GCC_PREPROCESSOR_DEFINITIONS = "";
 				INFOPLIST_FILE = Blink/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 14.0.3;
+				MARKETING_VERSION = 14.0.5;
 				OTHER_LDFLAGS = "-ObjC";
 				PRODUCT_BUNDLE_IDENTIFIER = "$(BUNDLE_ID)";
 				PRODUCT_NAME = Blink;
@@ -3943,11 +4505,38 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Debug;
 		};
+		BDBFA31B2728914F00C77798 /* Build configuration list for PBXNativeTarget "BlinkCode" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				BDBFA3142728914F00C77798 /* Debug */,
+				BDBFA3152728914F00C77798 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		BDBFA31C2728914F00C77798 /* Build configuration list for PBXNativeTarget "BlinkCodeTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				BDBFA3162728914F00C77798 /* Debug */,
+				BDBFA3172728914F00C77798 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
 		BDCB7167268E1577007D7047 /* Build configuration list for PBXNativeTarget "BlinkConfig" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				BDCB7168268E1577007D7047 /* Debug */,
 				BDCB7169268E1577007D7047 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		BDD6D14327594BF900E76F1F /* Build configuration list for PBXNativeTarget "BlinkConfigTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				BDD6D13E27594BF900E76F1F /* Debug */,
+				BDD6D13F27594BF900E76F1F /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Debug;

@@ -150,6 +150,11 @@ NSString *__iCloudsDriveDocumentsPath = nil;
   return [[self blink] stringByAppendingPathComponent:@"hosts"];
 }
 
++ (NSURL *)blinkGlobalSSHConfigFileURL
+{
+  return [[self blinkURL] URLByAppendingPathComponent:@"ssh_global"];
+}
+
 + (NSURL *)blinkSSHConfigFileURL
 {
   return [[self blinkURL] URLByAppendingPathComponent:@"ssh_config"];
@@ -189,6 +194,11 @@ NSString *__iCloudsDriveDocumentsPath = nil;
 + (NSURL *)fileProviderErrorLogURL
 {
   return [[self blinkURL] URLByAppendingPathComponent:@"fileprovider.log"];
+}
+
++ (NSURL *)blinkCodeErrorLogURL
+{
+  return [[self blinkURL] URLByAppendingPathComponent:@"blinkCode.log"];
 }
 
 + (NSArray<NSString *> *)cleanedSymlinksInHomeDirectory
