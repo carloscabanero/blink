@@ -33,6 +33,17 @@
                ReferencedContainer = "container:Blink.xcodeproj">
             </BuildableReference>
          </TestableReference>
+         <TestableReference
+            skipped = "NO"
+            parallelizable = "YES">
+            <BuildableReference
+               BuildableIdentifier = "primary"
+               BlueprintIdentifier = "BD9513E92B4F5A7A00A7BEBE"
+               BuildableName = "BlinkFileProviderTests.xctest"
+               BlueprintName = "BlinkFileProviderTests"
+               ReferencedContainer = "container:Blink.xcodeproj">
+            </BuildableReference>
+         </TestableReference>
       </Testables>
    </TestAction>
    <LaunchAction
