@@ -16,8 +16,8 @@
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "BD9EA1C82718E19000874007"
-               BuildableName = "BlinkFileProviderUI.appex"
-               BlueprintName = "BlinkFileProviderUI"
+               BuildableName = "BlinkFileProviderExtensionUI.appex"
+               BlueprintName = "BlinkFileProviderExtensionUI"
                ReferencedContainer = "container:Blink.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
