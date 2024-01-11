@@ -29,7 +29,7 @@
 		<key>NSExtensionPointIdentifier</key>
 		<string>com.apple.fileprovider-nonui</string>
 		<key>NSExtensionPrincipalClass</key>
-		<string>BlinkFileProvider.FileProviderExtension</string>
+		<string>BlinkFileProvider.FileProviderReplicatedExtension</string>
 	</dict>
 </dict>
 </plist>

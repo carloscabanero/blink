@@ -48,10 +48,10 @@ class _NSFileProviderDomain {
   let displayName: String
   let pathRelativeToDocumentStorage: String
   
-  init(identifier: _NSFileProviderDomainIdentifier, displayName: String, pathRelativeToDocumentStorage: String) {
+  init(identifier: _NSFileProviderDomainIdentifier, displayName: String) {
     self.identifier = identifier
     self.displayName = displayName
-    self.pathRelativeToDocumentStorage = pathRelativeToDocumentStorage
+    //self.pathRelativeToDocumentStorage = pathRelativeToDocumentStorage
   }
 }
 
@@ -105,8 +105,8 @@ class FileProviderDomain: Identifiable, Codable, Equatable {
   func nsFileProviderDomain(alias: String) -> _NSFileProviderDomain? {
     _NSFileProviderDomain(
       identifier: _NSFileProviderDomainIdentifier(rawValue: id.uuidString),
-      displayName: displayName,
-      pathRelativeToDocumentStorage: encodedPathFor(alias: alias) ?? ""
+      displayName: displayName
+      //pathRelativeToDocumentStorage: encodedPathFor(alias: alias) ?? ""
     )
   }
   
@@ -182,7 +182,7 @@ class FileProviderDomain: Identifiable, Codable, Equatable {
     
     for nsDomain in domainsToRemove {
       _NSFileProviderManager.remove(nsDomain) { err in
-        _NSFileProviderManager.clearFileProviderCache(nsDomain)
+        //_NSFileProviderManager.clearFileProviderCache(nsDomain)
         if let err = err {
           print("failed to remove domain", err)
         }
@@ -196,7 +196,7 @@ class FileProviderDomain: Identifiable, Codable, Equatable {
             print("failed to add domain", err)
           }
         }
-        _NSFileProviderManager.excludeDomainFromBackup(domain)
+        //_NSFileProviderManager.excludeDomainFromBackup(domain)
       }
     }
   }

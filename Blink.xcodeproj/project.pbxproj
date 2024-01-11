@@ -151,6 +151,9 @@
 		BD9514272B4F606500A7BEBE /* SSHClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = BD9514262B4F606500A7BEBE /* SSHClient.swift */; };
 		BD9514282B4F60F600A7BEBE /* BlinkLogging.swift in Sources */ = {isa = PBXBuildFile; fileRef = BD9EA20A271F62ED00874007 /* BlinkLogging.swift */; };
 		BD9514292B4F60F600A7BEBE /* Publisher.swift in Sources */ = {isa = PBXBuildFile; fileRef = BD9EA20C271F664D00874007 /* Publisher.swift */; };
+		BD9514312B4F660B00A7BEBE /* FileProviderReplicatedExtension.swift in Sources */ = {isa = PBXBuildFile; fileRef = BD9514302B4F660B00A7BEBE /* FileProviderReplicatedExtension.swift */; };
+		BD9514332B4F661600A7BEBE /* FileProviderItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = BD9514322B4F661600A7BEBE /* FileProviderItem.swift */; };
+		BD9514352B4F662100A7BEBE /* FileProviderReplicatedEnumerator.swift in Sources */ = {isa = PBXBuildFile; fileRef = BD9514342B4F662100A7BEBE /* FileProviderReplicatedEnumerator.swift */; };
 		BD98AC84260BD8DC00B4E6A1 /* SSHAgentAdd.swift in Sources */ = {isa = PBXBuildFile; fileRef = BD98AC83260BD8DC00B4E6A1 /* SSHAgentAdd.swift */; };
 		BD98AC95260BE20000B4E6A1 /* SSHAgentPool.swift in Sources */ = {isa = PBXBuildFile; fileRef = BD98AC94260BE20000B4E6A1 /* SSHAgentPool.swift */; };
 		BD9BF7E7262A6B0300B02074 /* SOCKS.swift in Sources */ = {isa = PBXBuildFile; fileRef = BD9BF7E3262A6B0300B02074 /* SOCKS.swift */; };
@@ -919,6 +922,9 @@
 		BD9514092B4F5B9400A7BEBE /* BlinkItemReference.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = BlinkItemReference.swift; sourceTree = "<group>"; };
 		BD95141E2B4F5F4000A7BEBE /* main.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = main.swift; sourceTree = "<group>"; };
 		BD9514262B4F606500A7BEBE /* SSHClient.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SSHClient.swift; sourceTree = "<group>"; };
+		BD9514302B4F660B00A7BEBE /* FileProviderReplicatedExtension.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = FileProviderReplicatedExtension.swift; sourceTree = "<group>"; };
+		BD9514322B4F661600A7BEBE /* FileProviderItem.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = FileProviderItem.swift; sourceTree = "<group>"; };
+		BD9514342B4F662100A7BEBE /* FileProviderReplicatedEnumerator.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = FileProviderReplicatedEnumerator.swift; sourceTree = "<group>"; };
 		BD98AC83260BD8DC00B4E6A1 /* SSHAgentAdd.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SSHAgentAdd.swift; sourceTree = "<group>"; };
 		BD98AC94260BE20000B4E6A1 /* SSHAgentPool.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SSHAgentPool.swift; sourceTree = "<group>"; };
 		BD9BF7E3262A6B0300B02074 /* SOCKS.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SOCKS.swift; sourceTree = "<group>"; };
@@ -1779,12 +1785,13 @@
 		BD9513E22B4F5A7A00A7BEBE /* BlinkFileProvider */ = {
 			isa = PBXGroup;
 			children = (
+				BD95142F2B4F639B00A7BEBE /* Old */,
 				BD9514062B4F5B9400A7BEBE /* Models */,
 				BD9514012B4F5B9400A7BEBE /* SSH */,
 				BD9513FE2B4F5B5600A7BEBE /* Publisher */,
-				BD9514052B4F5B9400A7BEBE /* FileProviderEnumerator.swift */,
-				BD9514032B4F5B9400A7BEBE /* FileProviderExtension.swift */,
-				BD9514042B4F5B9400A7BEBE /* NSFileProviderError.swift */,
+				BD9514342B4F662100A7BEBE /* FileProviderReplicatedEnumerator.swift */,
+				BD9514322B4F661600A7BEBE /* FileProviderItem.swift */,
+				BD9514302B4F660B00A7BEBE /* FileProviderReplicatedExtension.swift */,
 				BD9513E32B4F5A7A00A7BEBE /* BlinkFileProvider.h */,
 			);
 			path = BlinkFileProvider;
@@ -1833,6 +1840,16 @@
 			name = SSH;
 			path = BlinkFileProvider/SSH;
 			sourceTree = SOURCE_ROOT;
+		};
+		BD95142F2B4F639B00A7BEBE /* Old */ = {
+			isa = PBXGroup;
+			children = (
+				BD9514052B4F5B9400A7BEBE /* FileProviderEnumerator.swift */,
+				BD9514032B4F5B9400A7BEBE /* FileProviderExtension.swift */,
+				BD9514042B4F5B9400A7BEBE /* NSFileProviderError.swift */,
+			);
+			name = Old;
+			sourceTree = "<group>";
 		};
 		BD9EA1CA2718E19000874007 /* BlinkFileProviderExtensionUI */ = {
 			isa = PBXGroup;
@@ -3309,10 +3326,13 @@
 			buildActionMask = 2147483647;
 			files = (
 				BD9514282B4F60F600A7BEBE /* BlinkLogging.swift in Sources */,
+				BD9514312B4F660B00A7BEBE /* FileProviderReplicatedExtension.swift in Sources */,
 				BD9514292B4F60F600A7BEBE /* Publisher.swift in Sources */,
+				BD9514332B4F661600A7BEBE /* FileProviderItem.swift in Sources */,
 				BD95140D2B4F5B9400A7BEBE /* FileProviderEnumerator.swift in Sources */,
 				BD9514102B4F5B9400A7BEBE /* BlinkItemReference.swift in Sources */,
 				BD95140F2B4F5B9400A7BEBE /* FileTranslatorCache.swift in Sources */,
+				BD9514352B4F662100A7BEBE /* FileProviderReplicatedEnumerator.swift in Sources */,
 				BD9514002B4F5B5600A7BEBE /* ReplaySubject.swift in Sources */,
 				BD95140E2B4F5B9400A7BEBE /* BlinkItemIdentifier.swift in Sources */,
 				BD95140B2B4F5B9400A7BEBE /* FileProviderExtension.swift in Sources */,
