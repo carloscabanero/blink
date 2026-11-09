@@ -2,6 +2,8 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
+	<key>BLINK_BELL_APP_GROUP</key>
+	<string>group.$(GROUP_ID)</string>
 	<key>BLINK_APP_FONT</key>
 	<string>$(BLINK_APP_FONT)</string>
 	<key>UIAppFonts</key>
@@ -97,6 +99,7 @@
 				<string>http</string>
 				<string>ssh</string>
 				<string>blinkshell</string>
+				<string>blink</string>
 				<string>${BLINK_MIGRATION_SCHEME}</string>
 				<string>vscode</string>
 			</array>

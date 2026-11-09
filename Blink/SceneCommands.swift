@@ -33,6 +33,7 @@
 import Foundation
 
 
+// Operations performed in a selected Space.
 protocol SceneCommand {
   func perform(on spaceController: SpaceController)
 }
@@ -40,10 +41,25 @@ protocol SceneCommand {
 
 enum SceneCommands {
   static func from(url: URL) -> SceneCommand? {
-    OpenSSHCommand(url: url)
+    OpenTerminalCommand(url: url)
+      ?? OpenSSHCommand(url: url)
       ?? XCallbackRunCommand(url: url)
       ?? OpenCodeCommand(url: url)
       ?? OpenHTTPCommand(url: url)
+  }
+}
+
+
+struct OpenTerminalCommand: SceneCommand {
+  let sessionKey: UUID
+
+  init?(url: URL) {
+    guard let key = WorkURL.terminalSessionKey(url) else { return nil }
+    sessionKey = key
+  }
+
+  func perform(on spaceController: SpaceController) {
+    spaceController.moveToShellAction(key: sessionKey)
   }
 }
 

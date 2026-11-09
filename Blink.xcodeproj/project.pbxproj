@@ -475,6 +475,22 @@
 		D2F330DA20A7127B0074ADD7 /* open.m in Sources */ = {isa = PBXBuildFile; fileRef = D2F330D920A7127B0074ADD7 /* open.m */; };
 		D2FBEC0B27CF505D00FD974A /* browse.swift in Sources */ = {isa = PBXBuildFile; fileRef = D2FBEC0727CF505D00FD974A /* browse.swift */; };
 		D2FCB4DD2339F9DB00A88108 /* UIScrollView+Paging.swift in Sources */ = {isa = PBXBuildFile; fileRef = D2FCB4DC2339F9DB00A88108 /* UIScrollView+Paging.swift */; };
+		B31100020000000000000001 /* Bell.swift in Sources */ = {isa = PBXBuildFile; fileRef = B31100010000000000000001 /* Bell.swift */; };
+		B31100020000000000000002 /* BellTower.swift in Sources */ = {isa = PBXBuildFile; fileRef = B31100010000000000000002 /* BellTower.swift */; };
+		B31100020000000000000003 /* TerminalBellMenu.swift in Sources */ = {isa = PBXBuildFile; fileRef = B31100010000000000000003 /* TerminalBellMenu.swift */; };
+		B31100020000000000000006 /* AppDelegate+Notifications.swift in Sources */ = {isa = PBXBuildFile; fileRef = B31100010000000000000006 /* AppDelegate+Notifications.swift */; };
+		B31100020000000000000005 /* AppDelegate+Bell.swift in Sources */ = {isa = PBXBuildFile; fileRef = B31100010000000000000005 /* AppDelegate+Bell.swift */; };
+		B31700000000000000000065 /* WorkURL.swift in Sources */ = {isa = PBXBuildFile; fileRef = B31700000000000000000001 /* WorkURL.swift */; };
+		B31700000000000000000067 /* BellBindingStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = B31700000000000000000003 /* BellBindingStore.swift */; };
+		B31700000000000000000068 /* BellMockPush.swift in Sources */ = {isa = PBXBuildFile; fileRef = B31700000000000000000004 /* BellMockPush.swift */; };
+		B31700000000000000000069 /* NotificationService.swift in Sources */ = {isa = PBXBuildFile; fileRef = B31700000000000000000005 /* NotificationService.swift */; };
+		B3170000000000000000006A /* BellBindingStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = B31700000000000000000003 /* BellBindingStore.swift */; };
+		B3170000000000000000006B /* BellMockPush.swift in Sources */ = {isa = PBXBuildFile; fileRef = B31700000000000000000004 /* BellMockPush.swift */; };
+		B3170000000000000000006C /* BlinkNotificationService.appex in Embed PlugIns */ = {isa = PBXBuildFile; fileRef = B31700000000000000000008 /* BlinkNotificationService.appex */; platformFilter = ios; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		B31800000000000000000002 /* BellFlowTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B31800000000000000000001 /* BellFlowTests.swift */; };
+		B31800000000000000000003 /* NotificationService.swift in Sources */ = {isa = PBXBuildFile; fileRef = B31700000000000000000005 /* NotificationService.swift */; };
+		B31900000000000000000002 /* MockBellRelay.swift in Sources */ = {isa = PBXBuildFile; fileRef = B31900000000000000000001 /* MockBellRelay.swift */; };
+		B32000000000000000000001 /* Bell.swift in Sources */ = {isa = PBXBuildFile; fileRef = B31100010000000000000001 /* Bell.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -709,6 +725,13 @@
 			remoteGlobalIDString = BDBFA3042728914F00C77798;
 			remoteInfo = BlinkCode;
 		};
+		B31700000000000000000029 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = EA0BA1831C0CC57B00719C1A /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = B31700000000000000000028;
+			remoteInfo = BlinkNotificationService;
+		};
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -751,6 +774,7 @@
 				D218069C25CC27C100B98902 /* AppKitBridge.bundle in Embed PlugIns */,
 				9827126B262E4BDB00F883FA /* BlinkFileProviderExtension.appex in Embed PlugIns */,
 				BD9EA1D32718E19000874007 /* BlinkFileProviderExtensionUI.appex in Embed PlugIns */,
+				B3170000000000000000006C /* BlinkNotificationService.appex in Embed PlugIns */,
 			);
 			name = "Embed PlugIns";
 			runOnlyForDeploymentPostprocessing = 0;
@@ -1225,6 +1249,20 @@
 		D2FBEC0727CF505D00FD974A /* browse.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = browse.swift; sourceTree = "<group>"; };
 		D2FCB4DC2339F9DB00A88108 /* UIScrollView+Paging.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "UIScrollView+Paging.swift"; sourceTree = "<group>"; };
 		EA0BA18B1C0CC57B00719C1A /* Blink.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Blink.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		B31100010000000000000001 /* Bell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Bell.swift; sourceTree = "<group>"; };
+		B31100010000000000000002 /* BellTower.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BellTower.swift; sourceTree = "<group>"; };
+		B31100010000000000000003 /* TerminalBellMenu.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TerminalBellMenu.swift; sourceTree = "<group>"; };
+		B31100010000000000000006 /* AppDelegate+Notifications.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "AppDelegate+Notifications.swift"; sourceTree = "<group>"; };
+		B31100010000000000000005 /* AppDelegate+Bell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "AppDelegate+Bell.swift"; sourceTree = "<group>"; };
+		B31700000000000000000001 /* WorkURL.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkURL.swift; sourceTree = "<group>"; };
+		B31700000000000000000003 /* BellBindingStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BellBindingStore.swift; sourceTree = "<group>"; };
+		B31700000000000000000004 /* BellMockPush.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BellMockPush.swift; sourceTree = "<group>"; };
+		B31700000000000000000005 /* NotificationService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationService.swift; sourceTree = "<group>"; };
+		B31700000000000000000006 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		B31700000000000000000007 /* BlinkNotificationService.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = BlinkNotificationService.entitlements; sourceTree = "<group>"; };
+		B31700000000000000000008 /* BlinkNotificationService.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = BlinkNotificationService.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		B31800000000000000000001 /* BellFlowTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BellFlowTests.swift; sourceTree = "<group>"; };
+		B31900000000000000000001 /* MockBellRelay.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MockBellRelay.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
@@ -1455,13 +1493,21 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		B3170000000000000000001F /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = ();
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
 		0716B5231CFFAB9300268B5B /* Blink */ = {
 			isa = PBXGroup;
 			children = (
+				B31100030000000000000001 /* Bell */,
 				BD36631C2FA159730085FD66 /* SceneCommands.swift */,
+				B31700000000000000000001 /* WorkURL.swift */,
 				D22277F02A26200B00D4C708 /* Snippets */,
 				D25DE9C32939EB63008246EB /* NonStdIO */,
 				D264D2AE28F8457A002B1B14 /* WhatsNew */,
@@ -1480,6 +1526,7 @@
 				D29B4A8D274D1E9F00C66ED9 /* BrowserController.swift */,
 				D2AD8E5D27A2BAD600DED28D /* StatusBarLessViewController.swift */,
 				0716B5291CFFAB9300268B5B /* AppDelegate.h */,
+				B31100010000000000000006 /* AppDelegate+Notifications.swift */,
 				0716B52A1CFFAB9300268B5B /* AppDelegate.m */,
 				0716B52C1CFFAB9300268B5B /* LaunchScreen.storyboard */,
 				D2179F2B2136A5DC00B0850A /* GeoManager.h */,
@@ -2223,6 +2270,7 @@
 		D265FBBB2317DD3C0017EAC4 /* BlinkTests */ = {
 			isa = PBXGroup;
 			children = (
+				B31800000000000000000001 /* BellFlowTests.swift */,
 				BD9EA215271F83B400874007 /* BlinkLoggingTests.swift */,
 				D20CBA56236031D700D93301 /* CompleteUtilsTests.swift */,
 				BDE7C45B29DCAEFA005E033E /* FileLocationPathTests.swift */,
@@ -2423,6 +2471,7 @@
 				BD9513F02B4F5A7A00A7BEBE /* BlinkFileProviderTests */,
 				BD9EA1CA2718E19000874007 /* BlinkFileProviderExtensionUI */,
 				98271251262E4BDB00F883FA /* BlinkFileProviderExtension */,
+				B31700000000000000000014 /* BlinkNotificationService */,
 				BDCB715F268E1577007D7047 /* BlinkConfig */,
 				BDD6D13827594BF900E76F1F /* BlinkConfigTests */,
 				BDBFA3062728914F00C77798 /* BlinkCode */,
@@ -2448,6 +2497,7 @@
 			isa = PBXGroup;
 			children = (
 				EA0BA18B1C0CC57B00719C1A /* Blink.app */,
+				B31700000000000000000008 /* BlinkNotificationService.appex */,
 				D265FBBA2317DD3C0017EAC4 /* BlinkTests.xctest */,
 				07FABB8425C9AEC000E1CC2C /* SSH.framework */,
 				07FABB8C25C9AEC100E1CC2C /* SSHTests.xctest */,
@@ -2466,6 +2516,30 @@
 				BD9513EA2B4F5A7A00A7BEBE /* BlinkFileProviderTests.xctest */,
 			);
 			name = Products;
+			sourceTree = "<group>";
+		};
+		B31100030000000000000001 /* Bell */ = {
+			isa = PBXGroup;
+			children = (
+				B31900000000000000000001 /* MockBellRelay.swift */,
+				B31100010000000000000001 /* Bell.swift */,
+				B31700000000000000000003 /* BellBindingStore.swift */,
+				B31700000000000000000004 /* BellMockPush.swift */,
+				B31100010000000000000002 /* BellTower.swift */,
+				B31100010000000000000003 /* TerminalBellMenu.swift */,
+				B31100010000000000000005 /* AppDelegate+Bell.swift */,
+			);
+			path = Bell;
+			sourceTree = "<group>";
+		};
+		B31700000000000000000014 /* BlinkNotificationService */ = {
+			isa = PBXGroup;
+			children = (
+				B31700000000000000000005 /* NotificationService.swift */,
+				B31700000000000000000006 /* Info.plist */,
+				B31700000000000000000007 /* BlinkNotificationService.entitlements */,
+			);
+			path = BlinkNotificationService;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -2862,6 +2936,7 @@
 				9827126A262E4BDB00F883FA /* PBXTargetDependency */,
 				BDCB7164268E1577007D7047 /* PBXTargetDependency */,
 				BD9EA1D22718E19000874007 /* PBXTargetDependency */,
+				B3170000000000000000002A /* PBXTargetDependency */,
 				D2A9B2FA272E6F26009FCBDE /* PBXTargetDependency */,
 				D22277E02A26115300D4C708 /* PBXTargetDependency */,
 				BDECEA492CDE7544007BBCF6 /* PBXTargetDependency */,
@@ -2883,6 +2958,21 @@
 			productName = Blink;
 			productReference = EA0BA18B1C0CC57B00719C1A /* Blink.app */;
 			productType = "com.apple.product-type.application";
+		};
+		B31700000000000000000028 /* BlinkNotificationService */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = B31700000000000000000032 /* Build configuration list for PBXNativeTarget "BlinkNotificationService" */;
+			buildPhases = (
+				B3170000000000000000001E /* Sources */,
+				B3170000000000000000001F /* Frameworks */,
+				B31700000000000000000020 /* Resources */,
+			);
+			buildRules = ();
+			dependencies = ();
+			name = BlinkNotificationService;
+			productName = BlinkNotificationService;
+			productReference = B31700000000000000000008 /* BlinkNotificationService.appex */;
+			productType = "com.apple.product-type.app-extension";
 		};
 /* End PBXNativeTarget section */
 
@@ -3017,6 +3107,7 @@
 			);
 			projectRoot = "";
 			targets = (
+				B31700000000000000000028 /* BlinkNotificationService */,
 				EA0BA18A1C0CC57B00719C1A /* Blink */,
 				D265FBB92317DD3C0017EAC4 /* BlinkTests */,
 				07FABB8325C9AEC000E1CC2C /* SSH */,
@@ -3233,6 +3324,12 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		B31700000000000000000020 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = ();
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
@@ -3427,6 +3524,8 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				B31800000000000000000002 /* BellFlowTests.swift in Sources */,
+				B31800000000000000000003 /* NotificationService.swift in Sources */,
 				BD74A7C22905BD5800ED01CF /* WhatsNewModelTests.swift in Sources */,
 				BDE7C45C29DCAEFA005E033E /* FileLocationPathTests.swift in Sources */,
 				BD55D69C2F7D744B00EE80EA /* TerminalStyleTests.swift in Sources */,
@@ -3448,6 +3547,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				B31900000000000000000002 /* MockBellRelay.swift in Sources */,
 				BD23B6E12CB0585B0041C38D /* ios_patches.m in Sources */,
 				D2AD8E7527A2BAFA00DED28D /* PurchasesUserModel.swift in Sources */,
 				BDFA97352D959BC90020BBF2 /* TypingText.swift in Sources */,
@@ -3550,6 +3650,14 @@
 				D2AB611E23AB5ACD00BE6585 /* UIApplication+Version.m in Sources */,
 				07FAB8F525C8E6C500E1CC2C /* SSHConfigProvider.swift in Sources */,
 				BD1FFF702E4A10C600DB5AF9 /* TermSessionPayload.swift in Sources */,
+				B31100020000000000000006 /* AppDelegate+Notifications.swift in Sources */,
+				B31100020000000000000005 /* AppDelegate+Bell.swift in Sources */,
+				B31100020000000000000003 /* TerminalBellMenu.swift in Sources */,
+				B31100020000000000000002 /* BellTower.swift in Sources */,
+				B31100020000000000000001 /* Bell.swift in Sources */,
+				B31700000000000000000065 /* WorkURL.swift in Sources */,
+				B31700000000000000000067 /* BellBindingStore.swift in Sources */,
+				B31700000000000000000068 /* BellMockPush.swift in Sources */,
 				BD2C754E2D75FA85007BFE77 /* Walkthrough.swift in Sources */,
 				D241CBD523040734003D64A5 /* KBKey.swift in Sources */,
 				D215AC30233521B600E164C3 /* WKWebView.swift in Sources */,
@@ -3670,6 +3778,17 @@
 				D241CBE6230562E9003D64A5 /* KBSizes.swift in Sources */,
 				D241CBD023040734003D64A5 /* KBKeyViewFlexible.swift in Sources */,
 				D22278002A26204900D4C708 /* Accumulators.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		B3170000000000000000001E /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				B31700000000000000000069 /* NotificationService.swift in Sources */,
+				B3170000000000000000006A /* BellBindingStore.swift in Sources */,
+				B3170000000000000000006B /* BellMockPush.swift in Sources */,
+				B32000000000000000000001 /* Bell.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -3828,6 +3947,12 @@
 			isa = PBXTargetDependency;
 			target = BDBFA3042728914F00C77798 /* BlinkCode */;
 			targetProxy = D2A9B2F9272E6F26009FCBDE /* PBXContainerItemProxy */;
+		};
+		B3170000000000000000002A /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			platformFilter = ios;
+			target = B31700000000000000000028 /* BlinkNotificationService */;
+			targetProxy = B31700000000000000000029 /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
 
@@ -5395,6 +5520,54 @@
 			};
 			name = Release;
 		};
+		B31700000000000000000033 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				APPLICATION_EXTENSION_API_ONLY = YES;
+				CODE_SIGN_ENTITLEMENTS = BlinkNotificationService/BlinkNotificationService.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 2051;
+				INFOPLIST_FILE = BlinkNotificationService/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.6;
+				LD_RUNPATH_SEARCH_PATHS = ("$(inherited)", "@executable_path/Frameworks", "@executable_path/../../Frameworks", );
+				MARKETING_VERSION = 18.7.2;
+				PRODUCT_BUNDLE_IDENTIFIER = "$(BUNDLE_ID).BlinkNotificationService";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTS_MACCATALYST = NO;
+				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "$(inherited) BELL_NOTIFICATION_EXTENSION DEBUG";
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		B31700000000000000000034 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				APPLICATION_EXTENSION_API_ONLY = YES;
+				CODE_SIGN_ENTITLEMENTS = BlinkNotificationService/BlinkNotificationService.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 2051;
+				INFOPLIST_FILE = BlinkNotificationService/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.6;
+				LD_RUNPATH_SEARCH_PATHS = ("$(inherited)", "@executable_path/Frameworks", "@executable_path/../../Frameworks", );
+				MARKETING_VERSION = 18.7.2;
+				PRODUCT_BUNDLE_IDENTIFIER = "$(BUNDLE_ID).BlinkNotificationService";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTS_MACCATALYST = NO;
+				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "$(inherited) BELL_NOTIFICATION_EXTENSION";
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -5559,6 +5732,15 @@
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Debug;
+		};
+		B31700000000000000000032 /* Build configuration list for PBXNativeTarget "BlinkNotificationService" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				B31700000000000000000033 /* Debug */,
+				B31700000000000000000034 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
 

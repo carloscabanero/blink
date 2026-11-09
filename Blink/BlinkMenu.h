@@ -41,6 +41,7 @@ extern const BlinkActionID BlinkActionSnippets;
 extern const BlinkActionID BlinkActionTabClose;
 extern const BlinkActionID BlinkActionTabCreate;
 extern const BlinkActionID BlinkActionLayoutMenu;
+extern const BlinkActionID BlinkActionBellMenu;
 extern const BlinkActionID BlinkActionMoreMenu;
 extern const BlinkActionID BlinkActionChangeLayout;
 extern const BlinkActionID BlinkActionToggleLayoutLock;

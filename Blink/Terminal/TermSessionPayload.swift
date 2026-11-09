@@ -35,8 +35,10 @@ import Foundation
 
 // MARK: - Protocol
 
-protocol TermSessionPayload {
+protocol TermSessionPayload: AnyObject {
   static var sessionType: TermSessionPayloadType { get }
+
+  var bell: Bell? { get set }
 
   func start(in device: TermDevice, sessionKey: String)
   func suspend()
@@ -68,12 +70,22 @@ func decodePayload(from coder: NSCoder) -> (any TermSessionPayload)? {
 private enum TermSessionPayloadKey: CodingKey {
   case sessionType
   case snapshot
+  case bell
+}
+
+// Read owner metadata without constructing or starting a session. Old archives
+// have no Bell; protected/unavailable archives are handled by SessionStore.
+func decodeTerminalBell(from coder: NSCoder) -> Bell? {
+  guard coder.containsValue(forKey: TermSessionPayloadKey.bell.stringValue),
+        let data: Data = coder.bk_decode(for: TermSessionPayloadKey.bell) else { return nil }
+  return try? JSONDecoder().decode(Bell.self, from: data)
 }
 
 // MARK: - MCPSessionPayload
 
 class MCPSessionPayload : TermSessionPayload {
   static var sessionType: TermSessionPayloadType { .mcp }
+  var bell: Bell?
   private var _session: MCPSession? = nil
   private var _initialParams: MCPParams
   private var _snapshot: Data? = nil
@@ -123,6 +135,7 @@ class MCPSessionPayload : TermSessionPayload {
     coder.bk_encode(Self.sessionType.rawValue, for: TermSessionPayloadKey.sessionType)
     // Snapshot — stored as a sibling, never inside the params.
     coder.bk_encode(_snapshot, for: TermSessionPayloadKey.snapshot)
+    coder.bk_encode(bell.flatMap { try? JSONEncoder().encode($0) }, for: TermSessionPayloadKey.bell)
     // Config params — always clean (snapshot was extracted in suspend).
     if let session = _session {
       coder.bk_encode(session.sessionParams, for: Key.sessionParams)
@@ -137,6 +150,7 @@ class MCPSessionPayload : TermSessionPayload {
     }
     let payload = MCPSessionPayload(params: params)
     payload._snapshot = coder.bk_decode(for: TermSessionPayloadKey.snapshot)
+    payload.bell = decodeTerminalBell(from: coder)
     return payload
   }
 }

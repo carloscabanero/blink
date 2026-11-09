@@ -86,6 +86,8 @@ extern void build_auto_start_wg_ports(void);
   [KBTracker shared];
 
   [UNUserNotificationCenter currentNotificationCenter].delegate = self;
+  [self startBellTower];
+  [application registerForRemoteNotifications];
 
 //  [nc addObserver:self selector:@selector(_logEvent:) name:nil object:nil];
 //  [nc addObserver:self selector:@selector(_active) name:@"UIApplicationSystemNavigationActionChangedNotification" object:nil];
@@ -125,8 +127,19 @@ void __on_pipebroken_signal(int signum){
 }
 
 - (void)application:(UIApplication *)application didReceiveRemoteNotification:(NSDictionary *)userInfo fetchCompletionHandler:(void (^)(UIBackgroundFetchResult))completionHandler {
+  if ([self handleBellBackgroundNotification:userInfo completionHandler:completionHandler]) {
+    return;
+  }
   [[BKiCloudSyncHandler sharedHandler]checkForReachabilityAndSync:nil];
   // TODO: pass completion handler.
+}
+
+- (void)application:(UIApplication *)application didRegisterForRemoteNotificationsWithDeviceToken:(NSData *)deviceToken {
+  [self updateBellAPNsToken:deviceToken];
+}
+
+- (void)application:(UIApplication *)application didFailToRegisterForRemoteNotificationsWithError:(NSError *)error {
+  [[ZuseLog app] error:[NSString stringWithFormat:@"APNs registration failed: %@", error.localizedDescription]];
 }
 
 - (BOOL)application:(UIApplication *)application shouldAllowExtensionPointIdentifier:(NSString *)extensionPointIdentifier {
@@ -274,19 +287,20 @@ configurationForConnectingSceneSession:(UISceneSession *)connectingSceneSession
 
 #pragma mark - UNUserNotificationCenterDelegate
 
+// Foreground notification: process Bell status and choose presentation.
 - (void)userNotificationCenter:(UNUserNotificationCenter *)center willPresentNotification:(UNNotification *)notification withCompletionHandler:(void (^)(UNNotificationPresentationOptions))completionHandler {
-  UNNotificationPresentationOptions opts = UNNotificationPresentationOptionSound | UNNotificationPresentationOptionList | UNNotificationPresentationOptionBanner | UNNotificationPresentationOptionBadge;
-  completionHandler(opts);
+  dispatch_async(dispatch_get_main_queue(), ^{
+    // ATM, complete once: [] after in-scene presentation, system options otherwise.
+    // [dev] TODO: The app can do the notificaiton in the scene or global if the current scene is not key.
+    completionHandler([self presentBellNotification:notification]);
+  });
 }
 
 - (void)userNotificationCenter:(UNUserNotificationCenter *)center didReceiveNotificationResponse:(UNNotificationResponse *)response withCompletionHandler:(void (^)(void))completionHandler {
-  SceneDelegate *sceneDelegate = (SceneDelegate *)response.targetScene.delegate;
-
-  SpaceController *ctrl = sceneDelegate.spaceController;
-
-  [ctrl moveToShellWithKey:response.notification.request.content.threadIdentifier];
-
-  completionHandler();
+  dispatch_async(dispatch_get_main_queue(), ^{
+    [self routeNotificationResponse:response];
+    completionHandler();
+  });
 }
 
 #pragma mark - Menu Building

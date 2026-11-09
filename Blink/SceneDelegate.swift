@@ -63,12 +63,12 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
 
     defer {
       self._makePaywallWindowIfNeeded()
+      self._refreshSessionRouting(for: scene)
     }
 
     let conditions = scene.activationConditions
 
     conditions.canActivateForTargetContentIdentifierPredicate = NSPredicate(value: true)
-    conditions.prefersToActivateForTargetContentIdentifierPredicate = NSPredicate(format: "SELF == 'blink://open-scene/\(scene.session.persistentIdentifier)'")
 
     _spCtrl.sceneRole = session.role
     _spCtrl.restoreWith(stateRestorationActivity: session.stateRestorationActivity)
@@ -164,6 +164,18 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
 
   func stateRestorationActivity(for scene: UIScene) -> NSUserActivity? {
     return _spCtrl.stateRestorationActivity()
+  }
+
+  // Refresh when sessions are created, restored, moved or closed.
+  static func refreshSessionRouting() {
+    for scene in UIApplication.shared.connectedScenes {
+      (scene.delegate as? SceneDelegate)?._refreshSessionRouting(for: scene)
+    }
+  }
+
+  private func _refreshSessionRouting(for scene: UIScene) {
+    scene.activationConditions.prefersToActivateForTargetContentIdentifierPredicate =
+      WorkURL.targetPredicate(for: _spCtrl.workURLs)
   }
 
   func sceneDidDisconnect(_ scene: UIScene) {

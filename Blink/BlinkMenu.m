@@ -41,6 +41,7 @@ const BlinkActionID BlinkActionSnippets = @"blink-snippets";
 const BlinkActionID BlinkActionTabClose = @"blink-tab-close";
 const BlinkActionID BlinkActionTabCreate = @"blink-tab-create";
 const BlinkActionID BlinkActionLayoutMenu = @"blink-layout-menu";
+const BlinkActionID BlinkActionBellMenu = @"blink-bell-menu";
 const BlinkActionID BlinkActionMoreMenu = @"blink-actions-more-menu";
 const BlinkActionID BlinkActionChangeLayout = @"blink-change-layout";
 const BlinkActionID BlinkActionToggleLayoutLock = @"blink-toggle-layout-lock";
@@ -358,6 +359,15 @@ const CGFloat MENU_PADDING = 10.0;
     return action;
   }
   
+  if (elementID == BlinkActionBellMenu) {
+    UIDeferredMenuElement *deferred = [UIDeferredMenuElement elementWithUncachedProvider:^(void (^completion)(NSArray<UIMenuElement *> *)) {
+      completion([delegate.currentTerm bellMenuElements] ?: @[]);
+    }];
+    return [UIMenu menuWithTitle:noTitle ? @"" : @"Bell"
+                          image:[UIImage systemImageNamed:@"bell"]
+                     identifier:BlinkActionBellMenu options:0 children:@[deferred]];
+  }
+
   if (elementID == BlinkActionLayoutMenu) {
     __weak typeof(self) weakSelf = self;
     UIDeferredMenuElement *deferred = [UIDeferredMenuElement elementWithUncachedProvider:^(void (^completion)(NSArray<UIMenuElement *> *)) {

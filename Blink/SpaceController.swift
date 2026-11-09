@@ -59,6 +59,11 @@ class SpaceController: UIViewController {
   var sceneRole: UISceneSession.Role = UISceneSession.Role.windowApplication
   
   private(set) var machine = Machine.makeDefault()
+
+  var workURLs: [URL] {
+    machine.sessionKeys.map { WorkURL.terminal($0) }
+  }
+
   private var _pendingSceneCommands: [SceneCommand] = []
 
   private let log = Zuse.logger(.machine, "SpaceController")
@@ -407,6 +412,7 @@ Please go to your subscriptions and cancel one of them!
 
     log.info("new terminal \(term.meta.key.short)")
     machine.insertAfterCurrent(sessionKey: term.meta.key)
+    SceneDelegate.refreshSessionRouting()
 
     machine.track(term)
 
@@ -432,6 +438,13 @@ Please go to your subscriptions and cancel one of them!
   }
 
   func _closeCurrentTerm() {
+    do {
+      // _popCurrentTerm is also used by moves. Retire only here,
+      // before the Terminal-owned payload is removed.
+      try currentTerm()?.retireBell()
+    } catch {
+      log.error("Could not retire Terminal Bell during tab close: \(error.localizedDescription)")
+    }
     if let key = machine.currentSessionKey {
       machine.stopSession(for: key)
     }
@@ -448,6 +461,7 @@ Please go to your subscriptions and cancel one of them!
     currentTerm()?.delegate = nil
     machine.removeSession(for: currentKey)
     machine.removeSlot(at: idx)
+    SceneDelegate.refreshSessionRouting()
     if machine.isEmpty {
       _newShellAction(animated: false)
       return
@@ -544,6 +558,15 @@ Please go to your subscriptions and cancel one of them!
       sceneTitle += " | " + geometry
     }
     
+    if let state = term.bellState {
+      let details = [state.title, state.state?.rawValue, state.progress.map { "\($0)%" }]
+        .compactMap { $0 }.filter { !$0.isEmpty }.joined(separator: " · ")
+      if !details.isEmpty {
+        hud.label.numberOfLines += 1
+        hud.label.text = (hud.label.text ?? "") + "\n🔔 " + details
+      }
+    }
+
     _hud = hud
     hud.hide(animated: true, afterDelay: 1)
     
@@ -559,6 +582,7 @@ extension SpaceController: UIStateRestorable {
     log.info("restore \(state.machineID?.short ?? "nil")")
     if let id = state.machineID, let restored = Machine.restore(id: id) {
       machine = restored
+      SceneDelegate.refreshSessionRouting()
     }
     if let bgColor = UIColor(codableColor: state.bgColor) {
       view.backgroundColor = bgColor
@@ -580,6 +604,18 @@ extension SpaceController: UIStateRestorable {
         return
       }
 
+      // A discarded window deletes its Terminal owners too.
+      for slot in MachineStore.shared.machineState(id: machineID)?.slots ?? [] {
+        if let bell = SessionStore.shared.bell(forKey: slot.sessionKey) {
+          do {
+            try BellTower.shared.retireBell(bell.id, bellKey: bell.bellKey)
+          } catch {
+            // In any case, the discard cannot held the machine from destruction.
+            // Unused bells will get cleaned by the relay.
+            Zuse.logger(.machine, "Bell").error("Could not retire a discarded window Bell; continuing window discard")
+          }
+        }
+      }
       MachineStore.shared.destroy(id: machineID)
     }
     MachineStore.shared.removeOrphanSessions()
@@ -651,6 +687,16 @@ extension SpaceController: TermControlDelegate {
 
   func terminalDidResize(control: TermController) {
     if currentTerm() == control {
+      _displayHUD()
+    }
+  }
+
+  func terminalBellStateChanged(control: TermController) {
+    // [dev] - TODO Display the HUD on notification. Keep state until notification
+    // is attended (the user attends the session).
+    // [dev-review] Silent state changes update the existing HUD if it is already showing.
+    // They must not display a new attention overlay of their own.
+    if currentTerm() === control, _hud?.superview != nil {
       _displayHUD()
     }
   }
@@ -1054,7 +1100,7 @@ extension SpaceController {
       self.view.addSubview(menu.tapToCloseView)
       
       var ids: [BlinkActionID] = []
-      ids.append(contentsOf:  [.snippets, .tabClose, .tabCreate])
+      ids.append(contentsOf:  [.snippets, .tabClose, .tabCreate, .bellMenu])
       
       if DeviceInfo.shared().hasCorners {
         ids.append(contentsOf:  [.layoutMenu])
@@ -1167,6 +1213,7 @@ extension SpaceController {
     machine.track(term)
     term.delegate = self
     machine.append(sessionKey: term.meta.key)
+    SceneDelegate.refreshSessionRouting()
     _moveToShell(key: term.meta.key, animated: animated)
   }
   
@@ -1182,24 +1229,21 @@ extension SpaceController {
     _moveToShell(idx: machine.count - 1)
   }
   
-  @objc func moveToShell(key: String?) {
-    guard
-      let key = key,
-      let uuidKey = UUID(uuidString: key)
-    else {
-      return
+  func moveToShellAction(key: UUID) {
+    if !_moveToShell(key: key, animated: true) {
+      showAlert(msg: "This requested terminal could not be opened.")
     }
-    _moveToShell(key: uuidKey, animated: true)
   }
-  
-  private func _moveToShell(key: UUID, animated: Bool = true) {
+
+  @discardableResult
+  private func _moveToShell(key: UUID, animated: Bool = true) -> Bool {
     guard
       let currentKey = machine.currentSessionKey,
       let currentIdx = machine.index(ofSession: currentKey),
       let idx = machine.index(ofSession: key),
       let term = term(for: key)
     else {
-      return
+      return false
     }
 
     let direction: UIPageViewController.NavigationDirection = currentIdx < idx ? .forward : .reverse
@@ -1212,6 +1256,7 @@ extension SpaceController {
       self._attachInputToCurrentTerm()
       self._spaceControllerAnimating = false
     }
+    return true
   }
   
   private func _advanceShell(by: Int, animated: Bool = true) {

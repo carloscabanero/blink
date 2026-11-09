@@ -398,6 +398,18 @@ final class SessionStore {
     session.resume(with: unarchiver)
   }
 
+  // Read owner Bell metadata for retirement without starting a Terminal.
+  func bell(forKey key: UUID) -> Bell? {
+    if let term = _sessionsIndex[key] as? TermController, let bell = term.bell {
+      return bell
+    }
+    guard UIApplication.shared.isProtectedDataAvailable,
+          let data = _fsRead(forKey: key),
+          let coder = try? NSKeyedUnarchiver(forReadingFrom: data) else { return nil }
+    defer { coder.finishDecoding() }
+    return decodeTerminalBell(from: coder)
+  }
+
   private var _fsSessionsFolderURL: URL? = nil
 
   private func _fsSessionsFolder() throws -> URL {

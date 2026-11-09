@@ -40,6 +40,7 @@ import AVFoundation
   @objc optional func terminalLayoutModeChanged(control: TermController)
   @objc optional func terminalBackgroundColorChanged(control: TermController)
   @objc optional func terminalDeviceDidBecomeReady(control: TermController)
+  @objc optional func terminalBellStateChanged(control: TermController)
 }
 
 @objc protocol ControlPanelDelegate: NSObjectProtocol {
@@ -205,16 +206,25 @@ class TermController: UIViewController {
 
   @objc var termView: TermView { _termView }
 
-  private var _sessionPayload: TermSessionPayload? = nil
+  private var _sessionPayload: TermSessionPayload? = nil {
+    didSet {
+      _observeBell()
+    }
+  }
   private var _session: Session? { _sessionPayload?.session }
+  private var bellTower = BellTower.shared
+  private var _bellObservation: AnyCancellable?
+  private(set) var bellState: Bell.ReceivedState?
 
   required init(meta: SessionMeta? = nil) {
     _meta = meta ?? SessionMeta()
     super.init(nibName: nil, bundle: nil)
   }
 
-  convenience init(sceneRole: UISceneSession.Role? = nil, sessionPayload: TermSessionPayload? = nil) {
-    self.init(meta: nil)
+  convenience init(sceneRole: UISceneSession.Role? = nil, sessionPayload: TermSessionPayload? = nil,
+                   bellTower: BellTower? = nil, sessionMeta: SessionMeta? = nil) {
+    self.init(meta: sessionMeta)
+    self.bellTower = bellTower ?? .shared
     self._sessionPayload = sessionPayload
     self._sceneRole = sceneRole
   }
@@ -340,6 +350,79 @@ class TermController: UIViewController {
   }
 }
 
+// MARK: - Terminal-owned Bell
+extension TermController {
+  var bell: Bell? { _sessionPayload?.bell }
+  var bellBinding: Bell.LocalBinding? {
+    get throws {
+      guard let bell = bell else { return nil }
+      return try bellTower.localBinding(for: bell.id)
+    }
+  }
+
+  func createBell(name: String) throws -> Bell {
+    if let bell = bell { return bell }
+    guard let payload = _sessionPayload else { throw BellError.missingPayload }
+    let bell = try bellTower.createBell(name: name)
+    payload.bell = bell
+    // NOTE: A crash before suspension can lose this Bell's owner association.
+    // In the future, persist Bell ownership before binding, independently of session suspension.
+    _observeBell()
+    try bindBell(level: .loud) // explicit prototype creation policy
+
+    let log = Zuse.logger(.machine, "Bell")
+    log.info("CLI push: BELL_ID='\(bell.id.uuidString)'")
+    log.info("CLI push: BLINK_BUNDLE_ID='\(Bundle.main.bundleIdentifier ?? "unknown")'")
+    log.info("CLI push: WORK_URL='\(WorkURL.terminal(meta.key).absoluteString)'")
+    if let token = bellTower.apnsToken {
+      log.info("CLI push: APNS_DEVICE_TOKEN='\(token.map { String(format: "%02x", $0) }.joined())'")
+    } else {
+      log.info("CLI push: APNs registration pending; APNS_DEVICE_TOKEN will be logged when received")
+    }
+    return bell
+  }
+
+  @discardableResult
+  func bindBell(level: Bell.ReceiveLevel) throws -> Bell.RelayBindingResponse {
+    let bell = try _requiredBell()
+    return try bellTower.bind(bell.id, bellKey: bell.bellKey,
+                             contentSecret: bell.contentSecret, workURL: WorkURL.terminal(meta.key), level: level)
+  }
+
+  func unbindBell() throws {
+    let bell = try _requiredBell()
+    try bellTower.unbind(bell.id, bellKey: bell.bellKey)
+  }
+
+  // Called only on logical deletion only, never a Slot move or runtime stop.
+  func retireBell() throws {
+    guard let bell = self.bell ?? SessionStore.shared.bell(forKey: meta.key) else { return }
+    defer {
+      _bellObservation = nil
+      _sessionPayload?.bell = nil
+      bellState = nil
+    }
+    try bellTower.retireBell(bell.id, bellKey: bell.bellKey)
+    // NOTE A future Terminal borrowing a Pin Bell must preserve that Bell on close.
+  }
+
+  private func _requiredBell() throws -> Bell {
+    guard let bell = bell else { throw BellError.missingBell }
+    return bell
+  }
+
+  private func _observeBell() {
+    _bellObservation = nil
+    bellState = nil
+    guard let bell = bell else { return }
+    _bellObservation = bellTower.observe(bell.id).sink { [weak self] state in
+      guard let self = self else { return }
+      self.bellState = state
+      self.delegate?.terminalBellStateChanged?(control: self)
+    }
+  }
+}
+
 extension TermController: SessionDelegate {
   public func sessionFinished() {
     self.delegate?.terminalHangup(control: self)
@@ -405,7 +488,7 @@ extension TermController: TermDeviceDelegate {
     content.body = (data["body"] as? String) ?? ""
     content.sound = .default
     content.threadIdentifier = meta.key.uuidString
-    content.targetContentIdentifier = "blink://open-scene/\(view?.window?.windowScene?.session.persistentIdentifier ?? "")"
+    content.targetContentIdentifier = WorkURL.terminal(meta.key).absoluteString
 
     let req = UNNotificationRequest(identifier: UUID().uuidString, content: content, trigger: nil)
 
