@@ -43,9 +43,9 @@ extension AppDelegate {
       let workURL: URL?
       if let target = content.targetContentIdentifier, let url = URL(string: target), WorkURL.recognizes(url) {
         workURL = url
-      } else if let push = BellMockPush.decode(content.userInfo) {
+      } else if let bellID = BellWireEnvelope.bellID(content.userInfo) ?? BellMockPush.decode(content.userInfo)?.bellID {
         // Fallback notification if not processed by the NSE, try to unpack.
-        workURL = try BellTower.shared.workURL(for: push.bellID)
+        workURL = try BellTower.shared.workURL(for: bellID)
       } else {
         workURL = nil
       }

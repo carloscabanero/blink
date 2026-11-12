@@ -56,7 +56,7 @@ final class NotificationService: UNNotificationServiceExtension {
     lock.unlock()
     previous?.finishOriginal()
 
-    do { delivery.finish(try prepareMock(request.content)) }
+    do { delivery.finish(try prepareNotification(request.content)) }
     catch { delivery.finishOriginal() }
   }
 
@@ -67,11 +67,17 @@ final class NotificationService: UNNotificationServiceExtension {
     delivery?.finishOriginal()
   }
 
-  private func prepareMock(_ original: UNNotificationContent) throws -> UNNotificationContent {
-    guard let push = BellMockPush.decode(original.userInfo),
-          let binding = try bindingStore.binding(for: push.bellID), binding.acceptsPlaintext,
+  private func prepareNotification(_ original: UNNotificationContent) throws -> UNNotificationContent {
+    let bellID = BellWireEnvelope.bellID(original.userInfo) ?? BellMockPush.decode(original.userInfo)?.bellID
+    guard let id = bellID, let binding = try bindingStore.binding(for: id),
+          let push = BellMockPush.decode(original.userInfo, contentSecret: binding.contentSecret),
+          (binding.acceptsPlaintext || ((original.userInfo["bell"] as? [String: Any])?["enc"] as? Bool == true && binding.contentSecret != nil)),
           let content = original.mutableCopy() as? UNMutableNotificationContent else {
       throw PreparationError.unavailable
+    }
+    if !push.mock {
+      if let title = push.preparedTitle { content.title = title }
+      if let body = push.preparedBody { content.body = body }
     }
     content.targetContentIdentifier = binding.workURL.absoluteString
     return content

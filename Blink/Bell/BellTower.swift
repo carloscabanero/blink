@@ -127,6 +127,8 @@ import UserNotifications
     subject?.send(completion: .finished)
     try bindingStore.remove(bellID)
 
+    try bindingStore.removeState(for: bellID)
+
     // Local retirement is authoritative. Relay deletion is a courtesy, with no retry.
     do { try relay.deleteBell(bellID, bellKey: bellKey) }
     catch { Zuse.logger(.machine, "Bell").error("Could not notify Relay of Bell retirement: \(error.localizedDescription)") }
@@ -136,7 +138,7 @@ import UserNotifications
 
   private func attach(_ bellID: Bell.ID, toWorkURL url: URL, contentSecret: String?,
                       level: Bell.ReceiveLevel) throws {
-    try bindingStore.save(Bell.LocalBinding(workURL: url, acceptsPlaintext: contentSecret == nil, level: level), for: bellID)
+    try bindingStore.save(Bell.LocalBinding(contentSecret: contentSecret, workURL: url, acceptsPlaintext: contentSecret == nil, level: level), for: bellID)
   }
 
   func workURL(for bellID: Bell.ID) throws -> URL? {
@@ -147,7 +149,7 @@ import UserNotifications
 
   enum ReceiveResult: Equatable { case ignored, updated }
 
-  func state(_ bellID: Bell.ID) -> Bell.ReceivedState? { snapshots[bellID]?.value }
+  func state(_ bellID: Bell.ID) -> Bell.ReceivedState? { snapshot(bellID).value }
 
   func observe(_ bellID: Bell.ID) -> AnyPublisher<Bell.ReceivedState?, Never> {
     snapshot(bellID).eraseToAnyPublisher()
@@ -157,16 +159,18 @@ import UserNotifications
   func receiveNotificationStatus(_ message: Bell.Message) throws -> ReceiveResult {
     guard let status = message.status else { return .ignored }
     guard let binding = try bindingStore.binding(for: message.bellID), binding.acceptsPlaintext else { return .ignored }
-    return applyStatus(status, for: message.bellID)
+    return try applyStatus(status, for: message.bellID)
   }
 
   @discardableResult
-  private func applyStatus(_ status: Bell.ReceivedState, for bellID: Bell.ID) -> ReceiveResult {
+  private func applyStatus(_ status: Bell.ReceivedState, for bellID: Bell.ID) throws -> ReceiveResult {
     let previous = state(bellID)
-    guard previous?.title != status.title || previous?.body != status.body ||
+    if let incoming = status.stateVersion, let stored = previous?.stateVersion, incoming <= stored { return .ignored }
+    guard previous?.stateVersion != status.stateVersion || previous?.title != status.title || previous?.body != status.body ||
           previous?.state != status.state || previous?.progress != status.progress || previous == nil else {
       return .ignored
     }
+    try bindingStore.saveState(status, for: bellID)
     snapshot(bellID).send(status)
     return .updated
   }
@@ -177,8 +181,8 @@ import UserNotifications
 
   private func snapshot(_ bellID: Bell.ID) -> CurrentValueSubject<Bell.ReceivedState?, Never> {
     if let existing = snapshots[bellID] { return existing }
-    // [dev] TODO: status persistence/recovery; the binding store persists binding and routing only.
-    let subject = CurrentValueSubject<Bell.ReceivedState?, Never>(nil)
+    // Relay versions and last-known snapshots survive app restarts.
+    let subject = CurrentValueSubject<Bell.ReceivedState?, Never>(try? bindingStore.state(for: bellID))
     snapshots[bellID] = subject
     return subject
   }

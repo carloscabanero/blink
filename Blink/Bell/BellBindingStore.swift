@@ -72,5 +72,25 @@ struct BellBindingStore {
   }
   #endif
 
-  // [dev] TODO: NSE status-cache writes need ordering; deferred.
+  #if !BELL_NOTIFICATION_EXTENSION
+  func state(for bellID: Bell.ID) throws -> Bell.ReceivedState? {
+    let url = try directory().appendingPathComponent(bellID.uuidString + ".state.json")
+    do { return try JSONDecoder().decode(Bell.ReceivedState.self, from: Data(contentsOf: url)) }
+    catch CocoaError.fileReadNoSuchFile { return nil }
+  }
+
+  func removeState(for bellID: Bell.ID) throws {
+    let url = try directory().appendingPathComponent(bellID.uuidString + ".state.json")
+    do { try FileManager.default.removeItem(at: url) }
+    catch CocoaError.fileNoSuchFile { }
+  }
+
+  func saveState(_ state: Bell.ReceivedState, for bellID: Bell.ID) throws {
+    let folder = try directory()
+    try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true,
+      attributes: [.protectionKey: FileProtectionType.completeUntilFirstUserAuthentication])
+    try JSONEncoder().encode(state).write(to: folder.appendingPathComponent(bellID.uuidString + ".state.json"),
+      options: [.atomic, .completeFileProtectionUntilFirstUserAuthentication])
+  }
+  #endif
 }

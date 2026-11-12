@@ -58,12 +58,12 @@ extension AppDelegate {
       completionHandler(.noData)
       return true
     }
-    guard let push = BellMockPush.decode(userInfo) else {
+    guard let bellID = BellWireEnvelope.bellID(userInfo) ?? BellMockPush.decode(userInfo)?.bellID else {
       completionHandler(.failed)
       return true
     }
     Task { @MainActor in
-      switch await BellTower.shared.refreshState(for: push.bellID) {
+      switch await BellTower.shared.refreshState(for: bellID) {
       case .ignored: completionHandler(.noData)
       case .updated: completionHandler(.newData)
       }
