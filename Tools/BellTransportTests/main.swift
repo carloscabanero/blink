@@ -41,6 +41,7 @@ func hexData(_ hex: String) -> Data {
 }
 @main struct Tests {
   @MainActor static func main() async throws {
+    require(LiveBellRelay.eligibleProductIDs.count == 4 && !LiveBellRelay.eligibleProductIDs.contains("blink_shell_classic_unlimited_0"), "all four paid plans, not zero-price classic unlock")
     let suite = "bell-config-" + UUID().uuidString
     let defaults = UserDefaults(suiteName: suite)!
     defaults.setVolatileDomain(["BellRelayURL": "https://fixture.invalid", "BellAPNsEnvironment": "sandbox"], forName: UserDefaults.argumentDomain)
@@ -133,6 +134,6 @@ func hexData(_ hex: String) -> Data {
     FixtureProtocol.verdictStatus = "expired"
     let expired = try await restarted.submitVerdict(bellID: good.id, askID: LiveBellRelay.url64(Data(repeating: 9,count:16)), verdict: "approve")
     require(expired == "expired", "expired Ask remains expired")
-    print("22 live transport/configuration/recovery/Ask checks passed")
+    print("23 live transport/configuration/recovery/Ask checks passed")
   }
 }

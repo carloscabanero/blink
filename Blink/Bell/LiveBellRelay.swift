@@ -19,6 +19,11 @@ extension MockBellRelay: BellRelayOperations {
 }
 
 @MainActor final class LiveBellRelay: BellRelayOperations {
+  static let eligibleProductIDs: Set<String> = [
+    "blink_plus_1y_2999", "blink_shell_plus_1y_1999",
+    "blink_build_basic_1m_799", "blink_plus_build_1m_999"
+  ]
+
   struct Configuration {
     let baseURL: URL
     let paidToken: String
@@ -32,7 +37,12 @@ extension MockBellRelay: BellRelayOperations {
             url.scheme == "https" || (url.scheme == "http" && ["127.0.0.1", "localhost"].contains(url.host ?? "")),
             url.host != nil, url.user == nil, url.password == nil, url.query == nil, url.fragment == nil,
             url.path.isEmpty || url.path == "/" else { return nil }
-      let environment = defaults.string(forKey: "BellAPNsEnvironment") ?? "sandbox"
+      #if DEBUG
+      let defaultEnvironment = "sandbox"
+      #else
+      let defaultEnvironment = "production"
+      #endif
+      let environment = defaults.string(forKey: "BellAPNsEnvironment") ?? defaultEnvironment
       guard ["sandbox", "production"].contains(environment) else { return nil }
       // Copy explicit launch arguments into the persistent domain for icon launches.
       // Enrollment secrets remain in the protected journal, never UserDefaults.
@@ -205,7 +215,7 @@ extension MockBellRelay: BellRelayOperations {
       #if canImport(StoreKit)
       if paidToken.isEmpty, #available(iOS 15.0, macOS 12.0, *) {
         for await entitlement in StoreKit.Transaction.currentEntitlements {
-          if case .verified(let transaction) = entitlement, transaction.revocationDate == nil,
+          if case .verified(let transaction) = entitlement, Self.eligibleProductIDs.contains(transaction.productID), transaction.revocationDate == nil,
              transaction.expirationDate.map({ $0 > Date() }) ?? true {
             paidToken = entitlement.jwsRepresentation
             break
