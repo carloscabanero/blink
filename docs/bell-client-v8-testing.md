@@ -22,7 +22,7 @@ bash Tools/BellWireTests/run.sh
 bash Tools/BellTransportTests/run.sh
 ```
 
-Expected at the original PR head: 10 codec checks and 23 transport/config/recovery/Ask checks. These exercise encrypted wire compatibility, signatures, retry identity, durable offline operations, state ordering and verdict recovery through fixtures. They do **not** prove StoreKit, APNs or physical-device delivery.
+Expected with this diagnostic update: 10 codec checks and 32 transport/config/recovery/Ask checks (including explicit test-token forwarding, enrollment rejection, missing/empty APNs tokens and recovery). These exercise encrypted wire compatibility, signatures, retry identity, durable offline operations, state ordering and verdict recovery through fixtures. They do **not** prove StoreKit, APNs or physical-device delivery.
 
 ## 3. Build and sign on your Mac
 
@@ -62,6 +62,89 @@ The classic/unlimited zero-price unlock alone does not qualify. Use the app's no
 In a test Terminal, open Quick Actions → Bell → Create Bell, then Receive → Loud. Save the copied `token.content_secret` privately. Creation is asynchronous: the token dialog alone does not mean the server accepted enrollment, creation or binding. Confirm successful enrollment/bind via device diagnostics and an actual delivered Ring below. Server logs, if needed, require the operator; you do not need production SSH access to run the client test.
 
 Explicit URL/environment settings persist. An old private sandbox journal cannot silently migrate to production: use a separate test installation/container for another Relay origin. Do not delete your normal app data to work around the origin guard.
+
+## 4a. Development enrollment without a paid Apple transaction
+
+This is a **separate, private development Relay**, not a flag to enable on `bell.blink.sh`. You need Go 1.26+, Docker, and a Mac endpoint reachable over trusted HTTPS from the phone. A test token is not a Bell SEND token, APNs device token or mint key.
+
+In a separate server checkout:
+
+```bash
+git clone https://github.com/blinksh/bell.git bell-relay-dev
+cd bell-relay-dev
+git checkout af99b09
+make up
+make build
+BELL_ADDR=127.0.0.1:8787 BELL_PURCHASE=dev BELL_PUSH=log \
+  BELL_APNS_TOPICS=sh.blink.blinkshell ./bin/relay
+```
+
+Use your actual signed **app** bundle ID for `BELL_APNS_TOPICS` (`com.blink.shell` if that is your build). These commands start local Postgres/Redis on 5433/6380 and a development Relay on Mac loopback8787. If those ports/container names are already in use, use a separate fixture configuration rather than modifying another service.
+
+In another terminal on that Mac, check enrollment directly:
+
+```bash
+curl --fail --silent --show-error -o /dev/null -w 'HTTP %{http_code}\n' \
+  -H 'Content-Type: application/json' \
+  --data '{"paid_token":"dev:carlos"}' http://127.0.0.1:8787/devices
+```
+
+Expected HTTP201. This creates a disposable test device; it does not configure the iPhone or supply the iPhone's mint key. HTTP401 means the server did not accept development purchases/the token format. Valid names match `dev:[a-z0-9][a-z0-9._-]{0,63}`. Never run this probe against production expecting dev acceptance.
+
+Expose the loopback Relay through a **private trusted HTTPS reverse proxy** reachable by your phone. For example, if you already use Tailscale on both Mac and phone, inspect `tailscale serve status` first; if HTTPS8443 is unused, run on the Mac:
+
+```bash
+tailscale serve --bg --https=8443 http://127.0.0.1:8787
+```
+
+Use the exact HTTPS origin it reports, including `:8443`, with no path. Do not overwrite an existing Serve route or enable public Funnel. HTTPS must be enabled for the tailnet and phone ACLs must permit access. A trusted HTTPS proxy you already operate is also fine. `http://127.0.0.1:8787` on the iPhone means the **iPhone**, not your Mac. The client rejects plain HTTP LAN addresses and untrusted TLS; do not disable certificate verification. Stop only the test route afterwards (`tailscale serve --https=8443 off` for the route above).
+
+In **Xcode → Product → Scheme → Edit Scheme → Run → Arguments**:
+
+1. Under **Arguments Passed On Launch**, enable these two entries, replacing the origin with your private HTTPS address:
+
+   ```text
+   -BellRelayURL https://YOUR-MAC.YOUR-TAILNET.ts.net:8443
+   -BellAPNsEnvironment sandbox
+   ```
+
+2. Under **Environment Variables**, add and enable:
+
+   | Name | Value |
+   | --- | --- |
+   | `BELL_PAID_TOKEN` | `dev:carlos` |
+
+3. Stop the running app, then launch through Xcode. The environment is read when the Relay adapter is initialized. Passing `-BELL_PAID_TOKEN dev:carlos` as launch arguments, setting it only in the Mac shell, or opening the app from its icon does **not** inject that environment variable. Do not commit a shared scheme containing real enrollment secrets.
+4. Use a test installation already scoped to this private origin (or a separately signed test variant with matching server topic). An existing production/private-origin journal must not be transplanted or erased merely to switch environments.
+5. Create a disposable Bell and select Loud. A correctly signed physical device is still needed to obtain an APNs token for binding, **even when the development server logs pushes**. The simulator is not evidence of this device flow.
+
+`BELL_PUSH=log` proves enrollment, HTTP operations and server-side dispatch attempts; it does **not** send a notification. For real development APNs delivery, restart this private Relay with the same database and `BELL_PURCHASE=dev`, but replace `BELL_PUSH=log` with:
+
+```bash
+BELL_ADDR=127.0.0.1:8787 BELL_PURCHASE=dev BELL_PUSH=apns \
+  BELL_APNS_TOPICS=YOUR_SIGNED_APP_BUNDLE_ID \
+  BELL_APNS_KEY_FILE=/private/path/to/AuthKey.p8 \
+  BELL_APNS_KEY_ID=YOUR_KEY_ID BELL_APNS_TEAM_ID=YOUR_TEAM_ID ./bin/relay
+```
+
+The key must authorize your signed app's topic/team. Keep it outside Git. Use `sandbox` in the development-signed iPhone app; the Relay uses the endpoint's environment to select APNs. For the sender commands below, add `-relay https://YOUR-MAC.YOUR-TAILNET.ts.net:8443` to **every send and lookup**; otherwise the helper targets production.
+
+## 4b. Diagnose Carlos's reported error
+
+Before this update, **“Relay enrollment credentials are unavailable.”** was also thrown for a missing APNs token and invalid local Bell keys. It did not establish that the test token failed to reach the Relay.
+
+The updated build separates the causes:
+
+| New diagnostic | Meaning / next step |
+| --- | --- |
+| No eligible paid entitlement or enrollment token | Nothing usable was found locally; no enrollment POST was sent. Check the enabled Xcode Run environment variable and relaunch through Xcode, or restore an eligible Apple purchase for production. |
+| Relay enrollment failed (HTTP401) | An enrollment POST was sent and rejected. Confirm the selected origin, token format and server purchase mode. Production rejects `dev:carlos`. |
+| Relay enrollment failed (another HTTP code) | Enrollment reached an HTTP endpoint but failed; inspect the status and sanitized server logs. Do not assume a credential problem for rate limits/server errors. |
+| Waiting for an APNs device token | Enrollment is past the purchase-input gate; binding remains pending. Check physical-device signing, push entitlement, connectivity and APNs registration errors. Changing the purchase token will not fix APNs. |
+| Saved Bell credentials invalid / device ID missing | Local journal/key problem, not a missing test token. Preserve the journal and report the error; do not delete it or expose it publicly. |
+| Relay configuration invalid / saved origin differs | Validate the URL/environment and use the installation's original origin, or a separate test installation. |
+
+Inspect Xcode device console for the Bell synchronization error and APNs registration failure. If needed, break at `LiveBellRelay.synchronize` and inspect only `configuration?.baseURL`, `configuration?.paidToken.isEmpty` and `apnsToken?.count`—not their secret contents. Record whether `/devices` reached the selected server. A pending token dialog is not server acceptance. The previous generic message alone cannot diagnose Carlos's original run; retest with the updated PR.
 
 ## 5. Send an encrypted Ring and a confirm Ask
 

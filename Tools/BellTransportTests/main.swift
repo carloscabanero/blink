@@ -4,6 +4,8 @@ import Foundation
 final class FixtureProtocol: URLProtocol {
   static let lock = NSLock()
   static var paths: [String] = []
+  static var enrollmentStatus = 200
+  static var enrollmentToken: String?
   static var failBind = false
   static var failVerdict = false
   static var verdictResult = "approve"
@@ -18,7 +20,16 @@ final class FixtureProtocol: URLProtocol {
     Self.paths.append(request.httpMethod! + " " + path)
     var status = 200
     var body: [String: Any] = [:]
-    if path == "/devices" { body = ["device_id": "00000000-0000-0000-0000-000000000001", "mint_key": "fixture-mint"] }
+    if path == "/devices" {
+      status = Self.enrollmentStatus
+      let data = request.httpBody ?? request.httpBodyStream.map { stream -> Data in
+        stream.open(); defer { stream.close() }
+        var data = Data(); var buffer = [UInt8](repeating: 0, count: 1024)
+        while stream.hasBytesAvailable { let count = stream.read(&buffer, maxLength: buffer.count); if count <= 0 { break }; data.append(contentsOf: buffer.prefix(count)) }
+        return data
+      } ?? Data()
+      Self.enrollmentToken = (try? JSONSerialization.jsonObject(with: data) as? [String: Any])?["paid_token"] as? String
+      body = ["device_id": "00000000-0000-0000-0000-000000000001", "mint_key": "fixture-mint"] }
     if path.hasSuffix("/bindings/self") && (Self.failBind || Self.failedBindingID.map { path.contains($0) } == true) { status = 503 }
     if path.hasSuffix("/verdict") {
       if Self.failVerdict { status = 503 }
@@ -134,6 +145,28 @@ func hexData(_ hex: String) -> Data {
     FixtureProtocol.verdictStatus = "expired"
     let expired = try await restarted.submitVerdict(bellID: good.id, askID: LiveBellRelay.url64(Data(repeating: 9,count:16)), verdict: "approve")
     require(expired == "expired", "expired Ask remains expired")
-    print("23 live transport/configuration/recovery/Ask checks passed")
+    // Distinguish a missing local input from a server rejection and from APNs registration.
+    do { _ = try LiveBellRelay.requireEnrollmentToken(" \n"); preconditionFailure("blank enrollment accepted") }
+    catch LiveBellRelay.Failure.missingEnrollment {}
+    require(try! LiveBellRelay.requireEnrollmentToken(" dev:carlos ") == "dev:carlos", "trim enrollment input")
+    let diagnostic = try LiveBellRelay(configuration: config, journalURL: directory.appendingPathComponent("diagnostic.json"), session: session)
+    let diagnosticBell = try diagnostic.createBell(name: "diagnostic", ownerID: UUID())
+    _ = try diagnostic.bind(diagnosticBell.id, bellKey: diagnosticBell.bellKey, apnsToken: nil, level: .loud)
+    FixtureProtocol.enrollmentStatus = 401
+    do { try await diagnostic.synchronize(apnsToken: nil); preconditionFailure("rejected enrollment accepted") }
+    catch LiveBellRelay.Failure.enrollmentRejected(401) {}
+    require(FixtureProtocol.enrollmentToken == "dev:test", "explicit test token reaches enrollment HTTP body")
+    FixtureProtocol.enrollmentStatus = 200
+    FixtureProtocol.paths = []
+    do { try await diagnostic.synchronize(apnsToken: nil); preconditionFailure("binding without APNs accepted") }
+    catch LiveBellRelay.Failure.missingAPNsToken {}
+    require(diagnostic.hasPendingOperations && !FixtureProtocol.paths.contains(where: { $0.hasSuffix("/bindings/self") }), "missing APNs preserves pending binding without sending it")
+    FixtureProtocol.paths = []
+    do { try await diagnostic.synchronize(apnsToken: Data()); preconditionFailure("empty APNs accepted") }
+    catch LiveBellRelay.Failure.missingAPNsToken {}
+    require(!FixtureProtocol.paths.contains(where: { $0.hasSuffix("/endpoint") }), "empty APNs is not registered")
+    try await diagnostic.synchronize(apnsToken: Data([4]))
+    require(!diagnostic.hasPendingOperations && !FixtureProtocol.paths.contains("POST /devices"), "APNs arrival completes binding without reenrollment")
+    print("32 live transport/configuration/recovery/Ask checks passed")
   }
 }

@@ -31,7 +31,7 @@ extension MockBellRelay: BellRelayOperations {
     let environment: String
 
     static func configured(defaults: UserDefaults = .standard, topic: String? = Bundle.main.bundleIdentifier) -> Configuration? {
-      // Explicit debug/test configuration; never silently target production.
+      // Explicit diagnostic overrides take precedence over the production default.
       guard let address = (defaults.string(forKey: "BellRelayURL") ?? "https://bell.blink.sh") as String?, let url = URL(string: address),
             let topic = topic,
             url.scheme == "https" || (url.scheme == "http" && ["127.0.0.1", "localhost"].contains(url.host ?? "")),
@@ -81,11 +81,16 @@ extension MockBellRelay: BellRelayOperations {
     var records: [Record] = []
   }
   enum Failure: LocalizedError {
-    case configuration, credentials, response(Int), invalidResponse, missingRecord, expired
+    case configuration, localCredentials, missingEnrollment, missingAPNsToken, missingDevice, randomGeneration, enrollmentRejected(Int), response(Int), invalidResponse, missingRecord, expired
     var errorDescription: String? {
       switch self {
-      case .configuration: return "Configure a sandbox Relay before creating a Bell."
-      case .credentials: return "Relay enrollment credentials are unavailable."
+      case .configuration: return "Relay configuration is invalid or differs from this installation's saved Relay origin."
+      case .localCredentials: return "Saved Bell credentials are invalid or unavailable. Enrollment tokens cannot repair a Bell's local keys."
+      case .missingEnrollment: return "No eligible paid entitlement or enrollment token is available. Restore an eligible purchase, or set BELL_PAID_TOKEN in Xcode Run environment variables for a development Relay."
+      case .missingAPNsToken: return "Waiting for an APNs device token. Launch on a push-enabled signed device and check APNs registration. Bell binding remains pending."
+      case .missingDevice: return "Relay device enrollment is incomplete: the saved device ID is missing."
+      case .randomGeneration: return "The system could not generate secure Bell credentials."
+      case .enrollmentRejected(let code): return "Relay enrollment failed (HTTP \(code)). Check purchase eligibility and Relay purchase mode; production does not accept dev tokens."
       case .response(let code): return "Relay request failed (HTTP \(code)). Changes remain pending."
       case .invalidResponse: return "The Relay returned an invalid response."
       case .missingRecord: return "This Bell is not in the Relay operation journal."
@@ -123,7 +128,7 @@ extension MockBellRelay: BellRelayOperations {
   static func random(_ count: Int) throws -> Data {
     var data = Data(count: count)
     let status = data.withUnsafeMutableBytes { SecRandomCopyBytes(kSecRandomDefault, count, $0.baseAddress!) }
-    guard status == errSecSuccess else { throw Failure.credentials }
+    guard status == errSecSuccess else { throw Failure.randomGeneration }
     return data
   }
   static func hex(_ data: Data) -> String { data.map { String(format: "%02x", $0) }.joined() }
@@ -175,7 +180,7 @@ extension MockBellRelay: BellRelayOperations {
   }
 
   static func authorization(bell: Bell, method: String, path: String, body: Data, timestamp: Int64, nonce: Data) throws -> String {
-    guard let seed = Data(base64Encoded: bell.bellKey) else { throw Failure.credentials }
+    guard let seed = Data(base64Encoded: bell.bellKey) else { throw Failure.localCredentials }
     let proof = ["bellkey/v1", method, path, String(timestamp), nonce.base64EncodedString(), hex(Data(SHA256.hash(data: body)))].joined(separator: "\n")
     let signature = try Curve25519.Signing.PrivateKey(rawRepresentation: seed).signature(for: Data(proof.utf8))
     return "Bell-Key bell_id=\(wireID(bell.id)), ts=\(timestamp), nonce=\(nonce.base64EncodedString()), sig=\(signature.base64EncodedString())"
@@ -207,11 +212,17 @@ extension MockBellRelay: BellRelayOperations {
     return object
   }
 
+  static func requireEnrollmentToken(_ token: String) throws -> String {
+    let value = token.trimmingCharacters(in: .whitespacesAndNewlines)
+    guard !value.isEmpty else { throw Failure.missingEnrollment }
+    return value
+  }
+
   func synchronize(apnsToken: Data?) async throws {
     guard !syncing else { return }; syncing = true; defer { syncing = false }
     guard let config = configuration else { throw Failure.configuration }
     if journal.mintKey == nil {
-      var paidToken = config.paidToken
+      var paidToken = config.paidToken.trimmingCharacters(in: .whitespacesAndNewlines)
       #if canImport(StoreKit)
       if paidToken.isEmpty, #available(iOS 15.0, macOS 12.0, *) {
         for await entitlement in StoreKit.Transaction.currentEntitlements {
@@ -223,12 +234,14 @@ extension MockBellRelay: BellRelayOperations {
         }
       }
       #endif
-      guard !paidToken.isEmpty else { throw Failure.credentials }
-      let response = try await request("POST", "/devices", json: ["paid_token": paidToken])
+      paidToken = try Self.requireEnrollmentToken(paidToken)
+      let response: [String: Any]
+      do { response = try await request("POST", "/devices", json: ["paid_token": paidToken]) }
+      catch Failure.response(let code) { throw Failure.enrollmentRejected(code) }
       guard let id = response["device_id"] as? String, let key = response["mint_key"] as? String else { throw Failure.invalidResponse }
       var value = journal; value.deviceID = id; value.mintKey = key; try save(value)
     }
-    if let token = apnsToken, let device = journal.deviceID {
+    if let token = apnsToken, !token.isEmpty, let device = journal.deviceID {
       _ = try await request("PUT", "/devices/\(device)/endpoint", json: ["apns_token": Self.hex(token),
         "apns_env": config.environment, "apns_topic": config.topic], endpointKey: true)
     }
@@ -259,7 +272,7 @@ extension MockBellRelay: BellRelayOperations {
   func submitVerdict(bellID: UUID, askID: String, verdict: String) async throws -> String {
     guard ["approve", "deny"].contains(verdict), let id = BellWireEnvelope.bytes(askID), id.count == 16,
           let record = journal.records.first(where: { $0.bell.id == bellID && !$0.retired }),
-          let secret = record.bell.contentSecret, let key = Data(base64Encoded: secret) else { throw Failure.credentials }
+          let secret = record.bell.contentSecret, let key = Data(base64Encoded: secret) else { throw Failure.localCredentials }
     if journal.submissions?.contains(where: { $0.askID == askID && $0.bellID == bellID }) != true {
       let bytes = Data(("verdict" + "\0" + askID + "\0" + verdict).utf8)
       let mac = Data(HMAC<SHA256>.authenticationCode(for: bytes, using: SymmetricKey(data: key)))
@@ -299,14 +312,14 @@ extension MockBellRelay: BellRelayOperations {
     }
     if !record.provisioned {
       guard let tokenBytes = BellWireEnvelope.bytes(String(bell.token.dropFirst(5))),
-            let seed = Data(base64Encoded: bell.bellKey) else { throw Failure.credentials }
+            let seed = Data(base64Encoded: bell.bellKey) else { throw Failure.localCredentials }
       let verifier = try Curve25519.Signing.PrivateKey(rawRepresentation: seed).publicKey.rawRepresentation.base64EncodedString()
       _ = try await request("POST", "/bells", json: ["bell_id": id, "token_hash": Self.hex(Data(SHA256.hash(data: tokenBytes))),
         "verifier": verifier, "type": "plain", "policy": ["require_enc": true, "ask_allowed": true]])
     }
-    guard let device = journal.deviceID else { throw Failure.credentials }
+    guard let device = journal.deviceID else { throw Failure.missingDevice }
     if let level = record.level {
-      guard apnsToken != nil else { throw Failure.credentials }
+      guard let apnsToken = apnsToken, !apnsToken.isEmpty else { throw Failure.missingAPNsToken }
       _ = try await request("PUT", "/bells/\(id)/bindings/self", json: ["device_id": device, "level": level.rawValue], bell: bell, endpointKey: true)
     } else {
       _ = try await request("DELETE", "/bells/\(id)/bindings/device:\(device)", bell: bell, acceptMissing: true)
@@ -322,7 +335,7 @@ extension MockBellRelay: BellRelayOperations {
       let entries: [[String: Any]] = try chunk.map { record in
         let id = Self.wireID(record.bell.id); let version = since[record.bell.id] ?? 0
         let text = ["bellkey/v1", "state", id, String(version), String(timestamp), nonce.base64EncodedString()].joined(separator: "\n")
-        guard let seed = Data(base64Encoded: record.bell.bellKey) else { throw Failure.credentials }
+        guard let seed = Data(base64Encoded: record.bell.bellKey) else { throw Failure.localCredentials }
         let sig = try Curve25519.Signing.PrivateKey(rawRepresentation: seed).signature(for: Data(text.utf8))
         return ["bell_id": id, "since": version, "sig": sig.base64EncodedString()]
       }
