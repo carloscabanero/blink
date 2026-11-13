@@ -38,6 +38,7 @@ import XCTest
 // Compile the actual NSE source in this target, using the app's shared binding store and codec.
 typealias BellBindingStore = Blink.BellBindingStore
 typealias BellMockPush = Blink.BellMockPush
+typealias BellWireEnvelope = Blink.BellWireEnvelope
 
 final class BellFlowTests: XCTestCase {
   private var directory: URL!

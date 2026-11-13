@@ -35,15 +35,22 @@ import UIKit
 import UserNotifications
 
 @MainActor final class BellTower {
-  static let shared = BellTower()
+  static let shared: BellTower = {
+    do { return BellTower(relay: try LiveBellRelay(configuration: .configured())) }
+    catch { return BellTower(relay: UnavailableBellRelay(error: error)) }
+  }()
 
-  private let relay: MockBellRelay
+  private let relay: any BellRelayOperations
   private(set) var apnsToken: Data?
   private var snapshots: [Bell.ID: CurrentValueSubject<Bell.ReceivedState?, Never>] = [:]
   private let bindingStore: BellBindingStore
   private var activationObservation: AnyCancellable?
+  private var retryTask: Task<Void, Never>?
+  private var retryDelay: UInt64 = 2
+  private var refreshing = false
+  private var refreshAgain = false
 
-  init(relay: MockBellRelay = MockBellRelay(), bindingStore: BellBindingStore = BellBindingStore()) {
+  init(relay: any BellRelayOperations = MockBellRelay(), bindingStore: BellBindingStore = BellBindingStore()) {
     self.relay = relay
     self.bindingStore = bindingStore
   }
@@ -66,12 +73,61 @@ import UserNotifications
 
   @discardableResult
   func refreshState(for bellID: Bell.ID? = nil) async -> ReceiveResult {
-    // Retrieves state. Never replay Rings from a fetch.
-    // [dev] TODO: Relay status retrieval. Prefer a device batch for activation; This is per-bell,
-    // until we can work with devices on the relay. It also retain reads for known unbound Bells.
-    let scope = bellID == nil ? "known Bells" : "one Bell"
-    Zuse.logger(.machine, "Bell").info("Status refresh requested for \(scope) (Relay fetch deferred)")
-    return .ignored
+    guard let live = relay as? LiveBellRelay else { return .ignored }
+    guard !refreshing else { refreshAgain = true; return .ignored }
+    refreshing = true
+    retryTask?.cancel(); retryTask = nil
+    var failed = false
+    defer {
+      refreshing = false
+      if refreshAgain {
+        refreshAgain = false
+        Task { @MainActor [weak self] in await self?.refreshState() }
+      } else if failed || live.hasPendingOperations { scheduleRetry() }
+      else { retryDelay = 2 }
+    }
+    do { try await live.synchronize(apnsToken: apnsToken) }
+    catch { failed = true; Zuse.logger(.machine, "Bell").error("Relay operations remain pending: \(error.localizedDescription)") }
+    do {
+      let since = snapshots.mapValues { $0.value?.stateVersion ?? 0 }
+      let states = try await live.fetchState(since: since)
+      var result = ReceiveResult.ignored
+      for (id, state) in states {
+        if try applyStatus(state, for: id) == .updated { result = .updated }
+      }
+      return result
+    } catch {
+      failed = true
+      Zuse.logger(.machine, "Bell").error("Relay status refresh failed: \(error.localizedDescription)")
+      return .ignored
+    }
+  }
+
+  // Foreground-only bounded backoff; activation/background hints remain the
+  // recovery triggers when iOS suspends us. Never promise background execution.
+  private func scheduleRetry() {
+    guard retryTask == nil, UIApplication.shared.applicationState == .active else { return }
+    let delay = retryDelay
+    retryDelay = min(retryDelay * 2, 60)
+    retryTask = Task { @MainActor [weak self] in
+      do { try await Task.sleep(nanoseconds: delay * 1_000_000_000) }
+      catch { return }
+      guard let self = self else { return }
+      self.retryTask = nil
+      guard UIApplication.shared.applicationState == .active else { return }
+      await self.refreshState()
+    }
+  }
+
+  func answerAsk(bellID: UUID, askID: String, verdict: String) async {
+    guard let live = relay as? LiveBellRelay else { return }
+    do {
+      let status = try await live.submitVerdict(bellID: bellID, askID: askID, verdict: verdict)
+      Zuse.logger(.machine, "Bell").info("Ask result: \(status)")
+    } catch {
+      Zuse.logger(.machine, "Bell").error("Ask response retained for retry: \(error.localizedDescription)")
+      scheduleRetry()
+    }
   }
 
   func updateAPNsToken(_ token: Data) {
@@ -79,21 +135,16 @@ import UserNotifications
     let changed = apnsToken != nil
     apnsToken = token
     Zuse.logger(.machine, "Bell").info(changed ? "APNs endpoint changed" : "APNs endpoint received")
+    #if DEBUG
     Zuse.logger(.machine, "Bell").info("CLI push: APNS_DEVICE_TOKEN='\(token.map { String(format: "%02x", $0) }.joined())'")
-    // [dev] TODO: rebind each Bell OR registerDevice
+    #endif
+    Task { await refreshState() }
   }
-
-  #if false
-  // [dev] TODO PROPOSED RELAY API: unsupported today; deliberately unused.
-  func registerDevice(apnsToken: Data) async throws {
-    try await relay.registerDevice(deviceID: deviceID, apnsToken: apnsToken)
-  }
-  #endif
 
   // MARK: Create and bind
 
-  func createBell(name: String) throws -> Bell {
-    try relay.createBell(name: name)
+  func createBell(name: String, ownerID: UUID? = nil) throws -> Bell {
+    try relay.createBell(name: name, ownerID: ownerID)
   }
 
   @discardableResult
@@ -102,7 +153,9 @@ import UserNotifications
     guard WorkURL.recognizes(workURL) else { throw BellError.invalidWorkURL }
     try attach(bellID, toWorkURL: workURL, contentSecret: contentSecret, level: level)
     do {
-      return try relay.bind(bellID, bellKey: bellKey, apnsToken: apnsToken, level: level)
+      let response = try relay.bind(bellID, bellKey: bellKey, apnsToken: apnsToken, level: level)
+      Task { await refreshState() }
+      return response
     } catch {
       // A bind can be re-entrant and executed again by the user
       do {
@@ -119,24 +172,26 @@ import UserNotifications
   func unbind(_ bellID: Bell.ID, bellKey: String) throws {
     try relay.unbind(bellID, bellKey: bellKey)
     try bindingStore.remove(bellID)
+    Task { await refreshState() }
   }
 
   func retireBell(_ bellID: Bell.ID, bellKey: String) throws {
+    try relay.deleteBell(bellID, bellKey: bellKey)
     let subject = snapshots.removeValue(forKey: bellID)
     subject?.send(nil)
     subject?.send(completion: .finished)
     try bindingStore.remove(bellID)
 
-    // Local retirement is authoritative. Relay deletion is a courtesy, with no retry.
-    do { try relay.deleteBell(bellID, bellKey: bellKey) }
-    catch { Zuse.logger(.machine, "Bell").error("Could not notify Relay of Bell retirement: \(error.localizedDescription)") }
+    try bindingStore.removeState(for: bellID)
+
+    Task { await refreshState() }
   }
 
   // MARK: Local work association
 
   private func attach(_ bellID: Bell.ID, toWorkURL url: URL, contentSecret: String?,
                       level: Bell.ReceiveLevel) throws {
-    try bindingStore.save(Bell.LocalBinding(workURL: url, acceptsPlaintext: contentSecret == nil, level: level), for: bellID)
+    try bindingStore.save(Bell.LocalBinding(contentSecret: contentSecret, workURL: url, acceptsPlaintext: contentSecret == nil, level: level), for: bellID)
   }
 
   func workURL(for bellID: Bell.ID) throws -> URL? {
@@ -147,7 +202,7 @@ import UserNotifications
 
   enum ReceiveResult: Equatable { case ignored, updated }
 
-  func state(_ bellID: Bell.ID) -> Bell.ReceivedState? { snapshots[bellID]?.value }
+  func state(_ bellID: Bell.ID) -> Bell.ReceivedState? { snapshot(bellID).value }
 
   func observe(_ bellID: Bell.ID) -> AnyPublisher<Bell.ReceivedState?, Never> {
     snapshot(bellID).eraseToAnyPublisher()
@@ -156,17 +211,19 @@ import UserNotifications
   @discardableResult
   func receiveNotificationStatus(_ message: Bell.Message) throws -> ReceiveResult {
     guard let status = message.status else { return .ignored }
-    guard let binding = try bindingStore.binding(for: message.bellID), binding.acceptsPlaintext else { return .ignored }
-    return applyStatus(status, for: message.bellID)
+    guard try bindingStore.binding(for: message.bellID) != nil else { return .ignored }
+    return try applyStatus(status, for: message.bellID)
   }
 
   @discardableResult
-  private func applyStatus(_ status: Bell.ReceivedState, for bellID: Bell.ID) -> ReceiveResult {
+  private func applyStatus(_ status: Bell.ReceivedState, for bellID: Bell.ID) throws -> ReceiveResult {
     let previous = state(bellID)
-    guard previous?.title != status.title || previous?.body != status.body ||
+    if let incoming = status.stateVersion, let stored = previous?.stateVersion, incoming <= stored { return .ignored }
+    guard previous?.stateVersion != status.stateVersion || previous?.title != status.title || previous?.body != status.body ||
           previous?.state != status.state || previous?.progress != status.progress || previous == nil else {
       return .ignored
     }
+    try bindingStore.saveState(status, for: bellID)
     snapshot(bellID).send(status)
     return .updated
   }
@@ -177,8 +234,8 @@ import UserNotifications
 
   private func snapshot(_ bellID: Bell.ID) -> CurrentValueSubject<Bell.ReceivedState?, Never> {
     if let existing = snapshots[bellID] { return existing }
-    // [dev] TODO: status persistence/recovery; the binding store persists binding and routing only.
-    let subject = CurrentValueSubject<Bell.ReceivedState?, Never>(nil)
+    // Relay versions and last-known snapshots survive app restarts.
+    let subject = CurrentValueSubject<Bell.ReceivedState?, Never>(try? bindingStore.state(for: bellID))
     snapshots[bellID] = subject
     return subject
   }

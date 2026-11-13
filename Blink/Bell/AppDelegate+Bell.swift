@@ -36,7 +36,30 @@ import UserNotifications
 extension AppDelegate {
   @objc(startBellTower)
   func startBellTower() {
+    let actions = [UNNotificationAction(identifier: "BELL_APPROVE", title: "Approve", options: [.authenticationRequired]),
+                   UNNotificationAction(identifier: "BELL_DENY", title: "Deny", options: [.authenticationRequired])]
+    let category = UNNotificationCategory(identifier: "BELL_CONFIRM", actions: actions, intentIdentifiers: [])
+    UNUserNotificationCenter.current().getNotificationCategories { existing in
+      var categories = existing.filter { $0.identifier != "BELL_CONFIRM" }; categories.insert(category)
+      UNUserNotificationCenter.current().setNotificationCategories(categories)
+    }
     BellTower.shared.start()
+  }
+
+  @objc(handleBellAction:completionHandler:)
+  func handleBellAction(_ response: UNNotificationResponse, completionHandler: @escaping () -> Void) -> Bool {
+    guard ["BELL_APPROVE", "BELL_DENY"].contains(response.actionIdentifier) else { return false }
+    let info = response.notification.request.content.userInfo
+    guard let bellID = BellWireEnvelope.bellID(info), let envelope = info["bell"] as? [String: Any],
+          let ask = envelope["ask"] as? [String: Any], let askID = ask["ask_id"] as? String, askID == envelope["id"] as? String,
+          envelope["enc"] as? Bool == true,
+          let binding = try? BellBindingStore().binding(for: bellID),
+          BellMockPush.decode(info, contentSecret: binding.contentSecret) != nil else { completionHandler(); return true }
+    Task { @MainActor in
+      await BellTower.shared.answerAsk(bellID: bellID, askID: askID, verdict: response.actionIdentifier == "BELL_APPROVE" ? "approve" : "deny")
+      completionHandler()
+    }
+    return true
   }
 
   // MARK: APNs registration
@@ -58,12 +81,12 @@ extension AppDelegate {
       completionHandler(.noData)
       return true
     }
-    guard let push = BellMockPush.decode(userInfo) else {
+    guard let bellID = BellWireEnvelope.bellID(userInfo) ?? BellMockPush.decode(userInfo)?.bellID else {
       completionHandler(.failed)
       return true
     }
     Task { @MainActor in
-      switch await BellTower.shared.refreshState(for: push.bellID) {
+      switch await BellTower.shared.refreshState(for: bellID) {
       case .ignored: completionHandler(.noData)
       case .updated: completionHandler(.newData)
       }
@@ -82,7 +105,10 @@ extension AppDelegate {
 
   private func processBellNotificationStatus(_ notification: UNNotification) {
     guard notification.request.trigger is UNPushNotificationTrigger,
-          let message = Bell.Message(notificationContent: notification.request.content) else { return }
+          let id = BellWireEnvelope.bellID(notification.request.content.userInfo) ?? BellMockPush.decode(notification.request.content.userInfo)?.bellID,
+          let binding = try? BellTower.shared.localBinding(for: id),
+          binding.acceptsPlaintext || (notification.request.content.userInfo["bell"] as? [String: Any])?["enc"] as? Bool == true,
+          let message = Bell.Message(notificationContent: notification.request.content, contentSecret: binding.contentSecret) else { return }
     do {
       try BellTower.shared.receiveNotificationStatus(message)
     } catch {

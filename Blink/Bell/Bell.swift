@@ -41,9 +41,12 @@ struct Bell: Codable, Equatable {
   let bellKey: String        // MANAGE; owner supplies it for relay changes
   let contentSecret: String? // READ; nil for the plaintext prototype
 
+  var senderValue: String { contentSecret.map { token + "." + $0 } ?? token }
+
   enum ReceiveLevel: String, Codable { case silent, loud }
 
   struct LocalBinding: Codable {
+    var contentSecret: String? = nil
     let workURL: URL
     let acceptsPlaintext: Bool
     let level: ReceiveLevel? // nil only in older prototype records
@@ -51,12 +54,13 @@ struct Bell: Codable, Equatable {
   }
 
   struct RelayBindingResponse: Equatable {
+    var pending = false
     let bellID: ID
     let endpointID: String
     let level: ReceiveLevel
   }
 
-  enum WorkState: String { case idle, busy, ok, warn, error, attention }
+  enum WorkState: String, Codable { case idle, busy, ok, warn, error, attention }
   // Represent the incoming Bell event inside Blink. Combines the envelope with prepared UNNotificationContent from NSE.
   // APNs envelop -> BellPush -> Message -> optional ReceivedState
   struct Message {
@@ -73,7 +77,8 @@ struct Bell: Codable, Equatable {
   // State and Message are kept separate because State could be updated without a Ring.
   // Ie. "Progress update, 40%" -> Ring "Check this terminal" (still can keep state as 40%)
   // [dev] TODO Check without the Mock, this may be overdone.
-  struct ReceivedState: Equatable {
+  struct ReceivedState: Equatable, Codable {
+    var stateVersion: Int64? = nil
     let title: String?
     let body: String?
     let state: WorkState?
@@ -83,14 +88,16 @@ struct Bell: Codable, Equatable {
 }
 
 extension Bell.Message {
-  init?(notificationContent content: UNNotificationContent) {
-    guard let push = BellMockPush.decode(content.userInfo), let id = push.messageID else { return nil }
+  init?(notificationContent content: UNNotificationContent, contentSecret: String? = nil) {
+    guard let push = BellMockPush.decode(content.userInfo, contentSecret: contentSecret), let id = push.messageID else { return nil }
     // Alert text comes from the content prepared by iOS/NSE, independently of work status.
     self.init(id: id, bellID: push.bellID, ring: true,
               title: content.title, body: content.body, status: push.status.map {
-      Bell.ReceivedState(title: $0.title, body: $0.body,
+      var state = Bell.ReceivedState(title: $0.title, body: $0.body,
                          state: $0.state.flatMap(Bell.WorkState.init(rawValue:)),
                          progress: $0.progress, updatedAt: Date())
+      state.stateVersion = push.stateVersion
+      return state
     })
   }
 }
