@@ -135,7 +135,9 @@ import UserNotifications
     let changed = apnsToken != nil
     apnsToken = token
     Zuse.logger(.machine, "Bell").info(changed ? "APNs endpoint changed" : "APNs endpoint received")
+    #if DEBUG
     Zuse.logger(.machine, "Bell").info("CLI push: APNS_DEVICE_TOKEN='\(token.map { String(format: "%02x", $0) }.joined())'")
+    #endif
     Task { await refreshState() }
   }
 

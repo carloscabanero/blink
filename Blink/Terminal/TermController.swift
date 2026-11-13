@@ -370,6 +370,7 @@ extension TermController {
     _observeBell()
     try bindBell(level: .loud) // explicit prototype creation policy
 
+    #if DEBUG
     let log = Zuse.logger(.machine, "Bell")
     log.info("CLI push: BELL_ID='\(bell.id.uuidString)'")
     log.info("CLI push: BLINK_BUNDLE_ID='\(Bundle.main.bundleIdentifier ?? "unknown")'")
@@ -379,6 +380,7 @@ extension TermController {
     } else {
       log.info("CLI push: APNs registration pending; APNS_DEVICE_TOKEN will be logged when received")
     }
+    #endif
     return bell
   }
 
