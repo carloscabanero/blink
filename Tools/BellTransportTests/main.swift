@@ -5,6 +5,7 @@ final class FixtureProtocol: URLProtocol {
   static let lock = NSLock()
   static var paths: [String] = []
   static var failBind = false
+  static var failedBindingID: String?
   static var state: [String: Any]?
   override class func canInit(with request: URLRequest) -> Bool { true }
   override class func canonicalRequest(for request: URLRequest) -> URLRequest { request }
@@ -15,7 +16,7 @@ final class FixtureProtocol: URLProtocol {
     var status = 200
     var body: [String: Any] = [:]
     if path == "/devices" { body = ["device_id": "00000000-0000-0000-0000-000000000001", "mint_key": "fixture-mint"] }
-    if path.hasSuffix("/bindings/self") && Self.failBind { status = 503 }
+    if path.hasSuffix("/bindings/self") && (Self.failBind || Self.failedBindingID.map { path.contains($0) } == true) { status = 503 }
     if path == "/state" { body = ["states": Self.state.map { [$0] } ?? [], "errors": []] }
     Self.lock.unlock()
     let response = HTTPURLResponse(url: request.url!, statusCode: status, httpVersion: "HTTP/1.1", headerFields: nil)!
@@ -33,6 +34,17 @@ func hexData(_ hex: String) -> Data {
 }
 @main struct Tests {
   @MainActor static func main() async throws {
+    let suite = "bell-config-" + UUID().uuidString
+    let defaults = UserDefaults(suiteName: suite)!
+    defaults.setVolatileDomain(["BellRelayURL": "https://fixture.invalid", "BellAPNsEnvironment": "sandbox"], forName: UserDefaults.argumentDomain)
+    require(LiveBellRelay.Configuration.configured(defaults: defaults, topic: "test.blink") != nil, "valid launch configuration")
+    defaults.setVolatileDomain([:], forName: UserDefaults.argumentDomain)
+    require(defaults.persistentDomain(forName: suite)?["BellRelayURL"] as? String == "https://fixture.invalid", "configuration survives launch argument removal")
+    defaults.set("https://fixture.invalid/unsafe-path", forKey: "BellRelayURL")
+    require(LiveBellRelay.Configuration.configured(defaults: defaults, topic: "test.blink") == nil, "reject path-bearing configuration")
+    defaults.set("https://fixture.invalid", forKey: "BellRelayURL")
+    defaults.set("typo", forKey: "BellAPNsEnvironment")
+    require(LiveBellRelay.Configuration.configured(defaults: defaults, topic: "test.blink") == nil, "reject invalid APNs environment")
     let vectors = try JSONSerialization.jsonObject(with: Data(contentsOf: URL(fileURLWithPath: CommandLine.arguments[1]))) as! [String: Any]
     let proof = (vectors["key_proofs"] as! [[String: Any]])[0]
     let proofBell = Bell(id: BellWireEnvelope.uuid(proof["bell_id_hex"] as! String)!, name: "vector", token: "", bellKey: hexData(proof["bell_key_seed_hex"] as! String).base64EncodedString(), contentSecret: nil)
@@ -86,6 +98,20 @@ func hexData(_ hex: String) -> Data {
     try await retired.synchronize(apnsToken: Data([3]))
     require(FixtureProtocol.paths.contains(where: { $0.hasPrefix("DELETE /bells/") && !$0.contains("/bindings/") }), "offline revocation survives restart")
     require(!FixtureProtocol.paths.contains("POST /bells"), "retirement never recreates")
-    print("11 live transport/recovery checks passed, including signed Go vector and encrypted state")
+    let isolated = try LiveBellRelay(configuration: config, journalURL: directory.appendingPathComponent("isolation.json"), session: session)
+    let bad = try isolated.createBell(name: "unavailable", ownerID: UUID())
+    let good = try isolated.createBell(name: "independent", ownerID: UUID())
+    _ = try isolated.bind(bad.id, bellKey: bad.bellKey, apnsToken: Data([1]), level: .loud)
+    _ = try isolated.bind(good.id, bellKey: good.bellKey, apnsToken: Data([1]), level: .loud)
+    FixtureProtocol.failedBindingID = LiveBellRelay.wireID(bad.id)
+    FixtureProtocol.paths = []
+    do { try await isolated.synchronize(apnsToken: Data([1])); preconditionFailure("failed operation accepted") }
+    catch LiveBellRelay.Failure.response(503) {}
+    require(FixtureProtocol.paths.contains("PUT /bells/" + LiveBellRelay.wireID(good.id) + "/bindings/self"), "failed Bell does not starve independent Bell")
+    require(isolated.hasPendingOperations, "failed operation remains pending")
+    FixtureProtocol.failedBindingID = nil
+    try await isolated.synchronize(apnsToken: Data([1]))
+    require(!isolated.hasPendingOperations, "pending operation recovers")
+    print("18 live transport/configuration/recovery checks passed")
   }
 }

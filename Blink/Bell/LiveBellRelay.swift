@@ -22,14 +22,22 @@ extension MockBellRelay: BellRelayOperations {
     let topic: String
     let environment: String
 
-    static func configured() -> Configuration? {
+    static func configured(defaults: UserDefaults = .standard, topic: String? = Bundle.main.bundleIdentifier) -> Configuration? {
       // Explicit debug/test configuration; never silently target production.
-      let defaults = UserDefaults.standard
       guard let address = defaults.string(forKey: "BellRelayURL"), let url = URL(string: address),
-            let topic = Bundle.main.bundleIdentifier else { return nil }
+            let topic = topic,
+            url.scheme == "https" || (url.scheme == "http" && ["127.0.0.1", "localhost"].contains(url.host ?? "")),
+            url.host != nil, url.user == nil, url.password == nil, url.query == nil, url.fragment == nil,
+            url.path.isEmpty || url.path == "/" else { return nil }
+      let environment = defaults.string(forKey: "BellAPNsEnvironment") ?? "sandbox"
+      guard ["sandbox", "production"].contains(environment) else { return nil }
+      // Copy explicit launch arguments into the persistent domain for icon launches.
+      // Enrollment secrets remain in the protected journal, never UserDefaults.
+      defaults.set(address, forKey: "BellRelayURL")
+      defaults.set(environment, forKey: "BellAPNsEnvironment")
       let enrollment = ProcessInfo.processInfo.environment["BELL_PAID_TOKEN"] ?? ""
       return Configuration(baseURL: url, paidToken: enrollment, topic: topic,
-                           environment: defaults.string(forKey: "BellAPNsEnvironment") ?? "sandbox")
+                           environment: environment)
     }
   }
 
@@ -75,6 +83,7 @@ extension MockBellRelay: BellRelayOperations {
   private let session: URLSession
   private var journal: Journal
   private var syncing = false
+  var hasPendingOperations: Bool { journal.records.contains { $0.ready && $0.pending && !$0.expired } }
   private(set) var lastError: String?
 
   init(configuration: Configuration?, journalURL: URL? = nil, session: URLSession? = nil) throws {
@@ -192,6 +201,7 @@ extension MockBellRelay: BellRelayOperations {
     }
     // Each immutable operation snapshot is acknowledged only if its revision
     // is still desired after the await; a close/unbind wins over stale replies.
+    var firstError: Error?
     for record in journal.records where record.ready && record.pending && !record.expired {
       do {
         try await execute(record, apnsToken: apnsToken)
@@ -202,8 +212,12 @@ extension MockBellRelay: BellRelayOperations {
       } catch Failure.response(404) {
         var value = journal
         if let i = value.records.firstIndex(where: { $0.bell.id == record.bell.id }) { value.records[i].expired = true; value.records[i].pending = false; try save(value) }
+      } catch {
+        // Preserve this operation, but do not starve unrelated Bells.
+        if firstError == nil { firstError = error }
       }
     }
+    if let error = firstError { lastError = error.localizedDescription; throw error }
     lastError = nil
   }
 

@@ -45,6 +45,10 @@ import UserNotifications
   private var snapshots: [Bell.ID: CurrentValueSubject<Bell.ReceivedState?, Never>] = [:]
   private let bindingStore: BellBindingStore
   private var activationObservation: AnyCancellable?
+  private var retryTask: Task<Void, Never>?
+  private var retryDelay: UInt64 = 2
+  private var refreshing = false
+  private var refreshAgain = false
 
   init(relay: any BellRelayOperations = MockBellRelay(), bindingStore: BellBindingStore = BellBindingStore()) {
     self.relay = relay
@@ -70,8 +74,20 @@ import UserNotifications
   @discardableResult
   func refreshState(for bellID: Bell.ID? = nil) async -> ReceiveResult {
     guard let live = relay as? LiveBellRelay else { return .ignored }
+    guard !refreshing else { refreshAgain = true; return .ignored }
+    refreshing = true
+    retryTask?.cancel(); retryTask = nil
+    var failed = false
+    defer {
+      refreshing = false
+      if refreshAgain {
+        refreshAgain = false
+        Task { @MainActor [weak self] in await self?.refreshState() }
+      } else if failed || live.hasPendingOperations { scheduleRetry() }
+      else { retryDelay = 2 }
+    }
     do { try await live.synchronize(apnsToken: apnsToken) }
-    catch { Zuse.logger(.machine, "Bell").error("Relay operations remain pending: \(error.localizedDescription)") }
+    catch { failed = true; Zuse.logger(.machine, "Bell").error("Relay operations remain pending: \(error.localizedDescription)") }
     do {
       let since = snapshots.mapValues { $0.value?.stateVersion ?? 0 }
       let states = try await live.fetchState(since: since)
@@ -81,8 +97,25 @@ import UserNotifications
       }
       return result
     } catch {
+      failed = true
       Zuse.logger(.machine, "Bell").error("Relay status refresh failed: \(error.localizedDescription)")
       return .ignored
+    }
+  }
+
+  // Foreground-only bounded backoff; activation/background hints remain the
+  // recovery triggers when iOS suspends us. Never promise background execution.
+  private func scheduleRetry() {
+    guard retryTask == nil, UIApplication.shared.applicationState == .active else { return }
+    let delay = retryDelay
+    retryDelay = min(retryDelay * 2, 60)
+    retryTask = Task { @MainActor [weak self] in
+      do { try await Task.sleep(nanoseconds: delay * 1_000_000_000) }
+      catch { return }
+      guard let self = self else { return }
+      self.retryTask = nil
+      guard UIApplication.shared.applicationState == .active else { return }
+      await self.refreshState()
     }
   }
 
