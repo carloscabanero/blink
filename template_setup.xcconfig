@@ -40,3 +40,8 @@ CONVERSION_OPPORTUNITY_URL = http:/$()/localhost/conversionOpportunity
 WHATS_NEW_GITHUB_URL = http:/$()/localhost/conversionOpportunity
 
 BLINK_APP_FONT = JetBrains Mono
+
+// Bell app composition (empty APNs setting uses Debug=sandbox / Release=production).
+BELL_RELAY_URL = https:/$()/bell.blink.sh
+BELL_RELAY_ENABLED = YES
+BELL_APNS_ENVIRONMENT =

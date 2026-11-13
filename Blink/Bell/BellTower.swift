@@ -35,22 +35,20 @@ import UIKit
 import UserNotifications
 
 @MainActor final class BellTower {
-  static let shared: BellTower = {
-    do { return BellTower(relay: try LiveBellRelay(configuration: .configured())) }
-    catch { return BellTower(relay: UnavailableBellRelay(error: error)) }
-  }()
+  static var shared = BellTower(relay: UnavailableBellRelay(error: LiveBellRelay.Failure.configuration))
 
   private let relay: any BellRelayOperations
   private(set) var apnsToken: Data?
   private var snapshots: [Bell.ID: CurrentValueSubject<Bell.ReceivedState?, Never>] = [:]
   private let bindingStore: BellBindingStore
+  private var deactivationObservation: AnyCancellable?
   private var activationObservation: AnyCancellable?
   private var retryTask: Task<Void, Never>?
   private var retryDelay: UInt64 = 2
   private var refreshing = false
   private var refreshAgain = false
 
-  init(relay: any BellRelayOperations = MockBellRelay(), bindingStore: BellBindingStore = BellBindingStore()) {
+  init(relay: any BellRelayOperations, bindingStore: BellBindingStore = BellBindingStore()) {
     self.relay = relay
     self.bindingStore = bindingStore
   }
@@ -63,17 +61,20 @@ import UserNotifications
       .publisher(for: UIApplication.didBecomeActiveNotification)
       .sink { [weak self] _ in
         Task { @MainActor [weak self] in
+          self?.relay.setActive(true)
           await self?.refreshState()
         }
       }
+    deactivationObservation = NotificationCenter.default.publisher(for: UIApplication.willResignActiveNotification)
+      .sink { [weak self] _ in Task { @MainActor in self?.relay.setActive(false) } }
     if UIApplication.shared.applicationState == .active {
+      relay.setActive(true)
       Task { await refreshState() }
     }
   }
 
   @discardableResult
   func refreshState(for bellID: Bell.ID? = nil) async -> ReceiveResult {
-    guard let live = relay as? LiveBellRelay else { return .ignored }
     guard !refreshing else { refreshAgain = true; return .ignored }
     refreshing = true
     retryTask?.cancel(); retryTask = nil
@@ -83,14 +84,12 @@ import UserNotifications
       if refreshAgain {
         refreshAgain = false
         Task { @MainActor [weak self] in await self?.refreshState() }
-      } else if failed || live.hasPendingOperations { scheduleRetry() }
+      } else if failed { scheduleRetry() }
       else { retryDelay = 2 }
     }
-    do { try await live.synchronize(apnsToken: apnsToken) }
-    catch { failed = true; Zuse.logger(.machine, "Bell").error("Relay operations remain pending: \(error.localizedDescription)") }
     do {
       let since = snapshots.mapValues { $0.value?.stateVersion ?? 0 }
-      let states = try await live.fetchState(since: since)
+      let states = try await relay.fetchState(since: since)
       var result = ReceiveResult.ignored
       for (id, state) in states {
         if try applyStatus(state, for: id) == .updated { result = .updated }
@@ -120,13 +119,11 @@ import UserNotifications
   }
 
   func answerAsk(bellID: UUID, askID: String, verdict: String) async {
-    guard let live = relay as? LiveBellRelay else { return }
     do {
-      let status = try await live.submitVerdict(bellID: bellID, askID: askID, verdict: verdict)
+      let status = try await relay.submitVerdict(bellID: bellID, askID: askID, verdict: verdict)
       Zuse.logger(.machine, "Bell").info("Ask result: \(status)")
     } catch {
       Zuse.logger(.machine, "Bell").error("Ask response retained for retry: \(error.localizedDescription)")
-      scheduleRetry()
     }
   }
 
@@ -138,8 +135,10 @@ import UserNotifications
     #if DEBUG
     Zuse.logger(.machine, "Bell").info("CLI push: APNS_DEVICE_TOKEN='\(token.map { String(format: "%02x", $0) }.joined())'")
     #endif
-    Task { await refreshState() }
+    relay.updateEndpoint(token)
   }
+
+  func operationStatus(for id: UUID) -> AnyPublisher<BellOperationStatus, Never> { relay.operationStatus(for: id) }
 
   // MARK: Create and bind
 
@@ -154,7 +153,6 @@ import UserNotifications
     try attach(bellID, toWorkURL: workURL, contentSecret: contentSecret, level: level)
     do {
       let response = try relay.bind(bellID, bellKey: bellKey, apnsToken: apnsToken, level: level)
-      Task { await refreshState() }
       return response
     } catch {
       // A bind can be re-entrant and executed again by the user
@@ -172,7 +170,6 @@ import UserNotifications
   func unbind(_ bellID: Bell.ID, bellKey: String) throws {
     try relay.unbind(bellID, bellKey: bellKey)
     try bindingStore.remove(bellID)
-    Task { await refreshState() }
   }
 
   func retireBell(_ bellID: Bell.ID, bellKey: String) throws {
@@ -183,8 +180,6 @@ import UserNotifications
     try bindingStore.remove(bellID)
 
     try bindingStore.removeState(for: bellID)
-
-    Task { await refreshState() }
   }
 
   // MARK: Local work association

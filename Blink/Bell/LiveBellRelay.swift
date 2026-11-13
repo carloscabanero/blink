@@ -1,17 +1,45 @@
+import Combine
 import CryptoKit
 import Foundation
 import Security
-#if canImport(StoreKit)
-import StoreKit
-#endif
 
 // These synchronous methods only persist desired operations. Network I/O is
 // asynchronous and never blocks a menu, Terminal close, or the main thread.
+enum BellOperationStatus: Equatable {
+  case pending, confirmed, expired
+  case retrying(String)
+  var description: String {
+    switch self {
+    case .pending: return "Pending Relay confirmation"
+    case .confirmed: return "Relay confirmed"
+    case .expired: return "Bell expired"
+    case .retrying(let reason): return reason
+    }
+  }
+}
+
+@MainActor protocol BellPurchaseProofProvider {
+  func enrollmentProof() async throws -> String
+}
+
 @MainActor protocol BellRelayOperations {
+  func operationStatus(for id: UUID) -> AnyPublisher<BellOperationStatus, Never>
+  func setActive(_ active: Bool)
+  func updateEndpoint(_ token: Data)
+  func fetchState(since: [UUID: Int64]) async throws -> [(UUID, Bell.ReceivedState)]
+  func submitVerdict(bellID: UUID, askID: String, verdict: String) async throws -> String
   func createBell(name: String, ownerID: UUID?) throws -> Bell
   func bind(_ id: UUID, bellKey: String, apnsToken: Data?, level: Bell.ReceiveLevel) throws -> Bell.RelayBindingResponse
   func unbind(_ id: UUID, bellKey: String) throws
   func deleteBell(_ id: UUID, bellKey: String) throws
+}
+
+extension BellRelayOperations {
+  func operationStatus(for id: UUID) -> AnyPublisher<BellOperationStatus, Never> { Just(.confirmed).eraseToAnyPublisher() }
+  func setActive(_ active: Bool) {}
+  func updateEndpoint(_ token: Data) {}
+  func fetchState(since: [UUID: Int64]) async throws -> [(UUID, Bell.ReceivedState)] { [] }
+  func submitVerdict(bellID: UUID, askID: String, verdict: String) async throws -> String { "unavailable" }
 }
 
 extension MockBellRelay: BellRelayOperations {
@@ -19,38 +47,14 @@ extension MockBellRelay: BellRelayOperations {
 }
 
 @MainActor final class LiveBellRelay: BellRelayOperations {
-  static let eligibleProductIDs: Set<String> = [
-    "blink_plus_1y_2999", "blink_shell_plus_1y_1999",
-    "blink_build_basic_1m_799", "blink_plus_build_1m_999"
-  ]
-
   struct Configuration {
     let baseURL: URL
-    let paidToken: String
     let topic: String
     let environment: String
-
-    static func configured(defaults: UserDefaults = .standard, topic: String? = Bundle.main.bundleIdentifier) -> Configuration? {
-      // Explicit diagnostic overrides take precedence over the production default.
-      guard let address = (defaults.string(forKey: "BellRelayURL") ?? "https://bell.blink.sh") as String?, let url = URL(string: address),
-            let topic = topic,
-            url.scheme == "https" || (url.scheme == "http" && ["127.0.0.1", "localhost"].contains(url.host ?? "")),
-            url.host != nil, url.user == nil, url.password == nil, url.query == nil, url.fragment == nil,
-            url.path.isEmpty || url.path == "/" else { return nil }
-      #if DEBUG
-      let defaultEnvironment = "sandbox"
-      #else
-      let defaultEnvironment = "production"
-      #endif
-      let environment = defaults.string(forKey: "BellAPNsEnvironment") ?? defaultEnvironment
-      guard ["sandbox", "production"].contains(environment) else { return nil }
-      // Copy explicit launch arguments into the persistent domain for icon launches.
-      // Enrollment secrets remain in the protected journal, never UserDefaults.
-      defaults.set(address, forKey: "BellRelayURL")
-      defaults.set(environment, forKey: "BellAPNsEnvironment")
-      let enrollment = ProcessInfo.processInfo.environment["BELL_PAID_TOKEN"] ?? ""
-      return Configuration(baseURL: url, paidToken: enrollment, topic: topic,
-                           environment: environment)
+    var isValid: Bool {
+      (baseURL.scheme == "https" || (baseURL.scheme == "http" && ["127.0.0.1", "localhost"].contains(baseURL.host ?? ""))) &&
+      baseURL.host != nil && baseURL.user == nil && baseURL.password == nil && baseURL.query == nil && baseURL.fragment == nil &&
+      (baseURL.path.isEmpty || baseURL.path == "/") && !topic.isEmpty && ["sandbox", "production"].contains(environment)
     }
   }
 
@@ -64,6 +68,7 @@ extension MockBellRelay: BellRelayOperations {
     var expired = false
     var pending = true
     var level: Bell.ReceiveLevel?
+    var operationError: String?
   }
   struct Submission: Codable {
     let bellID: UUID
@@ -99,6 +104,13 @@ extension MockBellRelay: BellRelayOperations {
     }
   }
 
+  private let proofProvider: any BellPurchaseProofProvider
+  private var statusSubjects: [UUID: CurrentValueSubject<BellOperationStatus, Never>] = [:]
+  private var active = false
+  private var endpoint: Data?
+  private var retryTask: Task<Void, Never>?
+  private var retryDelay: UInt64 = 2
+  private var syncAgain = false
   private let configuration: Configuration?
   private let journalURL: URL
   private final class NoRedirects: NSObject, URLSessionTaskDelegate {
@@ -112,8 +124,9 @@ extension MockBellRelay: BellRelayOperations {
   var hasPendingOperations: Bool { journal.records.contains { $0.ready && $0.pending && !$0.expired } || journal.submissions?.contains { $0.status == "submitting" } == true }
   private(set) var lastError: String?
 
-  init(configuration: Configuration?, journalURL: URL? = nil, session: URLSession? = nil) throws {
+  init(configuration: Configuration?, proofProvider: any BellPurchaseProofProvider, journalURL: URL? = nil, session: URLSession? = nil) throws {
     self.configuration = configuration
+    self.proofProvider = proofProvider
     self.session = session ?? URLSession(configuration: .ephemeral, delegate: NoRedirects(), delegateQueue: nil)
     self.journalURL = try journalURL ?? FileManager.default.url(for: .applicationSupportDirectory,
       in: .userDomainMask, appropriateFor: nil, create: true).appendingPathComponent("Bell/RelayOperations.json")
@@ -123,6 +136,41 @@ extension MockBellRelay: BellRelayOperations {
        origin != configuration.baseURL.absoluteString { throw Failure.configuration }
     if journal.relayOrigin == nil { journal.relayOrigin = configuration?.baseURL.absoluteString }
     // Corrupt/unreadable journals must never reset credentials or duplicate Bells.
+  }
+
+  private func status(_ record: Record) -> BellOperationStatus {
+    if record.expired { return .expired }
+    if !record.pending { return .confirmed }
+    if let error = record.operationError { return .retrying(error) }
+    return .pending
+  }
+
+  func operationStatus(for id: UUID) -> AnyPublisher<BellOperationStatus, Never> {
+    if let subject = statusSubjects[id] { return subject.eraseToAnyPublisher() }
+    let subject = CurrentValueSubject<BellOperationStatus, Never>(journal.records.first(where: { $0.bell.id == id }).map(status) ?? .expired)
+    statusSubjects[id] = subject
+    return subject.eraseToAnyPublisher()
+  }
+
+  func setActive(_ active: Bool) {
+    self.active = active
+    if active { kick() } else { retryTask?.cancel(); retryTask = nil }
+  }
+
+  func updateEndpoint(_ token: Data) { endpoint = token; kick() }
+
+  // Relay owns operation scheduling. Tower only supplies lifecycle/endpoint events.
+  private func kick(after delay: UInt64 = 0) {
+    guard active else { return }
+    retryTask?.cancel()
+    retryTask = Task { @MainActor [weak self] in
+      if delay > 0 {
+        do { try await Task.sleep(nanoseconds: delay * 1_000_000_000) } catch { return }
+      }
+      guard let self = self, self.active, !Task.isCancelled else { return }
+      self.retryTask = nil
+      do { try await self.synchronize(apnsToken: self.endpoint) } catch { }
+    }
   }
 
   static func random(_ count: Int) throws -> Data {
@@ -144,17 +192,19 @@ extension MockBellRelay: BellRelayOperations {
     var attributes = URLResourceValues(); attributes.isExcludedFromBackup = true
     try url.setResourceValues(attributes)
     journal = value
+    for record in value.records { statusSubjects[record.bell.id]?.send(status(record)) }
   }
   private func change(_ id: UUID, key: String, allowRetired: Bool = false, _ update: (inout Record) -> Void) throws {
     var value = journal
     guard let index = value.records.firstIndex(where: { $0.bell.id == id && $0.bell.bellKey == key }) else { throw Failure.missingRecord }
     guard allowRetired || (!value.records[index].expired && !value.records[index].retired) else { throw Failure.expired }
-    update(&value.records[index]); value.records[index].revision += 1; value.records[index].pending = true
+    update(&value.records[index]); value.records[index].revision += 1; value.records[index].pending = true; value.records[index].operationError = nil
     try save(value)
+    kick()
   }
 
   func createBell(name: String, ownerID: UUID?) throws -> Bell {
-    guard configuration != nil else { throw Failure.configuration }
+    guard configuration?.isValid == true else { throw Failure.configuration }
     if let ownerID = ownerID, let existing = journal.records.first(where: { $0.ownerID == ownerID && !$0.retired }) {
       guard !existing.expired else { throw Failure.expired }; return existing.bell
     }
@@ -219,22 +269,30 @@ extension MockBellRelay: BellRelayOperations {
   }
 
   func synchronize(apnsToken: Data?) async throws {
-    guard !syncing else { return }; syncing = true; defer { syncing = false }
-    guard let config = configuration else { throw Failure.configuration }
-    if journal.mintKey == nil {
-      var paidToken = config.paidToken.trimmingCharacters(in: .whitespacesAndNewlines)
-      #if canImport(StoreKit)
-      if paidToken.isEmpty, #available(iOS 15.0, macOS 12.0, *) {
-        for await entitlement in StoreKit.Transaction.currentEntitlements {
-          if case .verified(let transaction) = entitlement, Self.eligibleProductIDs.contains(transaction.productID), transaction.revocationDate == nil,
-             transaction.expirationDate.map({ $0 > Date() }) ?? true {
-            paidToken = entitlement.jwsRepresentation
-            break
-          }
-        }
+    guard !syncing else { syncAgain = true; return }
+    syncing = true
+    defer {
+      syncing = false
+      if syncAgain { syncAgain = false; kick() }
+      else if hasPendingOperations { let delay = retryDelay; retryDelay = min(60, retryDelay * 2); kick(after: delay) }
+      else { retryDelay = 2 }
+    }
+    do { try await synchronizeOperations(apnsToken: apnsToken) }
+    catch {
+      var value = journal
+      for index in value.records.indices where value.records[index].pending && !value.records[index].expired {
+        if value.records[index].operationError == nil { value.records[index].operationError = error.localizedDescription }
       }
-      #endif
-      paidToken = try Self.requireEnrollmentToken(paidToken)
+      try save(value)
+      lastError = error.localizedDescription
+      throw error
+    }
+  }
+
+  private func synchronizeOperations(apnsToken: Data?) async throws {
+    guard let config = configuration, config.isValid else { throw Failure.configuration }
+    if journal.mintKey == nil {
+      let paidToken = try Self.requireEnrollmentToken(try await proofProvider.enrollmentProof())
       let response: [String: Any]
       do { response = try await request("POST", "/devices", json: ["paid_token": paidToken]) }
       catch Failure.response(let code) { throw Failure.enrollmentRejected(code) }
@@ -255,18 +313,30 @@ extension MockBellRelay: BellRelayOperations {
         try await execute(record, apnsToken: apnsToken)
         guard let i = journal.records.firstIndex(where: { $0.bell.id == record.bell.id }),
               journal.records[i].revision == record.revision else { continue }
-        var value = journal; value.records[i].pending = false; value.records[i].provisioned = !record.retired
+        var value = journal; value.records[i].pending = false; value.records[i].provisioned = !record.retired; value.records[i].operationError = nil
         try save(value)
       } catch Failure.response(let code) where code == 404 || code == 410 {
         var value = journal
         if let i = value.records.firstIndex(where: { $0.bell.id == record.bell.id }) { value.records[i].expired = true; value.records[i].pending = false; try save(value) }
       } catch {
         // Preserve this operation, but do not starve unrelated Bells.
+        var value = journal
+        if let i = value.records.firstIndex(where: { $0.bell.id == record.bell.id }), value.records[i].revision == record.revision {
+          value.records[i].operationError = error.localizedDescription
+          try save(value)
+        }
         if firstError == nil { firstError = error }
       }
     }
     if let error = firstError { lastError = error.localizedDescription; throw error }
     lastError = nil
+    // Keep unresolved Ask credentials. Remove only acknowledged retirement records.
+    var compacted = journal
+    let unresolved = Set((journal.submissions ?? []).filter { $0.status == "submitting" }.map { $0.bellID })
+    let retired = Set(journal.records.filter { $0.retired && !$0.pending && !unresolved.contains($0.bell.id) }.map { $0.bell.id })
+    compacted.records.removeAll { retired.contains($0.bell.id) }
+    compacted.submissions?.removeAll { retired.contains($0.bellID) && $0.status != "submitting" }
+    if !retired.isEmpty { try save(compacted) }
   }
 
   func submitVerdict(bellID: UUID, askID: String, verdict: String) async throws -> String {
@@ -281,7 +351,7 @@ extension MockBellRelay: BellRelayOperations {
       value.submissions!.append(Submission(bellID: bellID, askID: askID, verdict: verdict, mac: Self.url64(mac)))
       try save(value)
     }
-    try await flushVerdicts()
+    do { try await flushVerdicts() } catch { kick(after: retryDelay); throw error }
     return journal.submissions?.first(where: { $0.askID == askID && $0.bellID == bellID })?.status ?? "retryable_failure"
   }
 
@@ -327,6 +397,9 @@ extension MockBellRelay: BellRelayOperations {
   }
 
   func fetchState(since: [UUID: Int64]) async throws -> [(UUID, Bell.ReceivedState)] {
+    // A refresh hint also attempts pending work, but operation failures do not
+    // prevent independent state recovery.
+    do { try await synchronize(apnsToken: endpoint) } catch { }
     let known = journal.records.filter { $0.ready && !$0.retired && !$0.expired }
     var result: [(UUID, Bell.ReceivedState)] = []
     for start in stride(from: 0, to: known.count, by: 200) {
@@ -366,6 +439,7 @@ extension MockBellRelay: BellRelayOperations {
 
 @MainActor struct UnavailableBellRelay: BellRelayOperations {
   let error: Error
+  func operationStatus(for id: UUID) -> AnyPublisher<BellOperationStatus, Never> { Just(.retrying(error.localizedDescription)).eraseToAnyPublisher() }
   func createBell(name: String, ownerID: UUID?) throws -> Bell { throw error }
   func bind(_ id: UUID, bellKey: String, apnsToken: Data?, level: Bell.ReceiveLevel) throws -> Bell.RelayBindingResponse { throw error }
   func unbind(_ id: UUID, bellKey: String) throws { throw error }

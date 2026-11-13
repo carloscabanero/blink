@@ -1,3 +1,4 @@
+import Combine
 import CryptoKit
 import Foundation
 
@@ -45,25 +46,24 @@ final class FixtureProtocol: URLProtocol {
   override func stopLoading() {}
 }
 
-func require(_ condition: @autoclosure () -> Bool, _ label: String) { precondition(condition(), label) }
+var checks = 0
+func require(_ condition: @autoclosure () -> Bool, _ label: String) { precondition(condition(), label); checks += 1 }
 func hexData(_ hex: String) -> Data {
   let c = Array(hex)
   return Data(stride(from: 0, to: c.count, by: 2).map { UInt8(String(c[$0...$0+1]), radix: 16)! })
 }
+@MainActor final class FixturePurchaseProof: BellPurchaseProofProvider {
+  var value = "dev:test"
+  var calls = 0
+  func enrollmentProof() async throws -> String { calls += 1; return value }
+}
+
 @main struct Tests {
   @MainActor static func main() async throws {
-    require(LiveBellRelay.eligibleProductIDs.count == 4 && !LiveBellRelay.eligibleProductIDs.contains("blink_shell_classic_unlimited_0"), "all four paid plans, not zero-price classic unlock")
-    let suite = "bell-config-" + UUID().uuidString
-    let defaults = UserDefaults(suiteName: suite)!
-    defaults.setVolatileDomain(["BellRelayURL": "https://fixture.invalid", "BellAPNsEnvironment": "sandbox"], forName: UserDefaults.argumentDomain)
-    require(LiveBellRelay.Configuration.configured(defaults: defaults, topic: "test.blink") != nil, "valid launch configuration")
-    defaults.setVolatileDomain([:], forName: UserDefaults.argumentDomain)
-    require(defaults.persistentDomain(forName: suite)?["BellRelayURL"] as? String == "https://fixture.invalid", "configuration survives launch argument removal")
-    defaults.set("https://fixture.invalid/unsafe-path", forKey: "BellRelayURL")
-    require(LiveBellRelay.Configuration.configured(defaults: defaults, topic: "test.blink") == nil, "reject path-bearing configuration")
-    defaults.set("https://fixture.invalid", forKey: "BellRelayURL")
-    defaults.set("typo", forKey: "BellAPNsEnvironment")
-    require(LiveBellRelay.Configuration.configured(defaults: defaults, topic: "test.blink") == nil, "reject invalid APNs environment")
+    require(LiveBellRelay.Configuration(baseURL: URL(string: "https://fixture.invalid")!, topic: "test", environment: "sandbox").isValid, "valid configuration")
+    require(!LiveBellRelay.Configuration(baseURL: URL(string: "https://fixture.invalid/unsafe")!, topic: "test", environment: "sandbox").isValid, "reject path-bearing configuration")
+    require(!LiveBellRelay.Configuration(baseURL: URL(string: "https://fixture.invalid")!, topic: "test", environment: "typo").isValid, "reject invalid APNs environment")
+    let proofProvider = FixturePurchaseProof()
     let vectors = try JSONSerialization.jsonObject(with: Data(contentsOf: URL(fileURLWithPath: CommandLine.arguments[1]))) as! [String: Any]
     let proof = (vectors["key_proofs"] as! [[String: Any]])[0]
     let proofBell = Bell(id: BellWireEnvelope.uuid(proof["bell_id_hex"] as! String)!, name: "vector", token: "", bellKey: hexData(proof["bell_key_seed_hex"] as! String).base64EncodedString(), contentSecret: nil)
@@ -77,21 +77,30 @@ func hexData(_ hex: String) -> Data {
     require(publicKey.isValidSignature(hexData(proof["sig_hex"] as! String), for: signedData), "Go signature verifies with CryptoKit")
     let directory = FileManager.default.temporaryDirectory.appendingPathComponent("bell-transport-" + UUID().uuidString)
     let url = directory.appendingPathComponent("journal.json")
-    let config = LiveBellRelay.Configuration(baseURL: URL(string: "https://fixture.invalid")!, paidToken: "dev:test", topic: "test.blink", environment: "sandbox")
+    let config = LiveBellRelay.Configuration(baseURL: URL(string: "https://fixture.invalid")!, topic: "test.blink", environment: "sandbox")
     let sessionConfig = URLSessionConfiguration.ephemeral; sessionConfig.protocolClasses = [FixtureProtocol.self]
     let session = URLSession(configuration: sessionConfig)
     let owner = UUID()
-    let relay = try LiveBellRelay(configuration: config, journalURL: url, session: session)
+    let relay = try LiveBellRelay(configuration: config, proofProvider: proofProvider, journalURL: url, session: session)
     let bell = try relay.createBell(name: "build", ownerID: owner)
     require(try! relay.createBell(name: "retry", ownerID: owner) == bell, "owner creation is stable")
     _ = try relay.bind(bell.id, bellKey: bell.bellKey, apnsToken: Data([1]), level: .loud)
+    var observed: [BellOperationStatus] = []
+    let observation = relay.operationStatus(for: bell.id).sink { observed.append($0) }
+    require(observed.last == .pending, "binding exposes local pending, not success")
     FixtureProtocol.failBind = true
     do { try await relay.synchronize(apnsToken: Data([1])); preconditionFailure("failed bind accepted") }
     catch LiveBellRelay.Failure.response(503) {}
-    let restored = try LiveBellRelay(configuration: config, journalURL: url, session: session)
+    require(observed.last == .retrying(LiveBellRelay.Failure.response(503).localizedDescription), "failed bind publishes useful retry reason")
+    withExtendedLifetime(observation) {}
+    let restored = try LiveBellRelay(configuration: config, proofProvider: proofProvider, journalURL: url, session: session)
     require(try! restored.createBell(name: "restart", ownerID: owner) == bell, "lost reply/restart preserves identity and secrets")
     FixtureProtocol.failBind = false
     try await restored.synchronize(apnsToken: Data([2]))
+    var restoredStatus: BellOperationStatus?
+    let restoredObservation = restored.operationStatus(for: bell.id).sink { restoredStatus = $0 }
+    require(restoredStatus == .confirmed, "only acknowledged bind is confirmed after restart")
+    withExtendedLifetime(restoredObservation) {}
     let createCount = FixtureProtocol.paths.filter { $0 == "POST /bells" }.count
     require(createCount == 2, "retry same create after ambiguous completion")
     FixtureProtocol.paths = []
@@ -112,12 +121,12 @@ func hexData(_ hex: String) -> Data {
     try await restored.synchronize(apnsToken: Data([3]))
     require(FixtureProtocol.paths.contains(where: { $0.contains("DELETE /bells/") && $0.contains("/bindings/device:") }), "durable unbind")
     try restored.deleteBell(bell.id, bellKey: bell.bellKey)
-    let retired = try LiveBellRelay(configuration: config, journalURL: url, session: session)
+    let retired = try LiveBellRelay(configuration: config, proofProvider: proofProvider, journalURL: url, session: session)
     FixtureProtocol.paths = []
     try await retired.synchronize(apnsToken: Data([3]))
     require(FixtureProtocol.paths.contains(where: { $0.hasPrefix("DELETE /bells/") && !$0.contains("/bindings/") }), "offline revocation survives restart")
     require(!FixtureProtocol.paths.contains("POST /bells"), "retirement never recreates")
-    let isolated = try LiveBellRelay(configuration: config, journalURL: directory.appendingPathComponent("isolation.json"), session: session)
+    let isolated = try LiveBellRelay(configuration: config, proofProvider: proofProvider, journalURL: directory.appendingPathComponent("isolation.json"), session: session)
     let bad = try isolated.createBell(name: "unavailable", ownerID: UUID())
     let good = try isolated.createBell(name: "independent", ownerID: UUID())
     _ = try isolated.bind(bad.id, bellKey: bad.bellKey, apnsToken: Data([1]), level: .loud)
@@ -135,7 +144,7 @@ func hexData(_ hex: String) -> Data {
     FixtureProtocol.failVerdict = true
     do { _ = try await isolated.submitVerdict(bellID: good.id, askID: askID, verdict: "approve"); preconditionFailure("failed verdict accepted") }
     catch LiveBellRelay.Failure.response(503) {}
-    let restarted = try LiveBellRelay(configuration: config, journalURL: directory.appendingPathComponent("isolation.json"), session: session)
+    let restarted = try LiveBellRelay(configuration: config, proofProvider: proofProvider, journalURL: directory.appendingPathComponent("isolation.json"), session: session)
     require(restarted.hasPendingOperations, "Ask submission survives restart")
     FixtureProtocol.failVerdict = false
     FixtureProtocol.verdictResult = "deny"
@@ -149,7 +158,7 @@ func hexData(_ hex: String) -> Data {
     do { _ = try LiveBellRelay.requireEnrollmentToken(" \n"); preconditionFailure("blank enrollment accepted") }
     catch LiveBellRelay.Failure.missingEnrollment {}
     require(try! LiveBellRelay.requireEnrollmentToken(" dev:carlos ") == "dev:carlos", "trim enrollment input")
-    let diagnostic = try LiveBellRelay(configuration: config, journalURL: directory.appendingPathComponent("diagnostic.json"), session: session)
+    let diagnostic = try LiveBellRelay(configuration: config, proofProvider: proofProvider, journalURL: directory.appendingPathComponent("diagnostic.json"), session: session)
     let diagnosticBell = try diagnostic.createBell(name: "diagnostic", ownerID: UUID())
     _ = try diagnostic.bind(diagnosticBell.id, bellKey: diagnosticBell.bellKey, apnsToken: nil, level: .loud)
     FixtureProtocol.enrollmentStatus = 401
@@ -167,6 +176,31 @@ func hexData(_ hex: String) -> Data {
     require(!FixtureProtocol.paths.contains(where: { $0.hasSuffix("/endpoint") }), "empty APNs is not registered")
     try await diagnostic.synchronize(apnsToken: Data([4]))
     require(!diagnostic.hasPendingOperations && !FixtureProtocol.paths.contains("POST /devices"), "APNs arrival completes binding without reenrollment")
-    print("32 live transport/configuration/recovery/Ask checks passed")
+    let lazyProof = FixturePurchaseProof()
+    lazyProof.value = ""
+    let lazy = try LiveBellRelay(configuration: config, proofProvider: lazyProof, journalURL: directory.appendingPathComponent("lazy.json"), session: session)
+    let lazyBell = try lazy.createBell(name: "late purchase", ownerID: nil)
+    _ = try lazy.bind(lazyBell.id, bellKey: lazyBell.bellKey, apnsToken: nil, level: .loud)
+    require(lazyProof.calls == 0, "startup does not snapshot purchase")
+    do { try await lazy.synchronize(apnsToken: Data([1])); preconditionFailure("empty purchase accepted") } catch LiveBellRelay.Failure.missingEnrollment {}
+    lazyProof.value = "dev:late"
+    try await lazy.synchronize(apnsToken: Data([1]))
+    require(lazyProof.calls == 2 && !lazy.hasPendingOperations, "late purchase is requested again and recovers")
+    let compacted = try JSONDecoder().decode(LiveBellRelay.Journal.self, from: Data(contentsOf: url))
+    require(compacted.records.isEmpty, "acknowledged retirement compacted")
+    let scheduledProof = FixturePurchaseProof()
+    let scheduled = try LiveBellRelay(configuration: config, proofProvider: scheduledProof, journalURL: directory.appendingPathComponent("scheduler.json"), session: session)
+    let scheduledBell = try scheduled.createBell(name: "foreground", ownerID: nil)
+    _ = try scheduled.bind(scheduledBell.id, bellKey: scheduledBell.bellKey, apnsToken: nil, level: .loud)
+    scheduled.updateEndpoint(Data([7]))
+    require(scheduledProof.calls == 0 && scheduled.hasPendingOperations, "inactive Relay retains work without starting requests")
+    FixtureProtocol.paths = []
+    scheduled.setActive(true)
+    let deadline = Date().addingTimeInterval(3)
+    while scheduled.hasPendingOperations && Date() < deadline { try await Task.sleep(nanoseconds: 10_000_000) }
+    require(!scheduled.hasPendingOperations, "activation drains queue without Tower refresh")
+    scheduled.setActive(false)
+    require(!FixtureProtocol.paths.contains("POST /state"), "scheduler does not require state refresh")
+    print("\(checks) live transport/configuration/recovery/Ask checks passed")
   }
 }

@@ -22,7 +22,7 @@ bash Tools/BellWireTests/run.sh
 bash Tools/BellTransportTests/run.sh
 ```
 
-Expected with this diagnostic update: 10 codec checks and 32 transport/config/recovery/Ask checks (including explicit test-token forwarding, enrollment rejection, missing/empty APNs tokens and recovery). These exercise encrypted wire compatibility, signatures, retry identity, durable offline operations, state ordering and verdict recovery through fixtures. They do **not** prove StoreKit, APNs or physical-device delivery.
+Expected: 10 codec checks and the transport/config/recovery/Ask check count printed by the runner (including explicit test-token forwarding, enrollment rejection, missing/empty APNs tokens and recovery). These exercise encrypted wire compatibility, signatures, retry identity, durable offline operations, state ordering and verdict recovery through fixtures. They do **not** prove StoreKit, APNs or physical-device delivery.
 
 ## 3. Build and sign on your Mac
 
@@ -44,7 +44,7 @@ Xcode Scheme → Run → Arguments Passed On Launch:
 -BellAPNsEnvironment sandbox
 ```
 
-Use `sandbox` for a development-signed build. TestFlight/App Store builds use `production` APNs (even though TestFlight StoreKit purchases are sandbox transactions). The APNs environment and StoreKit environment are separate. Debug defaults to sandbox; Release defaults to production; saved explicit overrides win.
+Use `sandbox` for a development-signed build. TestFlight/App Store builds use `production` APNs (even though TestFlight StoreKit purchases are sandbox transactions). The APNs environment and StoreKit environment are separate. Debug defaults to sandbox; Release defaults to production. Debug launch overrides win for that launch; Release uses build settings and ignores diagnostic overrides.
 
 Remove `BELL_PAID_TOKEN` from the scheme environment when testing production. There is no development-purchase bypass on production. Launch once unlocked so notification actions register; allow notifications in iOS Settings.
 
@@ -61,7 +61,7 @@ The classic/unlimited zero-price unlock alone does not qualify. Use the app's no
 
 In a test Terminal, open Quick Actions → Bell → Create Bell, then Receive → Loud. Save the copied `token.content_secret` privately. Creation is asynchronous: the token dialog alone does not mean the server accepted enrollment, creation or binding. Confirm successful enrollment/bind via device diagnostics and an actual delivered Ring below. Server logs, if needed, require the operator; you do not need production SSH access to run the client test.
 
-Explicit URL/environment settings persist. An old private sandbox journal cannot silently migrate to production: use a separate test installation/container for another Relay origin. Do not delete your normal app data to work around the origin guard.
+XCConfig settings survive icon launches; diagnostic launch arguments apply only to the corresponding Debug launch. An old private sandbox journal cannot silently migrate to production: use a separate test installation/container for another Relay origin. Do not delete your normal app data to work around the origin guard.
 
 ## 4a. Development enrollment without a paid Apple transaction
 
@@ -144,7 +144,7 @@ The updated build separates the causes:
 | Saved Bell credentials invalid / device ID missing | Local journal/key problem, not a missing test token. Preserve the journal and report the error; do not delete it or expose it publicly. |
 | Relay configuration invalid / saved origin differs | Validate the URL/environment and use the installation's original origin, or a separate test installation. |
 
-Inspect Xcode device console for the Bell synchronization error and APNs registration failure. If needed, break at `LiveBellRelay.synchronize` and inspect only `configuration?.baseURL`, `configuration?.paidToken.isEmpty` and `apnsToken?.count`—not their secret contents. Record whether `/devices` reached the selected server. A pending token dialog is not server acceptance. The previous generic message alone cannot diagnose Carlos's original run; retest with the updated PR.
+Inspect Xcode device console for the Bell synchronization error and APNs registration failure. If needed, break at `LiveBellRelay.synchronize` and inspect only `configuration?.baseURL`, the injected purchase provider result availability (not its secret value) and `apnsToken?.count`—not their secret contents. Record whether `/devices` reached the selected server. A pending token dialog is not server acceptance. The previous generic message alone cannot diagnose Carlos's original run; retest with the updated PR.
 
 ## 5. Send an encrypted Ring and a confirm Ask
 
@@ -211,3 +211,24 @@ Use new message/Ask IDs on each send (the helper generates them). Record actual 
 Prior physical evidence covers private-sandbox encrypted Ring, locked/restarted routing, offline state recovery and Approve with verified MAC. Production health/auth gates and signed builds passed. **Real paid-account enrollment and notification delivery through the new production topic still need Carlos's device test.** Physical token rotation, offline mutation edge cases and freshness/ownership UI are not declared complete. No Live Activity or arbitrary-choice Ask coverage is implied.
 
 Send back: commit, Xcode/iOS versions, signed bundle/team, APNs environment, entitlement product (no transaction JWS), pass/fail for each row, timestamps and sanitized HTTP/APNs errors. Never include sender capabilities or private keys.
+
+## 9. Operation acknowledgment and composition boundaries
+
+The Journal remains a durable desired-state snapshot. Create/bind returning locally is **not** remote acceptance. Open **Relay Status** in the Bell menu (or leave the token dialog open): it subscribes to per-Bell status and updates from pending to confirmed or a retry reason. Confirmation covers the current desired revision, including binding; it does not prove notification delivery. Received Bell content/state remains a separate publisher.
+
+To test, stop your development Relay, create a Bell, and leave the status dialog open. It must remain pending/retrying, never confirmed. Restart the Relay with the app foregrounded: bounded retries should confirm the same Bell/token. Repeat with missing APNs registration; the dialog must explain the waiting condition. Change Receive while a bind is outstanding: an older reply must not confirm the new operation. Restart Blink offline: pending/error state must survive. These device/UI scenarios still require a manual retest.
+
+App composition lives in `AppDelegate+Bell.swift`. Add these optional settings to an existing `developer_setup.xcconfig` (new setups get them from the template):
+
+```xcconfig
+BELL_RELAY_URL = https:/$()/bell.blink.sh
+BELL_RELAY_ENABLED = YES
+// Leave empty for Debug=sandbox, Release=production, or set explicitly.
+BELL_APNS_ENVIRONMENT =
+```
+
+`BELL_RELAY_ENABLED = NO` disables Relay operations with an explicit error; it never silently switches to the mock. Tests inject mock/live clients and a `BellPurchaseProofProvider`. Production purchase lookup uses the product constants from `EntitlementsManager`, requests a fresh verified StoreKit proof on enrollment attempts, and retries if purchase information was unavailable at startup. Existing enrolled devices keep their saved mint credentials. Debug-only `BELL_PAID_TOKEN` remains the development override; no secret belongs in xcconfig or the plist.
+
+Relay owns queue retries; Tower forwards foreground/inactive and APNs endpoint events. Tower refresh retries concern received state only. Queue mutations do not fetch `/state`. Activation/background hints still reconcile received state; this does not promise background execution. Ask wire/authentication and notification presentation/receipt rules are unchanged.
+
+Cleanup removes acknowledged retired Bell records only when no unresolved Ask needs their credentials, along with their resolved submissions. Active Bell keys and unresolved operations are retained. Completed Ask history for still-active Bells is deliberately retained for idempotent choice recovery; it is not blindly trimmed.
