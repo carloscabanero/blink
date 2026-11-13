@@ -1,6 +1,9 @@
 import CryptoKit
 import Foundation
 import Security
+#if canImport(StoreKit)
+import StoreKit
+#endif
 
 // These synchronous methods only persist desired operations. Network I/O is
 // asynchronous and never blocks a menu, Terminal close, or the main thread.
@@ -24,7 +27,7 @@ extension MockBellRelay: BellRelayOperations {
 
     static func configured(defaults: UserDefaults = .standard, topic: String? = Bundle.main.bundleIdentifier) -> Configuration? {
       // Explicit debug/test configuration; never silently target production.
-      guard let address = defaults.string(forKey: "BellRelayURL"), let url = URL(string: address),
+      guard let address = (defaults.string(forKey: "BellRelayURL") ?? "https://bell.blink.sh") as String?, let url = URL(string: address),
             let topic = topic,
             url.scheme == "https" || (url.scheme == "http" && ["127.0.0.1", "localhost"].contains(url.host ?? "")),
             url.host != nil, url.user == nil, url.password == nil, url.query == nil, url.fragment == nil,
@@ -198,8 +201,20 @@ extension MockBellRelay: BellRelayOperations {
     guard !syncing else { return }; syncing = true; defer { syncing = false }
     guard let config = configuration else { throw Failure.configuration }
     if journal.mintKey == nil {
-      guard !config.paidToken.isEmpty else { throw Failure.credentials }
-      let response = try await request("POST", "/devices", json: ["paid_token": config.paidToken])
+      var paidToken = config.paidToken
+      #if canImport(StoreKit)
+      if paidToken.isEmpty, #available(iOS 15.0, macOS 12.0, *) {
+        for await entitlement in StoreKit.Transaction.currentEntitlements {
+          if case .verified(let transaction) = entitlement, transaction.revocationDate == nil,
+             transaction.expirationDate.map({ $0 > Date() }) ?? true {
+            paidToken = entitlement.jwsRepresentation
+            break
+          }
+        }
+      }
+      #endif
+      guard !paidToken.isEmpty else { throw Failure.credentials }
+      let response = try await request("POST", "/devices", json: ["paid_token": paidToken])
       guard let id = response["device_id"] as? String, let key = response["mint_key"] as? String else { throw Failure.invalidResponse }
       var value = journal; value.deviceID = id; value.mintKey = key; try save(value)
     }
@@ -219,7 +234,7 @@ extension MockBellRelay: BellRelayOperations {
               journal.records[i].revision == record.revision else { continue }
         var value = journal; value.records[i].pending = false; value.records[i].provisioned = !record.retired
         try save(value)
-      } catch Failure.response(404) {
+      } catch Failure.response(let code) where code == 404 || code == 410 {
         var value = journal
         if let i = value.records.firstIndex(where: { $0.bell.id == record.bell.id }) { value.records[i].expired = true; value.records[i].pending = false; try save(value) }
       } catch {
@@ -259,7 +274,7 @@ extension MockBellRelay: BellRelayOperations {
         guard let index = value.submissions?.firstIndex(where: { $0.askID == submission.askID && $0.bellID == submission.bellID }) else { continue }
         value.submissions![index].status = status == "accepted" && result["verdict"] as? String != submission.verdict ? "resolved_elsewhere" : status
         try save(value)
-      } catch Failure.response(404) {
+      } catch Failure.response(let code) where code == 404 || code == 410 {
         var value = journal
         if let index = value.submissions?.firstIndex(where: { $0.askID == submission.askID && $0.bellID == submission.bellID }) { value.submissions![index].status = "expired"; try save(value) }
       } catch { if firstError == nil { firstError = error } }
