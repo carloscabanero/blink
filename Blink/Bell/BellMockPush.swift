@@ -120,7 +120,7 @@ enum BellWireEnvelope {
       guard let fields = try JSONSerialization.jsonObject(with: clear) as? [String: Any] else { throw Invalid.envelope }
       readable = fields
     }
-    let title = readable["title"] as? String
+    let title = readable["title"] as? String ?? readable["ask_prompt"] as? String
     let body = readable["body"] as? String
     let status: BellMockPush.Status? = state != nil || progress != nil
       ? .init(title: title, body: body, state: state, progress: progress) : nil

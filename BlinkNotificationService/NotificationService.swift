@@ -79,6 +79,11 @@ final class NotificationService: UNNotificationServiceExtension {
       if let title = push.preparedTitle { content.title = title }
       if let body = push.preparedBody { content.body = body }
     }
+    if let envelope = original.userInfo["bell"] as? [String: Any], let ask = envelope["ask"] as? [String: Any] {
+      guard ask["kind"] as? String == "confirm", ask["ask_id"] as? String == envelope["id"] as? String, let expires = ask["expires_at"] as? Double,
+            expires > Date().timeIntervalSince1970 else { content.categoryIdentifier = ""; return content }
+      content.categoryIdentifier = "BELL_CONFIRM"
+    }
     content.targetContentIdentifier = binding.workURL.absoluteString
     return content
   }

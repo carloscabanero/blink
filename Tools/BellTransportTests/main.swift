@@ -5,6 +5,9 @@ final class FixtureProtocol: URLProtocol {
   static let lock = NSLock()
   static var paths: [String] = []
   static var failBind = false
+  static var failVerdict = false
+  static var verdictResult = "approve"
+  static var verdictStatus = "accepted"
   static var failedBindingID: String?
   static var state: [String: Any]?
   override class func canInit(with request: URLRequest) -> Bool { true }
@@ -17,6 +20,10 @@ final class FixtureProtocol: URLProtocol {
     var body: [String: Any] = [:]
     if path == "/devices" { body = ["device_id": "00000000-0000-0000-0000-000000000001", "mint_key": "fixture-mint"] }
     if path.hasSuffix("/bindings/self") && (Self.failBind || Self.failedBindingID.map { path.contains($0) } == true) { status = 503 }
+    if path.hasSuffix("/verdict") {
+      if Self.failVerdict { status = 503 }
+      else { body = ["status": Self.verdictStatus, "verdict": Self.verdictResult] }
+    }
     if path == "/state" { body = ["states": Self.state.map { [$0] } ?? [], "errors": []] }
     Self.lock.unlock()
     let response = HTTPURLResponse(url: request.url!, statusCode: status, httpVersion: "HTTP/1.1", headerFields: nil)!
@@ -112,6 +119,20 @@ func hexData(_ hex: String) -> Data {
     FixtureProtocol.failedBindingID = nil
     try await isolated.synchronize(apnsToken: Data([1]))
     require(!isolated.hasPendingOperations, "pending operation recovers")
-    print("18 live transport/configuration/recovery checks passed")
+    let askID = LiveBellRelay.url64(Data(repeating: 8, count: 16))
+    FixtureProtocol.failVerdict = true
+    do { _ = try await isolated.submitVerdict(bellID: good.id, askID: askID, verdict: "approve"); preconditionFailure("failed verdict accepted") }
+    catch LiveBellRelay.Failure.response(503) {}
+    let restarted = try LiveBellRelay(configuration: config, journalURL: directory.appendingPathComponent("isolation.json"), session: session)
+    require(restarted.hasPendingOperations, "Ask submission survives restart")
+    FixtureProtocol.failVerdict = false
+    FixtureProtocol.verdictResult = "deny"
+    let outcome = try await restarted.submitVerdict(bellID: good.id, askID: askID, verdict: "deny")
+    require(outcome == "resolved_elsewhere", "original saved choice not overwritten and competing result is truthful")
+    require(!restarted.hasPendingOperations, "resolved Ask is not retried")
+    FixtureProtocol.verdictStatus = "expired"
+    let expired = try await restarted.submitVerdict(bellID: good.id, askID: LiveBellRelay.url64(Data(repeating: 9,count:16)), verdict: "approve")
+    require(expired == "expired", "expired Ask remains expired")
+    print("22 live transport/configuration/recovery/Ask checks passed")
   }
 }

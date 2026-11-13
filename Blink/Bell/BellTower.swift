@@ -119,6 +119,17 @@ import UserNotifications
     }
   }
 
+  func answerAsk(bellID: UUID, askID: String, verdict: String) async {
+    guard let live = relay as? LiveBellRelay else { return }
+    do {
+      let status = try await live.submitVerdict(bellID: bellID, askID: askID, verdict: verdict)
+      Zuse.logger(.machine, "Bell").info("Ask result: \(status)")
+    } catch {
+      Zuse.logger(.machine, "Bell").error("Ask response retained for retry: \(error.localizedDescription)")
+      scheduleRetry()
+    }
+  }
+
   func updateAPNsToken(_ token: Data) {
     guard apnsToken != token else { return }
     let changed = apnsToken != nil

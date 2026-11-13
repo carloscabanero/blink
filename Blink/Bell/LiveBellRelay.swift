@@ -52,7 +52,15 @@ extension MockBellRelay: BellRelayOperations {
     var pending = true
     var level: Bell.ReceiveLevel?
   }
+  struct Submission: Codable {
+    let bellID: UUID
+    let askID: String
+    let verdict: String
+    let mac: String
+    var status = "submitting"
+  }
   struct Journal: Codable {
+    var submissions: [Submission]? = nil
     var relayOrigin: String?
     var deviceID: String?
     var mintKey: String?
@@ -83,7 +91,7 @@ extension MockBellRelay: BellRelayOperations {
   private let session: URLSession
   private var journal: Journal
   private var syncing = false
-  var hasPendingOperations: Bool { journal.records.contains { $0.ready && $0.pending && !$0.expired } }
+  var hasPendingOperations: Bool { journal.records.contains { $0.ready && $0.pending && !$0.expired } || journal.submissions?.contains { $0.status == "submitting" } == true }
   private(set) var lastError: String?
 
   init(configuration: Configuration?, journalURL: URL? = nil, session: URLSession? = nil) throws {
@@ -199,9 +207,11 @@ extension MockBellRelay: BellRelayOperations {
       _ = try await request("PUT", "/devices/\(device)/endpoint", json: ["apns_token": Self.hex(token),
         "apns_env": config.environment, "apns_topic": config.topic], endpointKey: true)
     }
+    var verdictError: Error?
+    do { try await flushVerdicts() } catch { verdictError = error }
     // Each immutable operation snapshot is acknowledged only if its revision
     // is still desired after the await; a close/unbind wins over stale replies.
-    var firstError: Error?
+    var firstError: Error? = verdictError
     for record in journal.records where record.ready && record.pending && !record.expired {
       do {
         try await execute(record, apnsToken: apnsToken)
@@ -221,6 +231,42 @@ extension MockBellRelay: BellRelayOperations {
     lastError = nil
   }
 
+  func submitVerdict(bellID: UUID, askID: String, verdict: String) async throws -> String {
+    guard ["approve", "deny"].contains(verdict), let id = BellWireEnvelope.bytes(askID), id.count == 16,
+          let record = journal.records.first(where: { $0.bell.id == bellID && !$0.retired }),
+          let secret = record.bell.contentSecret, let key = Data(base64Encoded: secret) else { throw Failure.credentials }
+    if journal.submissions?.contains(where: { $0.askID == askID && $0.bellID == bellID }) != true {
+      let bytes = Data(("verdict" + "\0" + askID + "\0" + verdict).utf8)
+      let mac = Data(HMAC<SHA256>.authenticationCode(for: bytes, using: SymmetricKey(data: key)))
+      var value = journal
+      if value.submissions == nil { value.submissions = [] }
+      value.submissions!.append(Submission(bellID: bellID, askID: askID, verdict: verdict, mac: Self.url64(mac)))
+      try save(value)
+    }
+    try await flushVerdicts()
+    return journal.submissions?.first(where: { $0.askID == askID && $0.bellID == bellID })?.status ?? "retryable_failure"
+  }
+
+  private func flushVerdicts() async throws {
+    var firstError: Error?
+    for submission in journal.submissions ?? [] where submission.status == "submitting" {
+      do {
+        guard let record = journal.records.first(where: { $0.bell.id == submission.bellID }) else { throw Failure.missingRecord }
+        let result = try await request("POST", "/bells/" + Self.wireID(submission.bellID) + "/asks/" + submission.askID + "/verdict",
+          json: ["verdict": submission.verdict, "mac": submission.mac], bell: record.bell)
+        guard let status = result["status"] as? String, ["accepted", "expired"].contains(status) else { throw Failure.invalidResponse }
+        var value = journal
+        guard let index = value.submissions?.firstIndex(where: { $0.askID == submission.askID && $0.bellID == submission.bellID }) else { continue }
+        value.submissions![index].status = status == "accepted" && result["verdict"] as? String != submission.verdict ? "resolved_elsewhere" : status
+        try save(value)
+      } catch Failure.response(404) {
+        var value = journal
+        if let index = value.submissions?.firstIndex(where: { $0.askID == submission.askID && $0.bellID == submission.bellID }) { value.submissions![index].status = "expired"; try save(value) }
+      } catch { if firstError == nil { firstError = error } }
+    }
+    if let error = firstError { throw error }
+  }
+
   private func execute(_ record: Record, apnsToken: Data?) async throws {
     let bell = record.bell; let id = Self.wireID(bell.id)
     if record.retired {
@@ -231,7 +277,7 @@ extension MockBellRelay: BellRelayOperations {
             let seed = Data(base64Encoded: bell.bellKey) else { throw Failure.credentials }
       let verifier = try Curve25519.Signing.PrivateKey(rawRepresentation: seed).publicKey.rawRepresentation.base64EncodedString()
       _ = try await request("POST", "/bells", json: ["bell_id": id, "token_hash": Self.hex(Data(SHA256.hash(data: tokenBytes))),
-        "verifier": verifier, "type": "plain", "policy": ["require_enc": true]])
+        "verifier": verifier, "type": "plain", "policy": ["require_enc": true, "ask_allowed": true]])
     }
     guard let device = journal.deviceID else { throw Failure.credentials }
     if let level = record.level {
