@@ -41,6 +41,8 @@ struct Bell: Codable, Equatable {
   let bellKey: String        // MANAGE; owner supplies it for relay changes
   let contentSecret: String? // READ; nil for the plaintext prototype
 
+  var senderValue: String { contentSecret.map { token + "." + $0 } ?? token }
+
   enum ReceiveLevel: String, Codable { case silent, loud }
 
   struct LocalBinding: Codable {
@@ -52,6 +54,7 @@ struct Bell: Codable, Equatable {
   }
 
   struct RelayBindingResponse: Equatable {
+    var pending = false
     let bellID: ID
     let endpointID: String
     let level: ReceiveLevel
@@ -85,8 +88,8 @@ struct Bell: Codable, Equatable {
 }
 
 extension Bell.Message {
-  init?(notificationContent content: UNNotificationContent) {
-    guard let push = BellMockPush.decode(content.userInfo), let id = push.messageID else { return nil }
+  init?(notificationContent content: UNNotificationContent, contentSecret: String? = nil) {
+    guard let push = BellMockPush.decode(content.userInfo, contentSecret: contentSecret), let id = push.messageID else { return nil }
     // Alert text comes from the content prepared by iOS/NSE, independently of work status.
     self.init(id: id, bellID: push.bellID, ring: true,
               title: content.title, body: content.body, status: push.status.map {

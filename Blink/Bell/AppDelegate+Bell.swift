@@ -82,7 +82,10 @@ extension AppDelegate {
 
   private func processBellNotificationStatus(_ notification: UNNotification) {
     guard notification.request.trigger is UNPushNotificationTrigger,
-          let message = Bell.Message(notificationContent: notification.request.content) else { return }
+          let id = BellWireEnvelope.bellID(notification.request.content.userInfo) ?? BellMockPush.decode(notification.request.content.userInfo)?.bellID,
+          let binding = try? BellTower.shared.localBinding(for: id),
+          binding.acceptsPlaintext || (notification.request.content.userInfo["bell"] as? [String: Any])?["enc"] as? Bool == true,
+          let message = Bell.Message(notificationContent: notification.request.content, contentSecret: binding.contentSecret) else { return }
     do {
       try BellTower.shared.receiveNotificationStatus(message)
     } catch {
