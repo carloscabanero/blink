@@ -1,0 +1,122 @@
+#!/usr/bin/env python3
+"""Show an image in the terminal with the kitty graphics protocol.
+
+Ported from Wink (GPL-3.0). Works in Blink and kitty, and inside tmux: there the image is uploaded through
+tmux's passthrough and shown with Unicode placeholder characters, which tmux
+treats as text, so it stays put when tmux redraws. Needs in ~/.tmux.conf:
+
+    set -g allow-passthrough on
+    set -as terminal-features ',xterm*:RGB'
+
+usage: blink-icat [--cols N] IMAGE...
+Formats other than PNG are converted with macOS's sips.
+"""
+import argparse, base64, fcntl, os, random, shutil, struct, subprocess, sys, tempfile, termios
+
+PLACEHOLDER = '\U0010EEEE'
+# Row/column diacritics (value = index), from kitty's rowcolumn-diacritics.txt.
+DIACRITICS = [chr(int(h, 16)) for h in '''
+    305 30d 30e 310 312 33d 33e 33f 346 34a 34b 34c 350 351 352 357 35b 363 364 365 366 367 368
+    369 36a 36b 36c 36d 36e 36f 483 484 485 486 487 592 593 594 595 597 598 599 59c 59d 59e 59f
+    5a0 5a1 5a8 5a9 5ab 5ac 5af 5c4 610 611 612 613 614 615 616 617 657 658 659 65a 65b 65d 65e
+    6d6 6d7 6d8 6d9 6da 6db 6dc 6df 6e0 6e1 6e2 6e4 6e7 6e8 6eb 6ec 730 732 733 735 736 73a 73d
+    73f 740 741 743 745 747 749 74a 7eb 7ec 7ed 7ee 7ef 7f0 7f1 7f3 816 817 818 819 81b 81c 81d
+    81e 81f 820 821 822 823 825 826 827 829 82a 82b 82c 82d 951 953 954 f82 f83 f86 f87 135d
+    135e 135f 17dd 193a 1a17 1a75 1a76 1a77 1a78 1a79 1a7a 1a7b 1a7c 1b6b 1b6d 1b6e 1b6f 1b70
+    1b71 1b72 1b73 1cd0 1cd1 1cd2 1cda 1cdb 1ce0 1dc0 1dc1 1dc3 1dc4 1dc5 1dc6 1dc7 1dc8 1dc9
+    1dcb 1dcc 1dd1 1dd2 1dd3 1dd4 1dd5 1dd6 1dd7 1dd8 1dd9 1dda 1ddb 1ddc 1ddd 1dde 1ddf 1de0
+    1de1 1de2 1de3 1de4 1de5 1de6 1dfe 20d0 20d1 20d4 20d5 20d6 20d7 20db 20dc 20e1 20e7 20e9
+    20f0 2cef 2cf0 2cf1 2de0 2de1 2de2 2de3 2de4 2de5 2de6 2de7 2de8 2de9 2dea 2deb 2dec 2ded
+    2dee 2def 2df0 2df1 2df2 2df3 2df4 2df5 2df6 2df7 2df8 2df9 2dfa 2dfb 2dfc 2dfd 2dfe 2dff
+    a66f a67c a67d a6f0 a6f1 a8e0 a8e1 a8e2 a8e3 a8e4 a8e5 a8e6 a8e7 a8e8 a8e9 a8ea a8eb a8ec
+    a8ed a8ee a8ef a8f0 a8f1 aab0 aab2 aab3 aab7 aab8 aabe aabf aac1 fe20 fe21 fe22 fe23 fe24
+    fe25 fe26 10a0f 10a38 1d185 1d186 1d187 1d188 1d189 1d1aa 1d1ab 1d1ac 1d1ad 1d242 1d243
+    1d244
+'''.split()]
+
+
+def png_bytes(path):
+    with open(path, 'rb') as f:
+        data = f.read()
+    if data.startswith(b'\x89PNG\r\n\x1a\n'):
+        return data
+    with tempfile.TemporaryDirectory() as tmp:
+        out = os.path.join(tmp, 'image.png')
+        r = subprocess.run(['sips', '-s', 'format', 'png', path, '--out', out], capture_output=True)
+        if r.returncode != 0 or not os.path.exists(out):
+            sys.exit(f'blink-icat: cannot read {path} as an image')
+        with open(out, 'rb') as f:
+            return f.read()
+
+
+def png_size(data):
+    return struct.unpack('>II', data[16:24])  # IHDR width, height
+
+
+def terminal_cells():
+    """(columns, cell width px, cell height px) of the terminal we draw in."""
+    cols = shutil.get_terminal_size((80, 24)).columns
+    if os.environ.get('TMUX'):
+        out = subprocess.run(['tmux', 'display', '-p', '#{pane_width} #{client_cell_width} #{client_cell_height}'],
+                             capture_output=True, text=True).stdout.split()
+        if len(out) == 3 and all(x.isdigit() and int(x) > 0 for x in out):
+            return int(out[0]), int(out[1]), int(out[2])
+    try:
+        rows, ncols, xpx, ypx = struct.unpack('HHHH', fcntl.ioctl(sys.stdout, termios.TIOCGWINSZ, b'\0' * 8))
+        if xpx and ypx and ncols and rows:
+            return ncols, xpx / ncols, ypx / rows
+    except OSError:
+        pass
+    return cols, 8, 16  # unknown: assume a common cell size
+
+
+def emit(seq, tmux):
+    if tmux:  # tmux passthrough: wrap, doubling the inner escapes
+        seq = '\x1bPtmux;' + seq.replace('\x1b', '\x1b\x1b') + '\x1b\\'
+    sys.stdout.write(seq)
+
+
+def upload(data, keys, tmux):
+    """Send PNG data in base64 chunks of 4096 bytes, kitty style."""
+    payload = base64.b64encode(data).decode()
+    chunks = [payload[i:i + 4096] for i in range(0, len(payload), 4096)] or ['']
+    for n, chunk in enumerate(chunks):
+        more = 1 if n < len(chunks) - 1 else 0
+        emit(f'\x1b_G{keys + "," if n == 0 else ""}m={more};{chunk}\x1b\\', tmux)
+
+
+def show(path, max_cols):
+    data = png_bytes(path)
+    width, height = png_size(data)
+    term_cols, cell_w, cell_h = terminal_cells()
+    cols = min(max(1, -(-width // int(cell_w))), term_cols, max_cols or term_cols)
+    rows = max(1, round(height * (cols * cell_w / width) / cell_h))
+    if cols > len(DIACRITICS) or rows > len(DIACRITICS):
+        sys.exit('blink-icat: image too large for placeholders; use --cols')
+
+    if os.environ.get('TMUX'):
+        # Upload invisibly with a virtual placement, then print placeholders whose
+        # foreground color (24-bit) is the image id.
+        image_id = random.randint(1, 0xFFFFFF)
+        upload(data, f'a=T,U=1,f=100,q=2,i={image_id},c={cols},r={rows}', tmux=True)
+        r, g, b = image_id >> 16, (image_id >> 8) & 0xFF, image_id & 0xFF
+        for row in range(rows):
+            cells = ''.join(PLACEHOLDER + DIACRITICS[row] + DIACRITICS[col] for col in range(cols))
+            sys.stdout.write(f'\x1b[38;2;{r};{g};{b}m{cells}\x1b[39m\n')
+    else:
+        upload(data, f'a=T,f=100,q=2,c={cols}', tmux=False)
+        sys.stdout.write('\n')
+    sys.stdout.flush()
+
+
+def main():
+    parser = argparse.ArgumentParser(description='Show images with the kitty graphics protocol (works in tmux).')
+    parser.add_argument('--cols', type=int, default=0, help='maximum width in terminal columns')
+    parser.add_argument('images', nargs='+')
+    args = parser.parse_args()
+    for path in args.images:
+        show(path, args.cols)
+
+
+if __name__ == '__main__':
+    main()

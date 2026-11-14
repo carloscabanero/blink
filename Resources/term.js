@@ -131,6 +131,8 @@ function term_setup(accessibilityEnabled) {
     document.body.style.backgroundColor =
       t.scrollPort_.screen_.style.backgroundColor;
     var bgColor = _colorComponents(t.scrollPort_.screen_.style.backgroundColor);
+
+    window.installKittyGraphics(t);
     
     t.keyboard.characterEncoding = 'raw'; // we are UTF8. Fix for #507
     t.uninstallKeyboard();
