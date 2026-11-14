@@ -7,6 +7,8 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		B01700000000000000000001 /* kitty.js in Resources */ = {isa = PBXBuildFile; fileRef = B01700000000000000000003; };
+		B01700000000000000000002 /* kitty-integration.js in Resources */ = {isa = PBXBuildFile; fileRef = B01700000000000000000004; };
 		0716B5721CFFAB9300268B5B /* AppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = 0716B52A1CFFAB9300268B5B /* AppDelegate.m */; };
 		0716B5741CFFAB9300268B5B /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 0716B52C1CFFAB9300268B5B /* LaunchScreen.storyboard */; };
 		0732F04D1D062B9A00AB5438 /* locales.bundle in Resources */ = {isa = PBXBuildFile; fileRef = 0732F04A1D062B9A00AB5438 /* locales.bundle */; };
@@ -782,6 +784,8 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		B01700000000000000000003 = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; path = kitty.js; sourceTree = "<group>"; };
+		B01700000000000000000004 = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; path = "kitty-integration.js"; sourceTree = "<group>"; };
 		0716B5291CFFAB9300268B5B /* AppDelegate.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AppDelegate.h; sourceTree = "<group>"; };
 		0716B52A1CFFAB9300268B5B /* AppDelegate.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = AppDelegate.m; sourceTree = "<group>"; };
 		0716B52D1CFFAB9300268B5B /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/LaunchScreen.storyboard; sourceTree = "<group>"; };
@@ -1570,6 +1574,8 @@
 				85A34303200A837A009324F1 /* webfontloader.js */,
 				0732F04B1D062B9A00AB5438 /* term.html */,
 				D2496F402003941B00E75FE9 /* term.js */,
+				B01700000000000000000003,
+				B01700000000000000000004,
 				85A34308200A8FAF009324F1 /* term.css */,
 				D2496F3B20038B3300E75FE9 /* hterm_all.min.js */,
 				D29392B62004D785001FB2AA /* hterm_all.patches.js */,
@@ -3305,6 +3311,8 @@
 				D2C21F3920FCD7B800F125E0 /* blinkCommandsDictionary.plist in Resources */,
 				D266A9DA27295ECE00C85EED /* blink-uio.min.js in Resources */,
 				D2496F412003941B00E75FE9 /* term.js in Resources */,
+				B01700000000000000000001,
+				B01700000000000000000002,
 				D21A3FE621943BE200269705 /* dark-spotlight-iphone-40pt@3x.png in Resources */,
 				D21A3FDA21943BE200269705 /* dark-app-iphone-60pt@2x.png in Resources */,
 				D21A3FDC21943BE200269705 /* dark-app-iphone-60pt@3x.png in Resources */,
