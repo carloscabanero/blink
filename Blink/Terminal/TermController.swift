@@ -363,13 +363,14 @@ extension TermController {
   func createBell(name: String) throws -> Bell {
     if let bell = bell { return bell }
     guard let payload = _sessionPayload else { throw BellError.missingPayload }
-    let bell = try bellTower.createBell(name: name)
+    let bell = try bellTower.createBell(name: name, ownerID: meta.key)
     payload.bell = bell
     // NOTE: A crash before suspension can lose this Bell's owner association.
     // In the future, persist Bell ownership before binding, independently of session suspension.
     _observeBell()
     try bindBell(level: .loud) // explicit prototype creation policy
 
+    #if DEBUG
     let log = Zuse.logger(.machine, "Bell")
     log.info("CLI push: BELL_ID='\(bell.id.uuidString)'")
     log.info("CLI push: BLINK_BUNDLE_ID='\(Bundle.main.bundleIdentifier ?? "unknown")'")
@@ -379,6 +380,7 @@ extension TermController {
     } else {
       log.info("CLI push: APNs registration pending; APNS_DEVICE_TOKEN will be logged when received")
     }
+    #endif
     return bell
   }
 

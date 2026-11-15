@@ -2,6 +2,9 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
+    <key>BELL_RELAY_URL</key><string>$(BELL_RELAY_URL)</string>
+    <key>BELL_RELAY_ENABLED</key><string>$(BELL_RELAY_ENABLED)</string>
+    <key>BELL_APNS_ENVIRONMENT</key><string>$(BELL_APNS_ENVIRONMENT)</string>
 	<key>BLINK_BELL_APP_GROUP</key>
 	<string>group.$(GROUP_ID)</string>
 	<key>BLINK_APP_FONT</key>

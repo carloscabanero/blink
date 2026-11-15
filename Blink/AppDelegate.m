@@ -298,6 +298,7 @@ configurationForConnectingSceneSession:(UISceneSession *)connectingSceneSession
 
 - (void)userNotificationCenter:(UNUserNotificationCenter *)center didReceiveNotificationResponse:(UNNotificationResponse *)response withCompletionHandler:(void (^)(void))completionHandler {
   dispatch_async(dispatch_get_main_queue(), ^{
+    if ([self handleBellAction:response completionHandler:completionHandler]) { return; }
     [self routeNotificationResponse:response];
     completionHandler();
   });

@@ -30,6 +30,11 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 import UIKit
+import Combine
+
+private final class BellTokenAlert: UIAlertController {
+  var operationObservation: AnyCancellable?
+}
 
 extension TermController {
   // Rebuilt by BlinkMenu's uncached provider; reads the persisted local binding.
@@ -43,7 +48,7 @@ extension TermController {
             let name = self.title.flatMap { $0.isEmpty ? nil : $0 } ?? self.meta.key.uuidString
             let bell = try self.createBell(name: name)
             let granted = try await BellTower.shared.requestNotificationPermission()
-            self.showBellToken(bell.token, alertsAvailable: granted)
+            self.showBellToken(bell.senderValue, alertsAvailable: granted)
           } catch { self.showBellError(error) }
         }
       }]
@@ -60,7 +65,7 @@ extension TermController {
       Zuse.logger(.machine, "Bell").error("Could not read Bell binding: \(error.localizedDescription)")
     }
     let copy = UIAction(title: "Copy Token", image: UIImage(systemName: "doc.on.doc")) { [weak self] _ in
-      guard let token = self?.bell?.token else { return }
+      guard let token = self?.bell?.senderValue else { return }
       UIPasteboard.general.string = token
     }
     let levels: [(String, Bell.ReceiveLevel?)] = [("Off", nil), ("Silent", .silent), ("Loud", .loud)]
@@ -87,6 +92,11 @@ extension TermController {
     })
 
     var elements: [UIMenuElement] = [copy, receive]
+    if let bell = bell {
+      elements.append(UIAction(title: "Relay Status", image: UIImage(systemName: "network")) { [weak self] _ in
+        self?.showBellToken(bell.senderValue, alertsAvailable: true)
+      })
+    }
     if let state = bellState {
       let summary = [state.title, state.state?.rawValue, state.progress.map { "\($0)%" }]
         .compactMap { $0 }.filter { !$0.isEmpty }.joined(separator: " · ")
@@ -98,8 +108,13 @@ extension TermController {
 
   private func showBellToken(_ token: String, alertsAvailable: Bool) {
     let permission = alertsAvailable ? "" : "\n\nAlerts are disabled. Enable notifications for Blink in Settings."
-    let alert = UIAlertController(title: "Bell Token",
-      message: "This prototype token is for testing in Blink.\n\n\(token)\(permission)", preferredStyle: .alert)
+    let alert = BellTokenAlert(title: "Bell Token",
+      message: "Relay registration may still be pending. The token works once the Relay accepts the Bell.\n\n\(token)\(permission)", preferredStyle: .alert)
+    if let bell = bell {
+      alert.operationObservation = BellTower.shared.operationStatus(for: bell.id).sink { [weak alert] status in
+        alert?.message = "\(status.description)\n\n\(token)\(permission)"
+      }
+    }
     alert.addAction(UIAlertAction(title: "Copy", style: .default) { _ in UIPasteboard.general.string = token })
     alert.addAction(UIAlertAction(title: "Done", style: .cancel))
     guard viewIfLoaded?.window != nil, presentedViewController == nil else { return }

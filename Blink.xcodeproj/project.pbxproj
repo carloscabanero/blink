@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+ A02B462A5D384777A0000001 /* LiveBellRelay.swift in Sources */ = {isa = PBXBuildFile; fileRef = A02B462A5D384777A0000002 /* LiveBellRelay.swift */; };
 		0716B5721CFFAB9300268B5B /* AppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = 0716B52A1CFFAB9300268B5B /* AppDelegate.m */; };
 		0716B5741CFFAB9300268B5B /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 0716B52C1CFFAB9300268B5B /* LaunchScreen.storyboard */; };
 		0732F04D1D062B9A00AB5438 /* locales.bundle in Resources */ = {isa = PBXBuildFile; fileRef = 0732F04A1D062B9A00AB5438 /* locales.bundle */; };
@@ -782,6 +783,7 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+ A02B462A5D384777A0000002 /* LiveBellRelay.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiveBellRelay.swift; sourceTree = "<group>"; };
 		0716B5291CFFAB9300268B5B /* AppDelegate.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AppDelegate.h; sourceTree = "<group>"; };
 		0716B52A1CFFAB9300268B5B /* AppDelegate.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = AppDelegate.m; sourceTree = "<group>"; };
 		0716B52D1CFFAB9300268B5B /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/LaunchScreen.storyboard; sourceTree = "<group>"; };
@@ -2525,6 +2527,7 @@
 				B31100010000000000000001 /* Bell.swift */,
 				B31700000000000000000003 /* BellBindingStore.swift */,
 				B31700000000000000000004 /* BellMockPush.swift */,
+ A02B462A5D384777A0000002 /* LiveBellRelay.swift */,
 				B31100010000000000000002 /* BellTower.swift */,
 				B31100010000000000000003 /* TerminalBellMenu.swift */,
 				B31100010000000000000005 /* AppDelegate+Bell.swift */,
@@ -3658,6 +3661,7 @@
 				B31700000000000000000065 /* WorkURL.swift in Sources */,
 				B31700000000000000000067 /* BellBindingStore.swift in Sources */,
 				B31700000000000000000068 /* BellMockPush.swift in Sources */,
+ A02B462A5D384777A0000001 /* LiveBellRelay.swift in Sources */,
 				BD2C754E2D75FA85007BFE77 /* Walkthrough.swift in Sources */,
 				D241CBD523040734003D64A5 /* KBKey.swift in Sources */,
 				D215AC30233521B600E164C3 /* WKWebView.swift in Sources */,
