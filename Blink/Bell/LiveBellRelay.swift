@@ -91,7 +91,7 @@ extension MockBellRelay: BellRelayOperations {
       switch self {
       case .configuration: return "Relay configuration is invalid or differs from this installation's saved Relay origin."
       case .localCredentials: return "Saved Bell credentials are invalid or unavailable. Enrollment tokens cannot repair a Bell's local keys."
-      case .missingEnrollment: return "No eligible paid entitlement or enrollment token is available. Restore an eligible purchase, or set BELL_PAID_TOKEN in Xcode Run environment variables for a development Relay."
+      case .missingEnrollment: return "Blink Bell requires an active Blink purchase or an eligible TestFlight install. If you already paid, restore your purchases."
       case .missingAPNsToken: return "Waiting for an APNs device token. Launch on a push-enabled signed device and check APNs registration. Bell binding remains pending."
       case .missingDevice: return "Relay device enrollment is incomplete: the saved device ID is missing."
       case .randomGeneration: return "The system could not generate secure Bell credentials."

@@ -41,13 +41,19 @@ import StoreKit
     #endif
     let products: Set<String> = [ProductBlinkPlusID, ProductBlinkShellPlusID,
                                  ProductBlinkBuildBasicID, ProductBlinkPlusBuildBasicID]
-    if #available(iOS 15.0, *) {
-      for await entitlement in StoreKit.Transaction.currentEntitlements {
-        if case .verified(let transaction) = entitlement, products.contains(transaction.productID),
-           transaction.revocationDate == nil, transaction.expirationDate.map({ $0 > Date() }) ?? true {
-          return entitlement.jwsRepresentation
-        }
+    for await entitlement in StoreKit.Transaction.currentEntitlements {
+      if case .verified(let transaction) = entitlement, products.contains(transaction.productID),
+         transaction.environment == .production, transaction.revocationDate == nil,
+         transaction.expirationDate.map({ $0 > Date() }) ?? true {
+        return entitlement.jwsRepresentation
       }
+    }
+    // TestFlight and App Store can distribute the same binary. Use Apple's
+    // signed install environment rather than a build flag or receipt filename.
+    if let installation = try? await AppTransaction.shared,
+       case .verified(let app) = installation, app.environment == .sandbox,
+       !app.appTransactionID.isEmpty {
+      return installation.jwsRepresentation
     }
     throw LiveBellRelay.Failure.missingEnrollment
   }
