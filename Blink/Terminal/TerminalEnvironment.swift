@@ -137,6 +137,7 @@ enum TerminalEnvironment {
       return
     }
     addCommandList(listPath)
+    PluginCommands.shared.refresh()
   }
 
   private static func _setupProcessEnv() {

@@ -3,17 +3,28 @@ import SwiftUI
 @MainActor
 struct PluginAppsView: View {
   @State private var packages: [PluginPackage] = []
-  @State private var activeApp: AppSelection?
   @State private var review: Review?
   @State private var showingURL = false
   @State private var input = ""
   @State private var downloading = false
   @State private var notice: Notice?
 
-  private static let root = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0]
-    .appendingPathComponent("PortableApps", isDirectory: true)
-  private static let installed = root.appendingPathComponent("Plugins", isDirectory: true)
-  private static let bundled = Bundle.main.resourceURL?.appendingPathComponent("Plugins", isDirectory: true)
+  private static let root = PluginLibrary.root
+  private static let installed = PluginLibrary.installed
+  private static let bundled = PluginLibrary.bundled
+
+  /// Apps offered by default under Available until they're installed.
+  private struct Featured {
+    let id, name, summary, repository: String
+    /// Why Blink can't run it yet; nil when it can.
+    let unavailable: String?
+  }
+
+  private static let featured = [
+    Featured(id: "org.blink.database", name: "Database Workbench",
+             summary: "MySQL and MariaDB client: browse, edit, run SQL, SSH through your hosts.",
+             repository: "https://github.com/myneid/wink-database", unavailable: nil),
+  ]
 
   var body: some View {
     List {
@@ -28,17 +39,43 @@ struct PluginAppsView: View {
       Section("Apps") {
         ForEach(packages, id: \.manifest.id) { package in
           Button {
-            activeApp = AppSelection(package: package)
+            open(package)
           } label: {
-            Text(package.manifest.name)
+            VStack(alignment: .leading, spacing: 2) {
+              Text(package.manifest.name)
+              let commands = PluginCommands.shared.commands(of: package.manifest.id)
+              Text(commands.isEmpty ? "Opens in a new tab" : "Opens in a new tab · command: " + commands.joined(separator: ", "))
+                .font(.caption).foregroundColor(.secondary)
+            }
           }
           .contextMenu {
+            Button("Open in New Tab") { open(package) }
             if let source = sourceReceipt(for: package),
                let link = source["repository"], let url = URL(string: link) {
               Link("Open GitHub", destination: url)
               Button("Check for Update") { fetchUpdate(package, receipt: source) }
                 .disabled(downloading)
             }
+          }
+        }
+      }
+      let available = Self.featured.filter { item in !packages.contains { $0.manifest.id == item.id } }
+      if !available.isEmpty {
+        Section(header: Text("Available"), footer: Text("Apps are downloaded from GitHub for review before anything is installed.")) {
+          ForEach(available, id: \.id) { item in
+            Button {
+              download(item.repository)
+            } label: {
+              VStack(alignment: .leading, spacing: 2) {
+                HStack {
+                  Text(item.name)
+                  Spacer()
+                  Text(item.unavailable == nil ? "Install…" : "Wink only").font(.caption).foregroundColor(.secondary)
+                }
+                Text(item.unavailable ?? item.summary).font(.caption).foregroundColor(.secondary)
+              }
+            }
+            .disabled(downloading || item.unavailable != nil)
           }
         }
       }
@@ -64,7 +101,15 @@ struct PluginAppsView: View {
             Text(review.prepared.package.manifest.name)
             Text(review.prepared.package.manifest.id)
             Text("Version: " + review.prepared.package.manifest.version)
-            Text("Permissions: " + (review.prepared.package.manifest.permissions.first ?? "None"))
+            Text("Permissions: " + (review.prepared.package.manifest.permissions.isEmpty ? "None" : review.prepared.package.manifest.permissions.joined(separator: ", ")))
+            if let commands = review.prepared.package.manifest.commands, !commands.isEmpty {
+              Text("Commands: " + commands.joined(separator: ", "))
+            }
+          }
+          if !review.conflicts.isEmpty {
+            Section(header: Text("Can't Install"), footer: Text("Another app or Blink already uses these command names.")) {
+              ForEach(review.conflicts, id: \.self) { Text($0).foregroundColor(.red) }
+            }
           }
           Section("Source") {
             Text(review.prepared.source.repositoryURL)
@@ -78,31 +123,27 @@ struct PluginAppsView: View {
           }
           ToolbarItem(placement: .confirmationAction) {
             Button(review.current == nil ? "Install" : "Update") { install(review) }
+              .disabled(!review.conflicts.isEmpty)
           }
         }
-      }
-      .navigationViewStyle(.stack)
-    }
-    .sheet(item: $activeApp) { selection in
-      NavigationView {
-        PluginWebView(package: selection.package)
-          .navigationTitle(selection.package.manifest.name)
-          .navigationBarTitleDisplayMode(.inline)
-          .toolbar {
-            ToolbarItem(placement: .confirmationAction) {
-              Button("Done") { activeApp = nil }
-            }
-          }
       }
       .navigationViewStyle(.stack)
     }
   }
 
   private func reload() {
-    let all = loadPackages(from: Self.bundled) + loadPackages(from: Self.installed)
-    var ids = Set<String>()
-    packages = all.filter { ids.insert($0.manifest.id).inserted }
+    PluginCommands.shared.refresh()
+    packages = PluginLibrary.all()
       .sorted { $0.manifest.name.localizedStandardCompare($1.manifest.name) == .orderedAscending }
+  }
+
+  /// Full screen in a new Blink tab.
+  private func open(_ package: PluginPackage) {
+    guard let space = PluginCommands.activeSpace else {
+      notice = Notice(title: "Can't Open App", message: "Open a Blink window first.")
+      return
+    }
+    space.openPluginApp(package.manifest.id)
   }
 
   private func loadPackages(from folder: URL?) -> [PluginPackage] {
@@ -142,7 +183,8 @@ struct PluginAppsView: View {
             return
           }
         }
-        review = Review(prepared: prepared, current: current, receipt: receipt)
+        review = Review(prepared: prepared, current: current, receipt: receipt,
+                        conflicts: PluginCommands.shared.conflicts(for: prepared.package))
       } catch {
         notice = Notice(title: "Download Failed", message: error.localizedDescription)
       }
@@ -172,11 +214,7 @@ struct PluginAppsView: View {
     let prepared: PreparedPlugin
     let current: PluginPackage?
     let receipt: [String: String]
-  }
-
-  private struct AppSelection: Identifiable {
-    let package: PluginPackage
-    var id: String { package.manifest.id }
+    let conflicts: [String]
   }
 
   private struct Notice: Identifiable {

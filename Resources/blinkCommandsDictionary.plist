@@ -2,14 +2,119 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
-	<key>skstore</key>
+	<key>apps</key>
 	<array>
 		<string>MAIN</string>
-		<string>skstore_main</string>
+		<string>apps_main</string>
+		<string></string>
+		<string>no</string>
+	</array>
+	<key>bench</key>
+	<array>
+		<string>MAIN</string>
+		<string>bench_main</string>
+		<string></string>
+		<string>no</string>
+	</array>
+	<key>browse</key>
+	<array>
+		<string>MAIN</string>
+		<string>browse_main</string>
+		<string></string>
+		<string>no</string>
+	</array>
+	<key>build</key>
+	<array>
+		<string>MAIN</string>
+		<string>build_main</string>
+		<string></string>
+		<string>no</string>
+	</array>
+	<key>clear</key>
+	<array>
+		<string>MAIN</string>
+		<string>clear_main</string>
+		<string></string>
+		<string>no</string>
+	</array>
+	<key>code</key>
+	<array>
+		<string>MAIN</string>
+		<string>code_main</string>
+		<string></string>
+		<string>no</string>
+	</array>
+	<key>config</key>
+	<array>
+		<string>MAIN</string>
+		<string>config_main</string>
+		<string></string>
+		<string>no</string>
+	</array>
+	<key>device-info</key>
+	<array>
+		<string>MAIN</string>
+		<string>device_info_main</string>
+		<string></string>
+		<string>no</string>
+	</array>
+	<key>facecam</key>
+	<array>
+		<string>MAIN</string>
+		<string>facecam_main</string>
 		<string></string>
 		<string>no</string>
 	</array>
 	<key>fcp</key>
+	<array>
+		<string>MAIN</string>
+		<string>copyfiles_main</string>
+		<string></string>
+		<string>no</string>
+	</array>
+	<key>geo</key>
+	<array>
+		<string>MAIN</string>
+		<string>geo_main</string>
+		<string></string>
+		<string>no</string>
+	</array>
+	<key>help</key>
+	<array>
+		<string>MAIN</string>
+		<string>help_main</string>
+		<string></string>
+		<string>no</string>
+	</array>
+	<key>history</key>
+	<array>
+		<string>MAIN</string>
+		<string>history_main</string>
+		<string>c</string>
+		<string>no</string>
+	</array>
+	<key>open</key>
+	<array>
+		<string>MAIN</string>
+		<string>open_main</string>
+		<string></string>
+		<string>file</string>
+	</array>
+	<key>openurl</key>
+	<array>
+		<string>MAIN</string>
+		<string>blink_openurl_main</string>
+		<string></string>
+		<string>no</string>
+	</array>
+	<key>say</key>
+	<array>
+		<string>MAIN</string>
+		<string>say_main</string>
+		<string>f:v:r:</string>
+		<string>no</string>
+	</array>
+	<key>scp</key>
 	<array>
 		<string>MAIN</string>
 		<string>copyfiles_main</string>
@@ -23,10 +128,17 @@
 		<string></string>
 		<string>no</string>
 	</array>
-	<key>scp</key>
+	<key>showkey</key>
 	<array>
 		<string>MAIN</string>
-		<string>copyfiles_main</string>
+		<string>showkey_main</string>
+		<string></string>
+		<string>no</string>
+	</array>
+	<key>skstore</key>
+	<array>
+		<string>MAIN</string>
+		<string>skstore_main</string>
 		<string></string>
 		<string>no</string>
 	</array>
@@ -37,24 +149,17 @@
 		<string>axR:L:Vo:CGp:i:hqTtvl:F:</string>
 		<string>no</string>
 	</array>
-	<key>build</key>
-	<array>
-		<string>MAIN</string>
-		<string>build_main</string>
-		<string></string>
-		<string>no</string>
-	</array>
-	<key>facecam</key>
-	<array>
-		<string>MAIN</string>
-		<string>facecam_main</string>
-		<string></string>
-		<string>no</string>
-	</array>
 	<key>ssh-add</key>
 	<array>
 		<string>MAIN</string>
 		<string>blink_ssh_add</string>
+		<string>axR:L:Vo:CGp:i:hqTtvl:F:</string>
+		<string>no</string>
+	</array>
+	<key>ssh-agent</key>
+	<array>
+		<string>MAIN</string>
+		<string>ssh_agent_main</string>
 		<string>axR:L:Vo:CGp:i:hqTtvl:F:</string>
 		<string>no</string>
 	</array>
@@ -65,83 +170,6 @@
 		<string>v</string>
 		<string>no</string>
 	</array>
-	<key>ssh-agent</key>
-	<array>
-		<string>MAIN</string>
-		<string>ssh_agent_main</string>
-		<string>axR:L:Vo:CGp:i:hqTtvl:F:</string>
-		<string>no</string>
-	</array>
-	<key>help</key>
-	<array>
-		<string>MAIN</string>
-		<string>help_main</string>
-		<string></string>
-		<string>no</string>
-	</array>
-	<key>device-info</key>
-	<array>
-		<string>MAIN</string>
-		<string>device_info_main</string>
-		<string></string>
-		<string>no</string>
-	</array>
-	<key>config</key>
-	<array>
-		<string>MAIN</string>
-		<string>config_main</string>
-		<string></string>
-		<string>no</string>
-	</array>
-	<key>whatsnew</key>
-	<array>
-		<string>MAIN</string>
-		<string>whatsnew_main</string>
-		<string></string>
-		<string>no</string>
-	</array>
-	<key>clear</key>
-	<array>
-		<string>MAIN</string>
-		<string>clear_main</string>
-		<string></string>
-		<string>no</string>
-	</array>
-	<key>showkey</key>
-	<array>
-		<string>MAIN</string>
-		<string>showkey_main</string>
-		<string></string>
-		<string>no</string>
-	</array>
-	<key>history</key>
-	<array>
-		<string>MAIN</string>
-		<string>history_main</string>
-		<string>c</string>
-		<string>no</string>
-	</array>
-	<key>geo</key>
-	<array>
-		<string>MAIN</string>
-		<string>geo_main</string>
-		<string></string>
-		<string>no</string>
-	</array>
-	<key>bench</key>
-	<array>
-		<string>MAIN</string>
-		<string>bench_main</string>
-		<string></string>
-		<string>no</string>
-	</array>
-	<key>open</key>
-	<array>
-		<string>MAIN</string>
-		<string>open_main</string>
-		<string></string>
-		<string>file</string>
-	</array>
 	<key>udptunnel</key>
 	<array>
 		<string>MAIN</string>
@@ -149,31 +177,10 @@
 		<string></string>
 		<string>no</string>
 	</array>
-	<key>say</key>
+	<key>whatsnew</key>
 	<array>
 		<string>MAIN</string>
-		<string>say_main</string>
-		<string>f:v:r:</string>
-		<string>no</string>
-	</array>
-	<key>openurl</key>
-	<array>
-		<string>MAIN</string>
-		<string>blink_openurl_main</string>
-		<string></string>
-		<string>no</string>
-	</array>
-	<key>code</key>
-	<array>
-		<string>MAIN</string>
-		<string>code_main</string>
-		<string></string>
-		<string>no</string>
-	</array>
-	<key>browse</key>
-	<array>
-		<string>MAIN</string>
-		<string>browse_main</string>
+		<string>whatsnew_main</string>
 		<string></string>
 		<string>no</string>
 	</array>

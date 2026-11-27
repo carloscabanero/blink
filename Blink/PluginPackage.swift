@@ -8,6 +8,8 @@ struct PluginManifest: Decodable {
   let version: String
   let entry: String
   let permissions: [String]
+  /// Shell commands that open the app (Blink). Optional.
+  let commands: [String]?
 }
 
 struct PluginPackage {
@@ -26,6 +28,11 @@ struct PluginPackage {
           !manifest.name.isEmpty, manifest.name.count <= 100, !manifest.version.isEmpty,
           Set(manifest.permissions).isSubset(of: ["storage", "database", "spotify"]),
           manifest.entry.hasSuffix(".html") else { throw Failure.invalid("Unsupported manifest") }
+    let commands = manifest.commands ?? []
+    guard commands.count <= 4, Set(commands).count == commands.count,
+          commands.allSatisfy({ $0.range(of: "^[a-z][a-z0-9-]{1,31}$", options: .regularExpression) != nil }) else {
+      throw Failure.invalid("Commands must be 2–32 lowercase letters, digits or dashes, at most four")
+    }
     _ = try asset(manifest.entry)
   }
 

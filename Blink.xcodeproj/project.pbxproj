@@ -383,6 +383,11 @@
 		CC28B0084D1713A7015F0103 /* PluginWebView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC28B0084D1713A7015F0003 /* PluginWebView.swift */; };
 		CC28B0084D1713A7015F0110 /* SpotifyService.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC28B0084D1713A7015F0010 /* SpotifyService.swift */; };
 		CC28B0084D1713A7015F0104 /* PluginAppsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC28B0084D1713A7015F0004 /* PluginAppsView.swift */; };
+		CC28B0084D1713A7015F0106 /* PluginDatabase.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC28B0084D1713A7015F0006 /* PluginDatabase.swift */; };
+		CC28B0084D1713A7015F010A /* PluginCommands.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC28B0084D1713A7015F000A /* PluginCommands.swift */; };
+		CC28B0084D1713A7015F0107 /* DatabaseBridge.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC28B0084D1713A7015F0007 /* DatabaseBridge.swift */; };
+		CC28B0084D1713A7015F0108 /* MySQLClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC28B0084D1713A7015F0008 /* MySQLClient.swift */; };
+		CC28B0084D1713A7015F0109 /* DatabaseURL.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC28B0084D1713A7015F0009 /* DatabaseURL.swift */; };
 		D2887A5622DC676F00701BD5 /* SpaceController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D2887A5522DC676F00701BD5 /* SpaceController.swift */; };
 		D2887A5E22DCA6D500701BD5 /* SceneDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = D2887A5D22DCA6D500701BD5 /* SceneDelegate.swift */; };
 		D28B0337243EF5F2008F38F6 /* Set+UIScene.swift in Sources */ = {isa = PBXBuildFile; fileRef = D28B0336243EF5F2008F38F6 /* Set+UIScene.swift */; };
@@ -1168,6 +1173,11 @@
 		CC28B0084D1713A7015F0003 /* PluginWebView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PluginWebView.swift; sourceTree = "<group>"; };
 		CC28B0084D1713A7015F0010 /* SpotifyService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpotifyService.swift; sourceTree = "<group>"; };
 		CC28B0084D1713A7015F0004 /* PluginAppsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PluginAppsView.swift; sourceTree = "<group>"; };
+		CC28B0084D1713A7015F0006 /* PluginDatabase.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PluginDatabase.swift; sourceTree = "<group>"; };
+		CC28B0084D1713A7015F000A /* PluginCommands.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PluginCommands.swift; sourceTree = "<group>"; };
+		CC28B0084D1713A7015F0007 /* DatabaseBridge.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Database/DatabaseBridge.swift; sourceTree = "<group>"; };
+		CC28B0084D1713A7015F0008 /* MySQLClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Database/MySQLClient.swift; sourceTree = "<group>"; };
+		CC28B0084D1713A7015F0009 /* DatabaseURL.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Database/DatabaseURL.swift; sourceTree = "<group>"; };
 		D2887A5522DC676F00701BD5 /* SpaceController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpaceController.swift; sourceTree = "<group>"; };
 		D2887A5D22DCA6D500701BD5 /* SceneDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SceneDelegate.swift; sourceTree = "<group>"; };
 		D28B0336243EF5F2008F38F6 /* Set+UIScene.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Set+UIScene.swift"; sourceTree = "<group>"; };
@@ -1551,6 +1561,11 @@
 				CC28B0084D1713A7015F0003 /* PluginWebView.swift */,
 				CC28B0084D1713A7015F0010 /* SpotifyService.swift */,
 				CC28B0084D1713A7015F0004 /* PluginAppsView.swift */,
+				CC28B0084D1713A7015F0006 /* PluginDatabase.swift */,
+				CC28B0084D1713A7015F000A /* PluginCommands.swift */,
+				CC28B0084D1713A7015F0007 /* DatabaseBridge.swift */,
+				CC28B0084D1713A7015F0008 /* MySQLClient.swift */,
+				CC28B0084D1713A7015F0009 /* DatabaseURL.swift */,
 				D2887A5522DC676F00701BD5 /* SpaceController.swift */,
 				BD283197309D0A8F00D0B2B5 /* SpaceController+KBDismissHold.swift */,
 				D2887A5D22DCA6D500701BD5 /* SceneDelegate.swift */,
@@ -3764,6 +3779,11 @@
 				CC28B0084D1713A7015F0103 /* PluginWebView.swift in Sources */,
 				CC28B0084D1713A7015F0110 /* SpotifyService.swift in Sources */,
 				CC28B0084D1713A7015F0104 /* PluginAppsView.swift in Sources */,
+				CC28B0084D1713A7015F0106 /* PluginDatabase.swift in Sources */,
+				CC28B0084D1713A7015F010A /* PluginCommands.swift in Sources */,
+				CC28B0084D1713A7015F0107 /* DatabaseBridge.swift in Sources */,
+				CC28B0084D1713A7015F0108 /* MySQLClient.swift in Sources */,
+				CC28B0084D1713A7015F0109 /* DatabaseURL.swift in Sources */,
 				D2887A5622DC676F00701BD5 /* SpaceController.swift in Sources */,
 				D2AC6749220303D900177BC5 /* openurl.m in Sources */,
 				D27DD70A2A3B203F009E97BC /* NewSnippetViewController.swift in Sources */,

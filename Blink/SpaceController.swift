@@ -875,6 +875,13 @@ extension SpaceController {
     _newShellAction()
   }
 
+  /// Opens an app full screen in a new tab: the tab runs `apps open --here`.
+  func openPluginApp(_ id: String, args: [String] = [], command: String = "apps") {
+    presentedViewController?.dismiss(animated: true)
+    let line = (["apps", "open", "--here", id] + args).map(PluginCommands.quote).joined(separator: " ")
+    _newShellAction(command: line)
+  }
+
   @objc func closeShellAction() {
     _closeCurrentTerm()
   }
