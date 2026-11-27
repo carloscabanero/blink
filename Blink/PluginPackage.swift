@@ -20,10 +20,11 @@ struct PluginPackage {
     let data = try Data(contentsOf: manifestURL)
     guard data.count <= 65536 else { throw Failure.invalid("Manifest too large") }
     manifest = try JSONDecoder().decode(PluginManifest.self, from: data)
+    // Accept portable declarations independently of which capabilities Blink grants.
     guard manifest.manifestVersion == 1,
           manifest.id.range(of: "^[a-z][a-z0-9]*(\\.[a-z0-9][a-z0-9-]*)+$", options: .regularExpression) != nil,
           !manifest.name.isEmpty, manifest.name.count <= 100, !manifest.version.isEmpty,
-          Set(manifest.permissions).isSubset(of: ["storage"]),
+          Set(manifest.permissions).isSubset(of: ["storage", "database"]),
           manifest.entry.hasSuffix(".html") else { throw Failure.invalid("Unsupported manifest") }
     _ = try asset(manifest.entry)
   }

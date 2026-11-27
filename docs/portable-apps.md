@@ -26,3 +26,8 @@ Apps run in separate nonpersistent WebViews with same-package assets and no
 network API, shell, SSH, PTY, or access to terminal sessions. The starter
 bundles its own hterm; opening it does not replace Blink's terminal. Wink's
 Spotify service is host-specific and is not part of Blink's portable API.
+
+The Database Workbench may also be installed from
+https://github.com/myneid/wink-database. Blink recognizes its database
+permission declaration but does not grant database access. The app opens
+with connection controls disabled until the host implements that capability.
