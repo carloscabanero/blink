@@ -42,6 +42,7 @@ struct PluginWebView: UIViewRepresentable {
     content.addUserScript(WKUserScript(source: Self.sdk, injectionTime: .atDocumentStart, forMainFrameOnly: true))
     let webView = WKWebView(frame: .zero, configuration: config)
     webView.navigationDelegate = context.coordinator
+    context.coordinator.webView = webView
     var url = URLComponents()
     url.scheme = "blink-plugin"
     url.host = package.manifest.id
@@ -56,10 +57,18 @@ struct PluginWebView: UIViewRepresentable {
     webView.configuration.userContentController.removeScriptMessageHandler(forName: "blink", contentWorld: .page)
     webView.navigationDelegate = nil
     webView.stopLoading()
+    if coordinator.spotifyAllowed { SpotifyService.shared.cancelLogin() }
   }
 
   final class Coordinator: NSObject, WKNavigationDelegate, WKScriptMessageHandlerWithReply {
     private let package: PluginPackage
+    weak var webView: WKWebView?
+
+    var spotifyAllowed: Bool {
+      guard package.manifest.id == "org.blink.spotify", package.manifest.permissions.contains("spotify"),
+            let bundled = Bundle.main.resourceURL?.appendingPathComponent("Plugins/org.blink.spotify") else { return false }
+      return package.root == bundled.resolvingSymlinksInPath().standardizedFileURL
+    }
 
     init(package: PluginPackage) { self.package = package }
 
@@ -69,6 +78,13 @@ struct PluginWebView: UIViewRepresentable {
 
     func webView(_ webView: WKWebView, decidePolicyFor action: WKNavigationAction,
                  decisionHandler: @escaping (WKNavigationActionPolicy) -> Void) {
+      if spotifyAllowed, action.sourceFrame.isMainFrame, isOwnOrigin(action.sourceFrame.request.url),
+         action.navigationType == .linkActivated, let url = action.request.url,
+         url.scheme == "https", url.host == "open.spotify.com", url.user == nil, url.password == nil, url.port == nil {
+        UIApplication.shared.open(url)
+        decisionHandler(.cancel)
+        return
+      }
       decisionHandler(action.targetFrame?.isMainFrame == true && isOwnOrigin(action.request.url) ? .allow : .cancel)
     }
 
@@ -80,11 +96,22 @@ struct PluginWebView: UIViewRepresentable {
         return
       }
 
+      if method.hasPrefix("spotify.") {
+        guard spotifyAllowed else { replyHandler(nil, "Spotify requires the bundled app"); return }
+        var presenter = webView?.window?.rootViewController
+        while let next = presenter?.presentedViewController { presenter = next }
+        Task { @MainActor in
+          do { replyHandler(try await SpotifyService.shared.call(method, request, presentingFrom: presenter), nil) }
+          catch { replyHandler(nil, error.localizedDescription) }
+        }
+        return
+      }
+
       let manifest = package.manifest
       let hasStorage = manifest.permissions.contains("storage")
       if method == "host.info" {
         replyHandler(["apiVersion": 1, "host": "blink", "platform": "ios", "pluginID": manifest.id,
-                      "capabilities": ["host.info"] + (hasStorage ? ["storage.get", "storage.set"] : [])], nil)
+                      "capabilities": ["host.info"] + (spotifyAllowed ? ["spotify"] : []) + (hasStorage ? ["storage.get", "storage.set"] : [])], nil)
         return
       }
 
@@ -118,6 +145,11 @@ struct PluginWebView: UIViewRepresentable {
     Object.defineProperty(window, 'blink', {value: Object.freeze({
       apiVersion: 1,
       host: Object.freeze({info: () => call('host.info')}),
+      spotify: Object.freeze({
+        status: () => call('spotify.status'), login: clientID => call('spotify.login', {clientID}), logout: () => call('spotify.logout'),
+        request: (verb, path, query, body) => call('spotify.request', {verb, path, query, ...(body === undefined ? {} : {body})}),
+        artwork: url => call('spotify.artwork', {url})
+      }),
       storage: Object.freeze({get: key => call('storage.get', {key}), set: (key, value) => call('storage.set', {key, value})})
     }), writable: false, configurable: false});
   })();

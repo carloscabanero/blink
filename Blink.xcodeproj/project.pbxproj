@@ -381,6 +381,7 @@
 		CC28B0084D1713A7015F0101 /* PluginPackage.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC28B0084D1713A7015F0001 /* PluginPackage.swift */; };
 		CC28B0084D1713A7015F0102 /* PluginInstaller.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC28B0084D1713A7015F0002 /* PluginInstaller.swift */; };
 		CC28B0084D1713A7015F0103 /* PluginWebView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC28B0084D1713A7015F0003 /* PluginWebView.swift */; };
+		CC28B0084D1713A7015F0110 /* SpotifyService.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC28B0084D1713A7015F0010 /* SpotifyService.swift */; };
 		CC28B0084D1713A7015F0104 /* PluginAppsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC28B0084D1713A7015F0004 /* PluginAppsView.swift */; };
 		D2887A5622DC676F00701BD5 /* SpaceController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D2887A5522DC676F00701BD5 /* SpaceController.swift */; };
 		D2887A5E22DCA6D500701BD5 /* SceneDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = D2887A5D22DCA6D500701BD5 /* SceneDelegate.swift */; };
@@ -1165,6 +1166,7 @@
 		CC28B0084D1713A7015F0001 /* PluginPackage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PluginPackage.swift; sourceTree = "<group>"; };
 		CC28B0084D1713A7015F0002 /* PluginInstaller.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PluginInstaller.swift; sourceTree = "<group>"; };
 		CC28B0084D1713A7015F0003 /* PluginWebView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PluginWebView.swift; sourceTree = "<group>"; };
+		CC28B0084D1713A7015F0010 /* SpotifyService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpotifyService.swift; sourceTree = "<group>"; };
 		CC28B0084D1713A7015F0004 /* PluginAppsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PluginAppsView.swift; sourceTree = "<group>"; };
 		D2887A5522DC676F00701BD5 /* SpaceController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpaceController.swift; sourceTree = "<group>"; };
 		D2887A5D22DCA6D500701BD5 /* SceneDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SceneDelegate.swift; sourceTree = "<group>"; };
@@ -1547,6 +1549,7 @@
 				CC28B0084D1713A7015F0001 /* PluginPackage.swift */,
 				CC28B0084D1713A7015F0002 /* PluginInstaller.swift */,
 				CC28B0084D1713A7015F0003 /* PluginWebView.swift */,
+				CC28B0084D1713A7015F0010 /* SpotifyService.swift */,
 				CC28B0084D1713A7015F0004 /* PluginAppsView.swift */,
 				D2887A5522DC676F00701BD5 /* SpaceController.swift */,
 				BD283197309D0A8F00D0B2B5 /* SpaceController+KBDismissHold.swift */,
@@ -3759,6 +3762,7 @@
 				CC28B0084D1713A7015F0101 /* PluginPackage.swift in Sources */,
 				CC28B0084D1713A7015F0102 /* PluginInstaller.swift in Sources */,
 				CC28B0084D1713A7015F0103 /* PluginWebView.swift in Sources */,
+				CC28B0084D1713A7015F0110 /* SpotifyService.swift in Sources */,
 				CC28B0084D1713A7015F0104 /* PluginAppsView.swift in Sources */,
 				D2887A5622DC676F00701BD5 /* SpaceController.swift in Sources */,
 				D2AC6749220303D900177BC5 /* openurl.m in Sources */,

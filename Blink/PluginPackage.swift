@@ -24,7 +24,7 @@ struct PluginPackage {
     guard manifest.manifestVersion == 1,
           manifest.id.range(of: "^[a-z][a-z0-9]*(\\.[a-z0-9][a-z0-9-]*)+$", options: .regularExpression) != nil,
           !manifest.name.isEmpty, manifest.name.count <= 100, !manifest.version.isEmpty,
-          Set(manifest.permissions).isSubset(of: ["storage", "database"]),
+          Set(manifest.permissions).isSubset(of: ["storage", "database", "spotify"]),
           manifest.entry.hasSuffix(".html") else { throw Failure.invalid("Unsupported manifest") }
     _ = try asset(manifest.entry)
   }
